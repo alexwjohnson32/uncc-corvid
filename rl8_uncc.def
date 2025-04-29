@@ -1,0 +1,217 @@
+Bootstrap: docker
+From: rockylinux:8
+
+%environment
+    export APPTAINER_TMPDIR=~/apptainerTmp
+    export PATH=/usr/local/gridlabd/bin:/usr/local/bin:/usr/bin:/bin
+    export LANG=C.UTF-8
+    export LC_ALL=C.UTF-8
+    export OMPI_ALLOW_RUN_AS_ROOT=1
+    export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    export PETSC_DIR=/usr/local/petsc-3.16.4
+    export LD_LIBRARY_PATH=/usr/local/petsc-3.16.4/lib:$LD_LIBRARY_PATH
+    export PATH=/opt/rh/gcc-toolset-11/root/usr/bin:$PATH
+    export CPATH=/opt/rh/gcc-toolset-11/root/usr/include:$CPATH
+    export LIBRARY_PATH=/opt/rh/gcc-toolset-11/root/usr/lib64:$LIBRARY_PATH
+    export CPLUS_INCLUDE_PATH=/opt/rh/gcc-toolset-11/root/usr/include:$CPLUS_INCLUDE_PATH
+%post
+    echo "Installing base packages..."
+
+    # Install plugins core
+    dnf install -y dnf-plugins-core
+
+    # Install EPEL
+    dnf install -y epel-release
+
+    # Enabling PowerTools
+    dnf config-manager --set-enabled powertools
+
+    # Update metadata
+    dnf makecache --refresh
+
+    # Install build tools
+    dnf groupinstall -y "Development Tools"
+
+    # Install additional packages
+    dnf install -y \
+	wget \
+      	which \
+        gcc-toolset-11 \
+        cmake \
+        zeromq \
+        zeromq-devel \
+        boost-devel \
+        swig \
+	python3.11 \
+	python3.11-devel \
+	python3.11-pip \
+        pkgconf-pkg-config \
+	openmpi \
+	openmpi-devel \
+	pkg-config \
+        libaec-devel
+
+    # Set up symlinks to make python3 and pip3 point to Python 3.11
+    ln -sf /usr/bin/python3.11 /usr/bin/python3
+    ln -sf /usr/bin/pip3.11 /usr/bin/pip3
+    ln -sf /usr/bin/pip3.11 /usr/bin/pip
+
+    # Activate GCC 11
+    source /opt/rh/gcc-toolset-11/enable
+
+    # Set up GCC 11 manually for everything
+    echo "Setting up GCC 11 as default for this container..."
+    export PATH=/opt/rh/gcc-toolset-11/root/usr/bin:$PATH
+    export CC=/opt/rh/gcc-toolset-11/root/usr/bin/gcc
+    export CXX=/opt/rh/gcc-toolset-11/root/usr/bin/g++
+    export LD_LIBRARY_PATH=/opt/rh/gcc-toolset-11/root/usr/lib64:$LD_LIBRARY_PATH
+
+    # Set up OpenMPI paths (optional but good for CMake later)
+    export PATH=/usr/lib64/openmpi/bin:$PATH
+    export LD_LIBRARY_PATH=/usr/lib64/openmpi/lib:$LD_LIBRARY_PATH
+
+    # pip install dependencies
+    pip3 install --upgrade pip
+    pip3 install wheel matplotlib pypower scipy numpy==1.26.4
+
+    cd ~
+    mkdir -p develop
+
+    # Install Boost 1.78.0 manually
+    cd ~/develop
+    wget https://archives.boost.io/release/1.78.0/source/boost_1_78_0.tar.gz
+    tar -xvf boost_1_78_0.tar.gz
+    cd boost_1_78_0
+    ./bootstrap.sh --prefix=/usr/local/boost-1.78.0 --with-libraries=mpi,serialization,random,filesystem,system
+
+    export BOOST_ROOT=/usr/local/boost-1.78.0
+
+    # Configure Boost to use MPI
+    echo "using mpi ;" >> project-config.jam
+
+    # Build Boost libraries (static linking)
+    ./b2 -a -d+2 link=static stage
+    ./b2 -a -d+2 link=static install
+
+    # Download, build and install HELICS
+    cd ~/develop
+    git clone --recurse-submodules https://github.com/GMLC-TDC/HELICS.git helics
+    cd helics
+
+    cmake -DCMAKE_INSTALL_PREFIX=/usr/local/helics \
+	-DCMAKE_C_COMPILER=$CC \
+      	-DCMAKE_CXX_COMPILER=$CXX \
+        -DBOOST_ROOT=/usr/local/boost-1.78.0 \
+	-DCMAKE_BUILD_TYPE=Release \
+        -DHELICS_BUILD_CXX_SHARED_LIB=ON \
+        -B build
+    cmake --build build -j2 -t install
+
+    # Creating venv
+    python3 -m venv /opt/myenv
+    . /opt/myenv/bin/activate
+
+    # Install HELICS python API and pypower for testing
+    pip3 install helics "helics[cli]"
+
+    # Install GridLab-D
+    cd ~/develop
+    dnf install -y \
+	 xerces-c-devel \
+    	 hdf5-devel \
+	 curl \
+	 gcc-gfortran \
+	 ncurses-devel
+
+    git clone https://github.com/gridlab-d/gridlab-d.git gridlabd
+    cd gridlabd
+    git submodule update --init --recursive
+
+    sed -i '/add_subdirectory(third_party\/jsoncpp_lib)/d' CMakeLists.txt
+    sed -i '/get_target_property(jsoncpp_lib/d' CMakeLists.txt
+    sed -i '/target_link_libraries(jsoncpp_lib/d' CMakeLists.txt
+
+    cmake -DCMAKE_INSTALL_PREFIX=/usr/local/gridlabd \
+		  -DGLD_USE_HELICS=ON \
+		  -DGLD_HELICS_DIR=/usr/local \
+		  -B build
+
+    cd build
+    make -j8 && make install
+
+    # GridPACK dependency: GA-5.8
+    cd ~/develop
+
+    wget https://github.com/GlobalArrays/ga/releases/download/v5.8/ga-5.8.tar.gz
+    tar -xvf ga-5.8.tar.gz
+    cd ga-5.8
+
+    ./configure --with-mpi-ts --disable-f77 --without-blas --enable-cxx --enable-i4 \
+        --prefix=/usr/local/ga-5.8
+
+    make -j 10 install
+
+    # GridPACK dependency: PETSc-3.16.4
+    cd ~/develop
+
+    git clone https://gitlab.com/petsc/petsc.git
+    cd petsc
+
+    git checkout v3.16.4
+    export PETSC_DIR=/root/develop/petsc
+
+    ./configure --download-superlu_dist \
+				--download-metis \
+				--download-parmetis \
+				--download-suitesparse \
+				--download-f2cblaslapack \
+				--prefix=/usr/local/petsc-3.16.4
+
+    make && make install
+
+    export OMPI_ALLOW_RUN_AS_ROOT=1
+    export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+
+    export PETSC_DIR=/usr/local/petsc-3.16.4
+    export LD_LIBRARY_PATH=/usr/local/petsc-3.16.4/lib
+
+    # Now for GridPACK
+    cd ~/develop
+
+    git clone https://github.com/GridOPTICS/GridPACK.git
+    cd GridPACK
+
+    git submodule update --init
+    cd src
+    git checkout develop
+
+    mkdir build
+    cd build
+
+    cmake -D GA_DIR:STRING="/usr/local/ga-5.8" \
+		  -D BOOST_ROOT:STRING="/usr/local/boost-1.78.0" \
+		  -D Boost_DIR:STRING="/usr/local/boost-1.78.0/lib/cmake/Boost-1.78.0" \
+		  -D BOOST_LIBRARYDIR:STRING="/usr/local/boost-1.78.0/lib"\
+		  -D PETSC_DIR:STRING="/usr/local/petsc-3.16.4" \
+		  -D MPI_CXX_COMPILER:STRING='mpicxx' \
+		  -D MPI_C_COMPILER:STRING='mpicc' \
+		  -D MPIEXEC:STRING='mpiexec' \
+		  -D GRIDPACK_TEST_TIMEOUT:STRING=30 \
+		  -D CMAKE_INSTALL_PREFIX:PATH="/usr/local/GridPACK" \
+		  -D HELICS_INSTALL_DIR:STRING='/usr/local/helics' \
+		  -D CMAKE_BUILD_TYPE:STRING=Debug ..
+
+    make -j 10 install
+    cd ~
+ 
+    # Clean up
+    dnf clean all
+
+%labels
+    Author Alex Johnson
+    Version 1.0
+    Description Rocky Linux 8 Base Image
+
+%runscript
+    echo "Welcome to your Rocky Linux 8 container"
+    exec /bin/bash

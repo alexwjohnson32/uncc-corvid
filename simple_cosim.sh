@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SIF_FILE="./roi-img.sif"
+SIF_FILE="./rl8_uncc.sif"
 
 clear
 
