@@ -1,6 +1,9 @@
 Bootstrap: docker
 From: rockylinux:8
 
+%setup
+    mkdir -p ~/apptainerTmp
+
 %environment
     export APPTAINER_TMPDIR=~/apptainerTmp
     export PATH=/usr/local/gridlabd/bin:/usr/local/bin:/usr/bin:/bin
