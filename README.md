@@ -55,7 +55,10 @@ ssh-add ~/.ssh/id_ed25519
 ```bash
 git remote set-url origin git@github.com:YOUR-USERNAME/roi-uncc.git
 ```
+## Creating SIF File for RL8
+Navigate to the root of the uncc repo
 
+Run ```apptainer build --fakeroot --tmpdir ~/apptainerTmp/ rl8_uncc.sif rl8_uncc.def```
 
 
 
