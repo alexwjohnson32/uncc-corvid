@@ -1,11 +1,7 @@
 Bootstrap: docker
 From: rockylinux:8
 
-%setup
-    mkdir -p ~/apptainerTmp
-
 %environment
-    export APPTAINER_TMPDIR=~/apptainerTmp
     export PATH=/usr/local/gridlabd/bin:/usr/local/bin:/usr/bin:/bin
     export LANG=C.UTF-8
     export LC_ALL=C.UTF-8
@@ -17,6 +13,9 @@ From: rockylinux:8
     export CPATH=/opt/rh/gcc-toolset-11/root/usr/include:$CPATH
     export LIBRARY_PATH=/opt/rh/gcc-toolset-11/root/usr/lib64:$LIBRARY_PATH
     export CPLUS_INCLUDE_PATH=/opt/rh/gcc-toolset-11/root/usr/include:$CPLUS_INCLUDE_PATH
+    export PATH=/usr/lib64/openmpi/bin:$PATH
+    export LD_LIBRARY_PATH=/usr/lib64/openmpi/lib:$LD_LIBRARY_PATH
+
 %post
     echo "Installing base packages..."
 
@@ -38,6 +37,7 @@ From: rockylinux:8
     # Install additional packages
     dnf install -y \
 	wget \
+        vim \
       	which \
         gcc-toolset-11 \
         cmake \
@@ -72,10 +72,6 @@ From: rockylinux:8
     # Set up OpenMPI paths (optional but good for CMake later)
     export PATH=/usr/lib64/openmpi/bin:$PATH
     export LD_LIBRARY_PATH=/usr/lib64/openmpi/lib:$LD_LIBRARY_PATH
-
-    # pip install dependencies
-    pip3 install --upgrade pip
-    pip3 install wheel matplotlib pypower scipy numpy==1.26.4
 
     cd ~
     mkdir -p develop
@@ -114,8 +110,16 @@ From: rockylinux:8
     python3 -m venv /opt/myenv
     . /opt/myenv/bin/activate
 
+    # pip install dependencies
+    pip3 install --upgrade pip \
+	 wheel \
+	 matplotlib \
+	 pypower \
+	 scipy \
+	 numpy==1.26.4
+
     # Install HELICS python API and pypower for testing
-    pip3 install helics "helics[cli]"
+    pip3 install helics[cli] --no-cache-dir --no-warn-script-location
 
     # Install GridLab-D
     cd ~/develop

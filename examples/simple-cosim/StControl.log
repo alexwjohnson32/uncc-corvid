@@ -1,13 +1,13 @@
 HELICS Version: 3.6.1 (2025-02-24)
 StControlSim: Federate StControlSim has been registered
-/usr/local/lib/python3.10/dist-packages/helics/capi.py:9357: UserWarning: This is deprecated. Use `helicsInputGetTarget` instead.
+/opt/myenv/lib64/python3.11/site-packages/helics/capi.py:9357: UserWarning: This is deprecated. Use `helicsInputGetTarget` instead.
   warnings.warn("This is deprecated. Use `helicsInputGetTarget` instead.")
 StControlSim: Registered Subscription ---> Switch_Controller/sw1
 StControlSim: Switch state in GLD => 0 .
 Response Status Code: 403
 Failed to get a valid response from the server. Status Code: 403
 -1 - 0
-[2025-04-02 15:58:32.254] [console] [warning] StControlSim (131073)[31]::Time mismatch detected: granted time greater than requested time 31 vs 1
+[2025-05-01 10:39:25.323] [console] [warning] StControlSim (131074)[31]::Time mismatch detected: granted time greater than requested time 31 vs 1
 Response Status Code: 403
 Failed to get a valid response from the server. Status Code: 403
 31.0 - 30

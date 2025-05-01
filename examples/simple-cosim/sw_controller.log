@@ -1,7 +1,7 @@
 HELICS Version: 3.6.1 (2025-02-24)
 SwControllerSim: Federate SwControllerSim has been registered
 SwControllerSim: Registered Publication ---> Switch_Controller/sw1
-/usr/local/lib/python3.10/dist-packages/helics/capi.py:9357: UserWarning: This is deprecated. Use `helicsInputGetTarget` instead.
+/opt/myenv/lib64/python3.11/site-packages/helics/capi.py:9357: UserWarning: This is deprecated. Use `helicsInputGetTarget` instead.
   warnings.warn("This is deprecated. Use `helicsInputGetTarget` instead.")
 SwControllerSim: Registered Subscription ---> load_meter/current
 -1 - 0

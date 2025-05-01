@@ -1,6 +1,12 @@
 #!/bin/bash
 
-SIF_FILE="./rl8_uncc.sif"
+# Exit if no argument provided
+if [ -z "$1" ]; then
+  echo "Usage: $0 <container.sif>"
+  exit 1
+fi
+
+SIF_FILE="$1"
 
 clear
 
@@ -11,7 +17,7 @@ apptainer exec $SIF_FILE bash -s <<'EOF'
 
 echo Starting Run
 
-export UNCC_ROOT=$(pwd)
+export UNCC_ROOT="$(cd "$(pwd)/.." && pwd)"
 
 # Changing to the correct dir
 cd $UNCC_ROOT/examples/simple-cosim/
@@ -23,6 +29,9 @@ g++ -o gridpack_federate gridpack_federate.cpp    -I/root/develop/helics/src    
 
 # Linking HELICS correctly
 export LD_LIBRARY_PATH=/root/develop/helics/build/lib:$LD_LIBRARY_PATH
+
+# Source venv
+source /opt/myenv/bin/activate
 
 # Running example
 helics run --path=switch_cosim_runner.json
