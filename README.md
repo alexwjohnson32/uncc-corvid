@@ -58,7 +58,16 @@ git remote set-url origin git@github.com:YOUR-USERNAME/roi-uncc.git
 ## Creating SIF File for RL8
 Navigate to the root of the uncc repo
 
+Run ```mkdir -p ~/apptainerTmp```
+
 Run ```apptainer build --fakeroot --tmpdir ~/apptainerTmp/ rl8_uncc.sif rl8_uncc.def```
+
+## Running and example
+Navigate to scripts/ folder
+
+Run the script of your choice and provide the path to the sif file as a parameter. Example below.
+
+```./simple_cosim.sh ../rl8_uncc.sif```
 
 
 
