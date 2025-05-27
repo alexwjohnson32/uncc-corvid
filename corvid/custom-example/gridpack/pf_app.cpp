@@ -35,7 +35,7 @@ gridpack::powerflow::PFApp::PFApp(const std::string &alt_config_path)
     }
 }
 
-boost::shared_ptr<gridpack::utility::Configuration> gridpack::powerflow::PFApp::GetConfig(PFNetwork &world)
+boost::shared_ptr<gridpack::utility::Configuration> gridpack::powerflow::PFApp::GetConfig(gridpack::parallel::Communicator &world) const
 {
     boost::shared_ptr<gridpack::utility::Configuration> config(gridpack::utility::Configuration::configuration());
     config->enableLogging(&std::cout);
@@ -54,7 +54,7 @@ boost::shared_ptr<gridpack::utility::Configuration> gridpack::powerflow::PFApp::
 }
 
 std::string gridpack::powerflow::PFApp::ParseNetworkConfig(boost::shared_ptr<PFNetwork> network,
-                                                           gridpack::utility::Configuration::CursorPtr cursor, int rank)
+                                                           gridpack::utility::Configuration::CursorPtr cursor, int rank) const
 {
     // Different files use different conventions for the phase shift sign.
     // Allow users to change sign to correspond to the convention used
@@ -120,7 +120,7 @@ std::complex<double> gridpack::powerflow::PFApp::ComputeVc(const std::complex<do
     boost::shared_ptr<gridpack::utility::Configuration> config = GetConfig(world);
     if (config == nullptr)
     {
-        return std::complex<double>(std::nan, std::nan);
+        return std::complex<double>(std::nan(""), std::nan(""));
     }
 
     // Find the Configuration.Powerflow block within the input file
@@ -133,7 +133,7 @@ std::complex<double> gridpack::powerflow::PFApp::ComputeVc(const std::complex<do
     std::string network_config_file = ParseNetworkConfig(network, cursor, world.rank());
     if (network_config_file.empty())
     {
-        return std::complex<double>(std::nan, std::nan);
+        return std::complex<double>(std::nan(""), std::nan(""));
     }
 
     // Set convergence and iteration parameters from input file. If

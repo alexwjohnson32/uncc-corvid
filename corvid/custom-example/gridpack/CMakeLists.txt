@@ -7,6 +7,7 @@ add_executable(gpk-left-fed.x
   gpk-left-fed.cpp
   pf_app.cpp
   pf_factory.cpp
+  GpkRunner.cpp
   )
 
 target_include_directories(gpk-left-fed.x

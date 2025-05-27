@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     gridpack::powerflow::PFApp app(config_input_file);
 
     const std::string gpk_left(
-        "/beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/gridpack/gpk-left-fed");
+        "/beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/gridpack/gpk-left-fed-1.json");
     const std::string out_file_path(
         "/beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/outputs/gpk.csv");
 

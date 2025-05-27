@@ -36,9 +36,9 @@ class PFApp
         return "/beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/gridpack/build/input.xml";
     }
 
-    boost::shared_ptr<gridpack::utility::Configuration> GetConfig(PFNetwork &world);
+    boost::shared_ptr<gridpack::utility::Configuration> GetConfig(gridpack::parallel::Communicator &world) const;
     std::string ParseNetworkConfig(boost::shared_ptr<PFNetwork> network,
-                                   gridpack::utility::Configuration::CursorPtr cursor, int rank);
+                                   gridpack::utility::Configuration::CursorPtr cursor, int rank) const;
 
   public:
     PFApp(void) : m_config_path(CompiledConfigPath()) {};
