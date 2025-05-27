@@ -43,7 +43,7 @@
 	<strictnames>TRUE</strictnames>
 	<website>http://www.gridlabd.org/</website>
 	<urlbase>http://www.gridlabd.org/</urlbase>
-	<randomseed>-1260329408</randomseed>
+	<randomseed>1985094538</randomseed>
 	<include>""</include>
 	<trace>""</trace>
 	<gdb_window>FALSE</gdb_window>
@@ -140,7 +140,7 @@
 			<inherits_from>node</inherits_from>
 			<meter>
 				<id>0</id>
-				<rank>1</rank>
+				<rank>8</rank>
 				<out_svc>NEVER</out_svc>
 				<clock>2025-02-21 00:00:00 PST</clock>
 				<name>slack_bus</name>
@@ -240,7 +240,7 @@
 				<third_tier_energy>+0 kWh</third_tier_energy>
 				<bustype>SWING</bustype>
 				<busflags>HASSOURCE</busflags>
-				<maximum_voltage_error>+0 V</maximum_voltage_error>
+				<maximum_voltage_error>+0.069 V</maximum_voltage_error>
 				<voltage_A>+69000+0d V</voltage_A>
 				<voltage_B>+69000-120d V</voltage_B>
 				<voltage_C>+69000+120d V</voltage_C>
