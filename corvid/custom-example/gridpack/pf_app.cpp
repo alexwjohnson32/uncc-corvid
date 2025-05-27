@@ -17,22 +17,12 @@
 
 #include "gridpack/include/gridpack.hpp"
 #include "pf_app.hpp"
-#include "pf_factory.hpp"
 #include <iostream>
 #include <cstdlib>
 #include <string>
+#include <cmath>
 
 // Calling program for powerflow application
-
-/**
- * Enumerated type to distinguish between different configuration file
- * formats. PSS/E version 23 and 33 formats are currently supported
- */
-enum Parser
-{
-    PTI23,
-    PTI33
-};
 
 gridpack::powerflow::PFApp::PFApp(const std::string &alt_config_path)
     : m_config_path(gridpack::powerflow::PFApp::CompiledConfigPath())
@@ -45,32 +35,79 @@ gridpack::powerflow::PFApp::PFApp(const std::string &alt_config_path)
     }
 }
 
-bool gridpack::powerflow::PFApp::CanReadConfigFile() const
+boost::shared_ptr<gridpack::utility::Configuration> gridpack::powerflow::PFApp::GetConfig(PFNetwork &world)
 {
-    // Define a communicator on the group of all processors (the world group)
-    // and create and instance of a power flow network
-    gridpack::parallel::Communicator world;
-    boost::shared_ptr<PFNetwork> network(new PFNetwork(world));
-
-    // Read configuration file.
-    gridpack::utility::Configuration *config = gridpack::utility::Configuration::configuration();
-
-    // Echo input file to standard out
+    boost::shared_ptr<gridpack::utility::Configuration> config(gridpack::utility::Configuration::configuration());
     config->enableLogging(&std::cout);
 
-    bool opened = config->open(m_config_path, world);
-
-    // If no input file found, print error
-    if (!opened)
+    if (!config->open(m_config_path, world))
     {
         std::string pwd = "";
         const char *env_var = std::getenv("PWD");
         if (env_var != nullptr) pwd = std::string(env_var);
 
         std::cout << "RETURNING: Could not find file: '" << m_config_path << "'. \n\tWorking Dir: " << pwd << std::endl;
+        config = nullptr;
     }
 
-    return opened;
+    return config;
+}
+
+std::string gridpack::powerflow::PFApp::ParseNetworkConfig(boost::shared_ptr<PFNetwork> network,
+                                                           gridpack::utility::Configuration::CursorPtr cursor, int rank)
+{
+    // Different files use different conventions for the phase shift sign.
+    // Allow users to change sign to correspond to the convention used
+    // in this application.
+    double phase_shift_sign = cursor->get("phaseShiftSign", 1.0);
+
+    // If networkConfiguration field found in input, assume that file
+    // is PSS/E version 23 format, otherwise if networkConfiguration_v33
+    // field found in input, assume file is version 33 format. If neither
+    // field is found, then no configuration file is specified so return.
+    // The rank() function on the communicator is used to determine the processor ID
+    std::string network_config_file = "";
+    if (cursor->get("networkConfiguration", &network_config_file))
+    {
+        // PTI23 parser
+        if (rank == 0)
+        {
+            std::cout << "Using V23 parser" << std::endl;
+            std::cout << "Network filename: " << network_config_file << std::endl;
+        }
+
+        gridpack::parser::PTI23_parser<PFNetwork> parser(network);
+        parser.parse(network_config_file.c_str());
+
+        if (phase_shift_sign == -1.0)
+        {
+            parser.changePhaseShiftSign();
+        }
+    }
+    else if (cursor->get("networkConfiguration_v33", &network_config_file))
+    {
+        // PTI33 parser
+        if (rank == 0)
+        {
+            std::cout << "Using V33 parser" << std::endl;
+            std::cout << "Network filename: " << network_config_file << std::endl;
+        }
+
+        gridpack::parser::PTI33_parser<PFNetwork> parser(network);
+        parser.parse(network_config_file.c_str());
+        if (phase_shift_sign == -1.0)
+        {
+            parser.changePhaseShiftSign();
+        }
+    }
+    else
+    {
+        // Unknown parser
+        std::cout << "No network configuration file specified" << std::endl;
+        network_config_file = "";
+    }
+
+    return network_config_file;
 }
 
 std::complex<double> gridpack::powerflow::PFApp::ComputeVc(const std::complex<double> &Sa) const
@@ -80,87 +117,29 @@ std::complex<double> gridpack::powerflow::PFApp::ComputeVc(const std::complex<do
     gridpack::parallel::Communicator world;
     boost::shared_ptr<PFNetwork> network(new PFNetwork(world));
 
-    // Read configuration file.
-    gridpack::utility::Configuration *config = gridpack::utility::Configuration::configuration();
-
-    // Echo input file to standard out
-    config->enableLogging(&std::cout);
-
-    // We assume that you have already checked that you can open this successfully.
-    config->open(m_config_path, world);
+    boost::shared_ptr<gridpack::utility::Configuration> config = GetConfig(world);
+    if (config == nullptr)
+    {
+        return std::complex<double>(std::nan, std::nan);
+    }
 
     // Find the Configuration.Powerflow block within the input file
     // and set cursor pointer to that block
     gridpack::utility::Configuration::CursorPtr cursor;
     cursor = config->getCursor("Configuration.Powerflow");
 
-    // If networkConfiguration field found in input, assume that file
-    // is PSS/E version 23 format, otherwise if networkConfiguration_v33
-    // field found in input, assume file is version 33 format. If neither
-    // field is found, then no configuration file is specified so return
-    std::string filename = "";
-    Parser filetype = Parser::PTI23;
-    if (!cursor->get("networkConfiguration", &filename))
+    // The rank() function on the communicator is used to determine the processor ID
+    // If the network config is empty, none could be parsed.
+    std::string network_config_file = ParseNetworkConfig(network, cursor, world.rank());
+    if (network_config_file.empty())
     {
-        if (cursor->get("networkConfiguration_v33", &filename))
-        {
-            filetype = Parser::PTI33;
-        }
-        else
-        {
-            printf("No network configuration file specified\n");
-            return;
-        }
+        return std::complex<double>(std::nan, std::nan);
     }
 
     // Set convergence and iteration parameters from input file. If
     // tolerance and maxIteration fields not found, then use defaults
     double tolerance = cursor->get("tolerance", 1.0e-6);
     int max_iteration = cursor->get("maxIteration", 50);
-
-    // Different files use different conventions for the phase shift sign.
-    // Allow users to change sign to correspond to the convention used
-    // in this application.
-    ComplexType tol;
-    double phase_shift_sign = cursor->get("phaseShiftSign", 1.0);
-
-    // Echo network file name to standard out and create appropriate parser.
-    // Parse the file and change the phase shift sign, if necessary. The rank()
-    // function on the communicator is used to determine the processor ID
-    if (world.rank() == 0)
-    {
-        printf("Network filename: (%s)\n", filename.c_str());
-    }
-
-    if (filetype == Parser::PTI23)
-    {
-        if (world.rank() == 0)
-        {
-            printf("Using V23 parser\n");
-        }
-
-        gridpack::parser::PTI23_parser<PFNetwork> parser(network);
-        parser.parse(filename.c_str());
-
-        if (phase_shift_sign == -1.0)
-        {
-            parser.changePhaseShiftSign();
-        }
-    }
-    else if (filetype == Parser::PTI33)
-    {
-        if (world.rank() == 0)
-        {
-            printf("Using V33 parser\n");
-        }
-
-        gridpack::parser::PTI33_parser<PFNetwork> parser(network);
-        parser.parse(filename.c_str());
-        if (phase_shift_sign == -1.0)
-        {
-            parser.changePhaseShiftSign();
-        }
-    }
 
     network->getBusData(1)->setValue(LOAD_PL, Sa.real(), 0);
     network->getBusData(1)->setValue(LOAD_QL, Sa.imag(), 0);
@@ -170,7 +149,8 @@ std::complex<double> gridpack::powerflow::PFApp::ComputeVc(const std::complex<do
 
     // Echo number of buses and branches to standard out. This message prints from
     // each processor. These numbers may be different for different processors.
-    printf("Process: %d NBUS: %d NBRANCH: %d\n", world.rank(), network->numBuses(), network->numBranches());
+    std::cout << "Process: " << world.rank() << " NBUS: " << network->numBuses()
+              << " NBRANCH: " << network->numBranches() << std::endl;
 
     // Create serial IO object to export data from buses
     gridpack::serial_io::SerialBusIO<PFNetwork> busIO(8192, network);
@@ -229,7 +209,7 @@ std::complex<double> gridpack::powerflow::PFApp::ComputeVc(const std::complex<do
     solver.configure(cursor);
 
     // Set initial value of the tolerance
-    tol = 2.0 * tolerance;
+    ComplexType tol = 2.0 * tolerance;
     int iter = 0;
 
     // First iteration of the solver to intialize Newton-Raphson loop

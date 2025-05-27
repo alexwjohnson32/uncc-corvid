@@ -33,12 +33,6 @@ int main(int argc, char **argv)
     }
     gridpack::powerflow::PFApp app(config_input_file);
 
-    if (!app.CanReadConfigFile())
-    {
-        std::cout << "Cannot read GridPACK config, exiting.";
-        return 0;
-    }
-
     const std::string gpk_left(
         "/beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/gridpack/gpk-left-fed");
     const std::string out_file_path(

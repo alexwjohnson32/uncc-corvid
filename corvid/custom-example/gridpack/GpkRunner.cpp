@@ -6,6 +6,7 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <cmath>
 
 namespace
 {
@@ -83,7 +84,10 @@ double corvid::GpkRunner::AdvanceSimulation(double last_granted_time, const grid
     m_out_file << "Update Vc by GridPACK:      " << voltage << "\n\n";
 
     // publish new center bus voltage
-    m_vc_id.publish(voltage * 69000.0);
+    if (!std::isnan(voltage.real()))
+    {
+        m_vc_id.publish(voltage * 69000.0);
+    }
 
     return granted_time;
 }

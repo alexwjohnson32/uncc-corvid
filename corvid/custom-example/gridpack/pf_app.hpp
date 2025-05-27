@@ -25,6 +25,7 @@ namespace gridpack
 {
 namespace powerflow
 {
+
 class PFApp
 {
   private:
@@ -35,12 +36,14 @@ class PFApp
         return "/beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/gridpack/build/input.xml";
     }
 
+    boost::shared_ptr<gridpack::utility::Configuration> GetConfig(PFNetwork &world);
+    std::string ParseNetworkConfig(boost::shared_ptr<PFNetwork> network,
+                                   gridpack::utility::Configuration::CursorPtr cursor, int rank);
+
   public:
     PFApp(void) : m_config_path(CompiledConfigPath()) {};
     PFApp(const std::string &alt_config_path);
     ~PFApp(void) {}
-
-    bool CanReadConfigFile() const;
 
     std::complex<double> ComputeVc(const std::complex<double> &Sa) const;
 };
