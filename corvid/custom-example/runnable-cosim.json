@@ -1,6 +1,6 @@
 {
     "name": "PowerFlow_Corvid_Cosim",
-    "broker": true,
+    "broker": false,
     "federates": [
         {
             "directory": ".",

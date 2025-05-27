@@ -1,4 +1,4 @@
-#include "/beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/gridlabd/baseline-gpk.glm";
+#include "gridlabd/baseline-gpk.glm";
 
 // Add a recorder for voltage magnitude and phase at the center bus
 object recorder {
