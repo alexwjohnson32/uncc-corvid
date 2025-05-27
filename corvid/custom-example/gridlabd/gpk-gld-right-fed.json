@@ -1,0 +1,35 @@
+{
+    "coreInit": "--federates=1",
+    "corName": "GridlabD Right Federate with GridPACK",
+    "coreType": "zmq",
+    "name": "gpk_gld_right_fed",
+    "offset": 0.0,
+    "period": 1.0,
+    "uninterruptible": true,
+    "logfile": "gpk_gld_right_fed.log",
+    "log_level": "debug",
+    "publications": [
+        {
+            "global": true,
+            "key": "gpk_gld_right_fed/sa",
+            "type": "complex",
+            "unit": "VA",
+            "info": {
+                "object": "slack_bus",
+                "property": "measured_power_A"
+            }
+        }
+    ],
+    "subscriptions": [
+        {
+            "required": true,
+            "key": "gpk-left-fed/Vc",
+            "type": "complex",
+            "unit": "V",
+            "info":{
+                "object": "slack_bus",
+                "property": "voltage_A"
+            }
+        }
+    ]
+}
