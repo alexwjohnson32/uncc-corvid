@@ -84,33 +84,12 @@ add_custom_command(
     TARGET gpk-left-fed.x POST_BUILD  # Run after the executable is built
     COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/input.xml" "${CMAKE_BINARY_DIR}"
-    COMMENT "Copying xml configuration to the build directory"
+    COMMENT "Copying input.xml configuration to the build directory"
     )
-
-# add_custom_command(
-#     TARGET gpk-left-fed.x POST_BUILD  # Run after the executable is built
-#     COMMAND ${CMAKE_COMMAND} -E copy
-#         "${CMAKE_SOURCE_DIR}/IEEE14.raw" "${CMAKE_BINARY_DIR}"
-#     COMMENT "Copying network file to the build directory"
-#     )
-
-# add_custom_command(
-#     TARGET gpk-left-fed.x POST_BUILD  # Run after the executable is built
-#     COMMAND ${CMAKE_COMMAND} -E copy
-#          "${CMAKE_SOURCE_DIR}/118.xml" "${CMAKE_BINARY_DIR}"
-#     COMMENT "118 xml file"
-#     )
-
-# add_custom_command(
-#     TARGET gpk-left-fed.x POST_BUILD  # Run after the executable is built
-#     COMMAND ${CMAKE_COMMAND} -E copy
-#          "${CMAKE_SOURCE_DIR}/118.raw" "${CMAKE_BINARY_DIR}"
-#     COMMENT "118 xml file"
-#     )
 
 add_custom_command(
     TARGET gpk-left-fed.x POST_BUILD  # Run after the executable is built
     COMMAND ${CMAKE_COMMAND} -E copy
          "${CMAKE_SOURCE_DIR}/oneline.raw" "${CMAKE_BINARY_DIR}"
-    COMMENT "oneline.raw"
+    COMMENT "Copying oneline.raw configuration to the build directory"
     )

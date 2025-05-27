@@ -1,0 +1,27 @@
+This keeps track of all non-compiled but referenced files. All files are presented as relative paths. These paths may or may not need to be changed if the working directory is moved.
+
+
+/gridlabd
+    /gpk-gld-right-fed.json
+        - logfile: gpk_gld_right_fed.log
+    /oneline-right-w-gpk.glm
+        - recorder->file: outputs/gld_cosim_right.csv
+        - helics_msg->configure: gridlabd/gld_cosim_right.csv
+/gridpack
+    /build
+        /gpk-left-fed.x
+        /input.xml
+        /oneline.raw
+    /input.xml
+        - <networkConfiguration>oneline.raw</networkConfiguration>
+    /gpk-left-fed.cpp
+        - std::ofstream outFile("../outputs/gpk.csv"); // line 44
+    /pf_app.cpp
+        - gridpack::utility::Configuration *config // line 47 This uses default config location for gridpack logging
+        - opened = config->open(inputfile, world); // line 57 This takes a file from command line
+        - opened = config->open("input.xml", world); // line 61
+        - Generally, it takes an input xml and looks for a tag named 'networkConfiguration' or 'networkConfiguration_v33' to get a parser file.
+
+
+
+The helics execution directory is the directory where the federate files are relative to (I think...)

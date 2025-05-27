@@ -19,6 +19,7 @@
 #include "pf_app.hpp"
 #include "pf_factory.hpp"
 #include <iostream>
+#include <cstdlib>
 
 // Calling program for powerflow application
 
@@ -50,19 +51,24 @@ void gridpack::powerflow::PFApp::execute(int argc, char** argv, std::complex<dou
     config->enableLogging(&std::cout);
 
     bool opened = false;
+    std::string config_input_file("gridpack/build/input.xml");
+
     if (argc >= 2 && argv[1] != NULL)
     {
-        char inputfile[256];
-        sprintf(inputfile, "%s", argv[1]);
-        opened = config->open(inputfile, world);
-    }
-    else
-    {
-        opened = config->open("input.xml", world);
+        config_input_file = std::string(argv[1]);
     }
 
+    opened = config->open(config_input_file, world);
+
     // If no input file found, return
-    if (!opened) return;
+    if (!opened)
+    {
+        char *pwd = std::getenv("PWD");
+        if (!pwd) pwd = "";
+
+        std::cout << "RETURNING: Could not find file: '" << config_input_file << "'. \n\tWorking Dir: " << pwd << std::endl;
+        return;
+    }
 
     // Find the Configuration.Powerflow block within the input file
     // and set cursor pointer to that block
