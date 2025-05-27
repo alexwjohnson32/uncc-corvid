@@ -7,11 +7,11 @@ object recorder {
     property measured_voltage_A, measured_power_A, measured_current_A;
     interval 1;  // Record every second
     limit 20;  // Record for 10 seconds
-    file "/beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/outputs/gld_cosim_right_1.csv";  // Output file
+    file "gld_cosim_right_1.csv";  // Output file
 };
 
 // Connect to HELICS
 object helics_msg {
     name gpk_gld_right_fed_1;
-    configure /beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/gridlabd/json/gpk-gld-right-fed-1.json;
+    configure "gridlabd/json/gpk-gld-right-fed-1.json";
 };

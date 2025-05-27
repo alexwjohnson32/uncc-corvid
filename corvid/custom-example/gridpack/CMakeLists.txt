@@ -18,7 +18,6 @@ target_include_directories(gpk-left-fed.x
   /usr/local/helics/include
   )
 
-
  # List of library names
  set(LIBRARIES_NAMES
    "mpi"
@@ -75,7 +74,6 @@ foreach(LIBRARY_NAME IN LISTS LIBRARIES_NAMES)
 endforeach()
 
 message(STATUS "All Libraries found: ${LIBRARIES_FOUND}")
-
 
 # Step 2: Link all found libraries to the executable
 target_link_libraries(gpk-left-fed.x PRIVATE ${LIBRARIES_FOUND} )

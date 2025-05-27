@@ -6,7 +6,7 @@
     "offset": 0.0,
     "period": 1.0,
     "uninterruptible": true,
-    "logfile": "/beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/outputs/gpk_gld_right_fed_1.log",
+    "logfile": "gpk_gld_right_fed_1.log",
     "log_level": "debug",
     "publications": [
         {

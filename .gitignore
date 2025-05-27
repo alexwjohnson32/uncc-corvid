@@ -7,5 +7,6 @@ build/
 # Logs and output CSV files
 *.log
 outputs/
+*.csv
 
 tmp/
