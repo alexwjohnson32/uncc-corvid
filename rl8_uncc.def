@@ -13,7 +13,7 @@ From: rockylinux:8
     export CPATH=/opt/rh/gcc-toolset-11/root/usr/include:$CPATH
     export LIBRARY_PATH=/opt/rh/gcc-toolset-11/root/usr/lib64:$LIBRARY_PATH
     export CPLUS_INCLUDE_PATH=/opt/rh/gcc-toolset-11/root/usr/include:$CPLUS_INCLUDE_PATH
-    export PATH=/usr/lib64/openmpi/bin:$PATH
+    export PATH=/opt/myenv/bin/:/usr/lib64/openmpi/bin:$PATH
     export LD_LIBRARY_PATH=/usr/lib64/openmpi/lib:$LD_LIBRARY_PATH
 
 %post
@@ -210,7 +210,7 @@ From: rockylinux:8
 
     make -j 10 install
     cd ~
- 
+
     # Clean up
     dnf clean all
 
