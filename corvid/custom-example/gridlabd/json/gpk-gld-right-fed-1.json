@@ -2,16 +2,16 @@
     "coreInit": "--federates=1",
     "corName": "GridlabD Right Federate with GridPACK",
     "coreType": "zmq",
-    "name": "gpk_gld_right_fed",
+    "name": "gpk_gld_right_fed_1",
     "offset": 0.0,
     "period": 1.0,
     "uninterruptible": true,
-    "logfile": "/beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/outputs/gpk_gld_right_fed.log",
+    "logfile": "/beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/outputs/gpk_gld_right_fed_1.log",
     "log_level": "debug",
     "publications": [
         {
             "global": true,
-            "key": "gpk_gld_right_fed/sa",
+            "key": "gpk_gld_right_fed_1/sa",
             "type": "complex",
             "unit": "VA",
             "info": {

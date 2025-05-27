@@ -63,8 +63,9 @@ void gridpack::powerflow::PFApp::execute(int argc, char** argv, std::complex<dou
     // If no input file found, return
     if (!opened)
     {
-        char *pwd = std::getenv("PWD");
-        if (!pwd) pwd = "";
+        std::string pwd = "";
+        const char *env_var = std::getenv("PWD");
+        if (env_var != nullptr) pwd = std::string(env_var);
 
         std::cout << "RETURNING: Could not find file: '" << config_input_file << "'. \n\tWorking Dir: " << pwd << std::endl;
         return;
@@ -108,7 +109,7 @@ void gridpack::powerflow::PFApp::execute(int argc, char** argv, std::complex<dou
     // Echo network file name to standard out and create appropriate parser.
     // Parse the file and change the phase shift sign, if necessary. The rank()
     // function on the communicator is used to determine the processor ID
-    if (world.rank() ==0)
+    if (world.rank() == 0)
     {
         printf("Network filename: (%s)\n", filename.c_str());
     }

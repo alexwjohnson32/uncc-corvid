@@ -4,9 +4,15 @@
     "federates": [
         {
             "directory": ".",
-            "exec": "gridlabd gridlabd/oneline-right-w-gpk.glm",
+            "exec": "gridlabd gridlabd/oneline-right-w-gpk-1.glm",
             "host": "localhost",
-            "name": "gpk_gld_right_fed"
+            "name": "gpk_gld_right_fed_1"
+        },
+        {
+            "directory": ".",
+            "exec": "gridlabd gridlabd/oneline-right-w-gpk-2.glm",
+            "host": "localhost",
+            "name": "gpk_gld_right_fed_2"
         },
         {
             "directory": ".",

@@ -6,7 +6,7 @@
 	<version.patch>0</version.patch>
 	<version.build>19775</version.build>
 	<version.branch>0affdba1:master</version.branch>
-	<command_line>"/usr/local/gridlabd/bin/gridlabd gridlabd/oneline-right-w-gpk.glm"</command_line>
+	<command_line>"/usr/local/gridlabd/bin/gridlabd gridlabd/oneline-right-w-gpk-1.glm"</command_line>
 	<environment>batch</environment>
 	<quiet>FALSE</quiet>
 	<warn>TRUE</warn>
@@ -38,12 +38,12 @@
 	<object_scan>%[^:]:%d</object_scan>
 	<object_tree_balance>FALSE</object_tree_balance>
 	<kmlfile>""</kmlfile>
-	<modelname>gridlabd/oneline-right-w-gpk.glm</modelname>
+	<modelname>gridlabd/oneline-right-w-gpk-1.glm</modelname>
 	<execdir>/usr/local/gridlabd/bin</execdir>
 	<strictnames>TRUE</strictnames>
 	<website>http://www.gridlabd.org/</website>
 	<urlbase>http://www.gridlabd.org/</urlbase>
-	<randomseed>-1334346816</randomseed>
+	<randomseed>-1260329408</randomseed>
 	<include>""</include>
 	<trace>""</trace>
 	<gdb_window>FALSE</gdb_window>
@@ -748,7 +748,7 @@
 				<name>voltage_recorder</name>
 				<property>"measured_voltage_A, measured_power_A, measured_current_A"</property>
 				<trigger>""</trigger>
-				<file>outputs/gld_cosim_right.csv</file>
+				<file>/beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/outputs/gld_cosim_right_1.csv</file>
 				<filetype>txt</filetype>
 				<mode>file</mode>
 				<multifile>""</multifile>
@@ -793,7 +793,7 @@
 				<rank>0</rank>
 				<out_svc>NEVER</out_svc>
 				<clock>2025-02-21 00:00:00 PST</clock>
-				<name>gpk_gld_right_fed</name>
+				<name>gpk_gld_right_fed_1</name>
 				<version>+0</version>
 				<message_type>GENERAL</message_type>
 				<publish_period>0</publish_period>

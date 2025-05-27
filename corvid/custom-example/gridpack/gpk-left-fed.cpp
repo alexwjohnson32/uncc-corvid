@@ -2,7 +2,12 @@
 #include <vector>
 #include <cmath>
 #include <fstream>
+#include <sstream>
+#include <iomanip>
+#include <complex>
 #include <helics/application_api/ValueFederate.hpp>
+#include <helics/application_api/Publications.hpp>
+#include <helics/application_api/Inputs.hpp>
 
 // GridPACK inludes
 #include "mpi.h"
@@ -10,6 +15,26 @@
 #include <macdecls.h>
 #include "gridpack/include/gridpack.hpp"
 #include "pf_app.hpp"
+
+std::complex<double> GetAverage(const std::vector<std::complex<double>> &values)
+{
+    std::complex<double> total_value(0.0, 0.0);
+    int nums = values.size();
+
+    for (const std::complex<double> &value : values)
+    {
+        total_value += value;
+    }
+
+    return total_value / static_cast<double>(nums);;
+}
+
+std::string ComplexToString(const std::complex<double> &complex, uint precision)
+{
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(precision) << "(" << complex.real() << ", " << complex.imag() << ")";
+    return ss.str();
+}
 
 int main (int argc, char **argv)
 {
@@ -37,8 +62,10 @@ int main (int argc, char **argv)
     std::cout << "HELICS GridPACK Federate create successfully." << std::endl;
 
     // Registering Pubs and Subs
-    auto Vc_id = gpk_left.registerPublication("Vc", "complex", "V");
-    auto sa_id = gpk_left.registerSubscription("gpk_gld_right_fed/sa", "VA");
+    helics::Publication Vc_id = gpk_left.registerPublication("Vc", "complex", "V");
+    std::vector<helics::Input> sa_ids;
+    sa_ids.push_back(gpk_left.registerSubscription("gpk_gld_right_fed_1/sa", "VA"));
+    sa_ids.push_back(gpk_left.registerSubscription("gpk_gld_right_fed_2/sa", "VA"));
 
     // File to store simulation signals
     std::ofstream outFile("/beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/outputs/gpk.csv");
@@ -68,15 +95,24 @@ int main (int argc, char **argv)
         // Request time
         grantedtime = gpk_left.requestTime(grantedtime + period);
 
-        // Get Sa from gridlab-d
-        Sa = sa_id.getValue<std::complex<double>>() / 1000000.0;
+        // Get Sa's from gridlab-d
+        std::vector<std::complex<double>> sa_values;
+        for (helics::Input &input : sa_ids)
+        {
+            std::complex<double> sa = input.getValue<std::complex<double>>() / 1000000.0;
+            sa_values.push_back(sa);
+            outFile << "Sub Name: " << input.getName() << "\n";
+            outFile << "Sub value: " << ComplexToString(sa, 2) << " " << input.getUnits() << "\n";
+        }
+
+        Sa = GetAverage(sa_values);
 
         // pass Sa to GridPACK and get back Vc
         app.execute(argc, argv, voltage, Sa);
 
         // Log boundary signals
         outFile << "Time (s): " << grantedtime << "\n";
-        outFile << "Sa received from Gridlab-D: " << Sa << "\n";
+        outFile << "Avg Sa received from Gridlab-D: " << Sa << "\n";
         outFile << "Update Vc by GridPACK:      " << voltage << "\n\n";
 
         // Publish new Center Bus Voltage

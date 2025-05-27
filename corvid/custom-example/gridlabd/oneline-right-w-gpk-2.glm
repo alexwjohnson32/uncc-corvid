@@ -1,3 +1,5 @@
+// #include "baseline-gpk.glm";
+
 // Define the module
 module powerflow {
     solver_method NR;
@@ -67,11 +69,11 @@ object recorder {
     property measured_voltage_A, measured_power_A, measured_current_A;
     interval 1;  // Record every second
     limit 20;  // Record for 10 seconds
-    file "/beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/outputs/gld_cosim_right.csv";  // Output file
+    file "/beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/outputs/gld_cosim_right_2.csv";  // Output file
 };
 
 // Connect to HELICS
 object helics_msg {
-    name gpk_gld_right_fed;
-    configure /beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/gridlabd/gpk-gld-right-fed.json;
+    name gpk_gld_right_fed_2;
+    configure /beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/gridlabd/json/gpk-gld-right-fed-2.json;
 };
