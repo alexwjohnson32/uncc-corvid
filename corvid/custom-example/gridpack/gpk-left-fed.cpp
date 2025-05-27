@@ -41,7 +41,7 @@ int main (int argc, char **argv)
     auto sa_id = gpk_left.registerSubscription("gpk_gld_right_fed/sa", "VA");
 
     // File to store simulation signals
-    std::ofstream outFile("../outputs/gpk.csv");
+    std::ofstream outFile("/beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/outputs/gpk.csv");
 
     // Prepare GridPACK Environment
     gridpack::Environment env(argc, argv);

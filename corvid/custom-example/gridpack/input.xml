@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Configuration>
     <Powerflow>
-        <networkConfiguration>gridpack/build/oneline.raw</networkConfiguration>
+        <networkConfiguration>/beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/gridpack/build/oneline.raw</networkConfiguration>
         <maxIteration>50</maxIteration>
         <tolerance>1.0e-6</tolerance>
         <LinearSolver>

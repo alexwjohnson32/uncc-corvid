@@ -51,7 +51,7 @@ void gridpack::powerflow::PFApp::execute(int argc, char** argv, std::complex<dou
     config->enableLogging(&std::cout);
 
     bool opened = false;
-    std::string config_input_file("gridpack/build/input.xml");
+    std::string config_input_file("/beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/gridpack/build/input.xml");
 
     if (argc >= 2 && argv[1] != NULL)
     {
