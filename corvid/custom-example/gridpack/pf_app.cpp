@@ -20,11 +20,9 @@
 #include "pf_factory.hpp"
 #include <iostream>
 #include <cstdlib>
+#include <string>
 
 // Calling program for powerflow application
-
-gridpack::powerflow::PFApp::PFApp(void){}
-gridpack::powerflow::PFApp::~PFApp(void){}
 
 /**
  * Enumerated type to distinguish between different configuration file
@@ -36,40 +34,60 @@ enum Parser
     PTI33
 };
 
-void gridpack::powerflow::PFApp::execute(int argc, char** argv, std::complex<double> &Vc, std::complex<double> &Sa)
+gridpack::powerflow::PFApp::PFApp(const std::string &alt_config_path)
+    : m_config_path(gridpack::powerflow::PFApp::CompiledConfigPath())
+{
+    // If a file is not specified when invoking the
+    // executable, assume the input file is called "input.xml"
+    if (!alt_config_path.empty())
+    {
+        m_config_path = alt_config_path;
+    }
+}
+
+bool gridpack::powerflow::PFApp::CanReadConfigFile() const
 {
     // Define a communicator on the group of all processors (the world group)
     // and create and instance of a power flow network
     gridpack::parallel::Communicator world;
     boost::shared_ptr<PFNetwork> network(new PFNetwork(world));
 
-    // Read configuration file. If file is not specified when invoking the
-    // executable, assume the input file is called "input.xml"
+    // Read configuration file.
     gridpack::utility::Configuration *config = gridpack::utility::Configuration::configuration();
 
     // Echo input file to standard out
     config->enableLogging(&std::cout);
 
-    bool opened = false;
-    std::string config_input_file("/beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/gridpack/build/input.xml");
+    bool opened = config->open(m_config_path, world);
 
-    if (argc >= 2 && argv[1] != NULL)
-    {
-        config_input_file = std::string(argv[1]);
-    }
-
-    opened = config->open(config_input_file, world);
-
-    // If no input file found, return
+    // If no input file found, print error
     if (!opened)
     {
         std::string pwd = "";
         const char *env_var = std::getenv("PWD");
         if (env_var != nullptr) pwd = std::string(env_var);
 
-        std::cout << "RETURNING: Could not find file: '" << config_input_file << "'. \n\tWorking Dir: " << pwd << std::endl;
-        return;
+        std::cout << "RETURNING: Could not find file: '" << m_config_path << "'. \n\tWorking Dir: " << pwd << std::endl;
     }
+
+    return opened;
+}
+
+std::complex<double> gridpack::powerflow::PFApp::ComputeVc(const std::complex<double> &Sa) const
+{
+    // Define a communicator on the group of all processors (the world group)
+    // and create and instance of a power flow network
+    gridpack::parallel::Communicator world;
+    boost::shared_ptr<PFNetwork> network(new PFNetwork(world));
+
+    // Read configuration file.
+    gridpack::utility::Configuration *config = gridpack::utility::Configuration::configuration();
+
+    // Echo input file to standard out
+    config->enableLogging(&std::cout);
+
+    // We assume that you have already checked that you can open this successfully.
+    config->open(m_config_path, world);
 
     // Find the Configuration.Powerflow block within the input file
     // and set cursor pointer to that block
@@ -163,7 +181,7 @@ void gridpack::powerflow::PFApp::execute(int argc, char** argv, std::complex<dou
     // written once to standard out.
     sprintf(ioBuf, "\nMaximum number of iterations: %d\n", max_iteration);
     busIO.header(ioBuf);
-    sprintf(ioBuf,"\nConvergence tolerance: %f\n", tolerance);
+    sprintf(ioBuf, "\nConvergence tolerance: %f\n", tolerance);
     busIO.header(ioBuf);
 
     // Create factory and call the load method to intialize network components
@@ -192,7 +210,7 @@ void gridpack::powerflow::PFApp::execute(int argc, char** argv, std::complex<dou
     busIO.header("\nIteration 0\n");
 
     factory.setMode(RHS);
-    gridpack::mapper::BusVectorMap<PFNetwork>vMap(network);
+    gridpack::mapper::BusVectorMap<PFNetwork> vMap(network);
     boost::shared_ptr<gridpack::math::Vector> PQ = vMap.mapToVector();
 
     // Create Jacobian matrix
@@ -243,7 +261,7 @@ void gridpack::powerflow::PFApp::execute(int argc, char** argv, std::complex<dou
 
         // Evaluate norm of residual and print out current iteration to standard out
         tol = PQ->normInfinity();
-        sprintf(ioBuf, "\nIteration %d Tol: %12.6e\n", iter+1, real(tol));
+        sprintf(ioBuf, "\nIteration %d Tol: %12.6e\n", iter + 1, real(tol));
         busIO.header(ioBuf);
         iter++;
     }
@@ -273,5 +291,5 @@ void gridpack::powerflow::PFApp::execute(int argc, char** argv, std::complex<dou
     // Write bus values values
     busIO.write();
 
-    Vc = std::polar(network->getBus(1)->getVoltage(), network->getBus(1)->getPhase());
+    return std::polar(network->getBus(1)->getVoltage(), network->getBus(1)->getPhase());
 }

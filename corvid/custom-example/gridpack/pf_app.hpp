@@ -27,13 +27,24 @@ namespace powerflow
 {
 class PFApp
 {
-    public:
-        PFApp(void);
-        ~PFApp(void);
+  private:
+    std::string m_config_path;
 
-        void execute(int argc, char** argv, std::complex<double>& Vc, std::complex<double>& Sa);
+    static inline std::string CompiledConfigPath()
+    {
+        return "/beegfs/users/lwilliamson/repos/uncc_root/uncc-corvid/corvid/custom-example/gridpack/build/input.xml";
+    }
+
+  public:
+    PFApp(void) : m_config_path(CompiledConfigPath()) {};
+    PFApp(const std::string &alt_config_path);
+    ~PFApp(void) {}
+
+    bool CanReadConfigFile() const;
+
+    std::complex<double> ComputeVc(const std::complex<double> &Sa) const;
 };
-}
-}
+} // namespace powerflow
+} // namespace gridpack
 
 #endif

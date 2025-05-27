@@ -4,6 +4,4 @@
 
 rm -rf gridpack/build/*
 
-cd gridpack/build
-cmake ..
-make -j10
+./build.sh
