@@ -42,7 +42,7 @@ void corvid::GpkRunner::InitializeRunner(const std::string &left_fed_json_path, 
     m_out_file = std::ofstream(out_file_path);
 
     // init pubs/subs
-    m_vc_id = m_gpk_left_fed.getPublication("gpk-left-fed/Vc");
+    m_vc_id = m_gpk_left_fed.getPublication("gridpack_left_federate/Vc");
     for (int i = 0; i < m_gpk_left_fed.getInputCount(); i++)
     {
         m_sa_ids.push_back(m_gpk_left_fed.getInput(i));

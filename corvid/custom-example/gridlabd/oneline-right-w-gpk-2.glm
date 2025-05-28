@@ -12,6 +12,6 @@ object recorder {
 
 // Connect to HELICS
 object helics_msg {
-    name gpk_gld_right_fed_2;
-    configure "gridlabd/json/gpk-gld-right-fed-2.json";
+    name gridlabd_right_federate_2;
+    configure "gridlabd/json/gridlabd_right_federate_2.json";
 };

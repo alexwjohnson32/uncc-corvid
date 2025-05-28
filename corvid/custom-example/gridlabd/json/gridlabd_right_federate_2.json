@@ -2,16 +2,16 @@
     "coreInit": "--federates=1",
     "corName": "GridlabD Right Federate with GridPACK",
     "coreType": "zmq",
-    "name": "gpk_gld_right_fed_1",
-    "offset": 0.0,
+    "name": "gridlabd_right_federate_2",
+    "offset": 1.0,
     "period": 1.0,
     "uninterruptible": true,
-    "logfile": "gpk_gld_right_fed_1.log",
+    "logfile": "gridlabd_right_federate_2.log",
     "log_level": "debug",
     "publications": [
         {
             "global": true,
-            "key": "gpk_gld_right_fed_1/sa",
+            "key": "gridlabd_right_federate_2/sa",
             "type": "complex",
             "unit": "VA",
             "info": {
@@ -23,7 +23,7 @@
     "subscriptions": [
         {
             "required": true,
-            "key": "gpk-left-fed/Vc",
+            "key": "gridpack_left_federate/Vc",
             "type": "complex",
             "unit": "V",
             "info":{

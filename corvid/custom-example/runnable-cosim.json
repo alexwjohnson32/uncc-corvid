@@ -1,24 +1,24 @@
 {
     "name": "PowerFlow_Corvid_Cosim",
-    "broker": false,
+    "broker": true,
     "federates": [
         {
             "directory": ".",
             "exec": "gridlabd gridlabd/oneline-right-w-gpk-1.glm",
             "host": "localhost",
-            "name": "gpk_gld_right_fed_1"
+            "name": "gridlabd_right_federate_1"
         },
         {
             "directory": ".",
             "exec": "gridlabd gridlabd/oneline-right-w-gpk-2.glm",
             "host": "localhost",
-            "name": "gpk_gld_right_fed_2"
+            "name": "gridlabd_right_federate_2"
         },
         {
             "directory": ".",
             "exec": "gridpack/build/gpk-left-fed.x",
             "host": "localhost",
-            "name": "gpk-left-fed"
+            "name": "gridpack_left_federate"
         }
     ]
 }

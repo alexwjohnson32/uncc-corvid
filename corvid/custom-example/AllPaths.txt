@@ -3,7 +3,7 @@ This keeps track of all non-compiled but referenced files. All files are present
 
 /gridlabd
     /gpk-gld-right-fed.json
-        - logfile: gpk_gld_right_fed.log
+        - logfile: gridlabd_right_federate.log
     /oneline-right-w-gpk.glm
         - recorder->file: outputs/gld_cosim_right.csv
         - helics_msg->configure: gridlabd/gld_cosim_right.csv
