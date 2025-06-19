@@ -52,7 +52,8 @@ From: rockylinux:8
 	openmpi \
 	openmpi-devel \
 	pkg-config \
-        libaec-devel
+        libaec-devel \
+        jsoncpp
 
     # Set up symlinks to make python3 and pip3 point to Python 3.11
     ln -sf /usr/bin/python3.11 /usr/bin/python3
@@ -96,6 +97,7 @@ From: rockylinux:8
     cd ~/develop
     git clone --recurse-submodules https://github.com/GMLC-TDC/HELICS.git helics
     cd helics
+    git checkout -b v3.6.1 tags/v3.6.1
 
     cmake -DCMAKE_INSTALL_PREFIX=/usr/local/helics \
 	-DCMAKE_C_COMPILER=$CC \
@@ -132,11 +134,8 @@ From: rockylinux:8
 
     git clone https://github.com/gridlab-d/gridlab-d.git gridlabd
     cd gridlabd
+    git checkout -b v5.3.0 tags/v5.3.0
     git submodule update --init --recursive
-
-    sed -i '/add_subdirectory(third_party\/jsoncpp_lib)/d' CMakeLists.txt
-    sed -i '/get_target_property(jsoncpp_lib/d' CMakeLists.txt
-    sed -i '/target_link_libraries(jsoncpp_lib/d' CMakeLists.txt
 
     cmake -DCMAKE_INSTALL_PREFIX=/usr/local/gridlabd \
 		  -DGLD_USE_HELICS=ON \
@@ -163,15 +162,17 @@ From: rockylinux:8
 
     git clone https://gitlab.com/petsc/petsc.git
     cd petsc
+    git checkout -b v3.16.4 tags/v3.16.4
 
-    git checkout v3.16.4
     export PETSC_DIR=/root/develop/petsc
+
+    wget https://www.mcs.anl.gov/petsc/mirror/externalpackages/f2cblaslapack-3.4.2.q4.tar.gz
 
     ./configure --download-superlu_dist \
 				--download-metis \
 				--download-parmetis \
 				--download-suitesparse \
-				--download-f2cblaslapack \
+				--download-f2cblaslapack=./f2cblaslapack-3.4.2.q4.tar.gz \
 				--prefix=/usr/local/petsc-3.16.4
 
     make && make install
@@ -187,10 +188,11 @@ From: rockylinux:8
 
     git clone https://github.com/GridOPTICS/GridPACK.git
     cd GridPACK
+    git checkout -b v3.4 tags/v3.4
 
     git submodule update --init
     cd src
-    git checkout develop
+    #git checkout develop
 
     mkdir build
     cd build
