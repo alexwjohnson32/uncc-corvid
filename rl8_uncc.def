@@ -52,8 +52,7 @@ From: rockylinux:8
 	openmpi \
 	openmpi-devel \
 	pkg-config \
-        libaec-devel \
-        jsoncpp
+        libaec-devel
 
     # Set up symlinks to make python3 and pip3 point to Python 3.11
     ln -sf /usr/bin/python3.11 /usr/bin/python3
@@ -186,12 +185,10 @@ From: rockylinux:8
 
     git clone https://github.com/GridOPTICS/GridPACK.git
     cd GridPACK
-    git checkout -b v3.4 tags/v3.4
-
+    git checkout -b local_develop 03c716fbaeff037290a5a06cc54b205ec9965800
     git submodule update --init
-    cd src
-    #git checkout develop
 
+    cd src
     mkdir build
     cd build
 

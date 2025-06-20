@@ -60,7 +60,7 @@ Navigate to the root of the uncc repo
 
 Run ```mkdir -p ~/apptainerTmp```
 
-Run ```apptainer build --fakeroot --tmpdir ~/apptainerTmp/ rl8_uncc.sif rl8_uncc.def```
+Run ```apptainer build --fakeroot --tmpdir ~/apptainerTmp/ --mksquashfs-args="-processors 12" rl8_uncc.sif rl8_uncc.def```
 
 ## Running and example
 Navigate to scripts/ folder
