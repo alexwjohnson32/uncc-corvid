@@ -106,7 +106,7 @@ From: rockylinux:8
 	-DCMAKE_BUILD_TYPE=Release \
         -DHELICS_BUILD_CXX_SHARED_LIB=ON \
         -B build
-    cmake --build build -j2 -t install
+    cmake --build build -j12 -t install
 
     # Creating venv
     python3 -m venv /opt/myenv
@@ -143,7 +143,7 @@ From: rockylinux:8
 		  -B build
 
     cd build
-    make -j8 && make install
+    make -j12 && make install
 
     # GridPACK dependency: GA-5.8
     cd ~/develop
@@ -155,7 +155,7 @@ From: rockylinux:8
     ./configure --with-mpi-ts --disable-f77 --without-blas --enable-cxx --enable-i4 \
         --prefix=/usr/local/ga-5.8
 
-    make -j 10 install
+    make -j 12 install
 
     # GridPACK dependency: PETSc-3.16.4
     cd ~/develop
@@ -165,9 +165,7 @@ From: rockylinux:8
     git checkout -b v3.16.4 tags/v3.16.4
 
     export PETSC_DIR=/root/develop/petsc
-
-    wget https://www.mcs.anl.gov/petsc/mirror/externalpackages/f2cblaslapack-3.4.2.q4.tar.gz
-
+    wget http://ftp.mcs.anl.gov/pub/petsc/externalpackages/f2cblaslapack-3.4.2.q4.tar.gz
     ./configure --download-superlu_dist \
 				--download-metis \
 				--download-parmetis \
@@ -210,7 +208,7 @@ From: rockylinux:8
 		  -D HELICS_INSTALL_DIR:STRING='/usr/local/helics' \
 		  -D CMAKE_BUILD_TYPE:STRING=Debug ..
 
-    make -j 10 install
+    make -j 12 install
     cd ~
 
     # Clean up
