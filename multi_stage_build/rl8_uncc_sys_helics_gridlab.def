@@ -43,6 +43,9 @@ From: rl8_uncc_sys_helics.sif
     cd build
     make -j12 && make install
 
+    # Clean up
+    dnf clean all
+
 %labels
     Author Alex Johnson
     Version 1.0

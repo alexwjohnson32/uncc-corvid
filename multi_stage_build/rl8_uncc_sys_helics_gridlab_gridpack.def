@@ -21,42 +21,6 @@ From: rl8_uncc_sys_helics_gridlab.sif
     export BOOST_ROOT=/usr/local/boost-1.78.0
 
 %post
-    # GridPACK dependency: GA-5.8
-    cd ~/develop
-
-    wget https://github.com/GlobalArrays/ga/releases/download/v5.8/ga-5.8.tar.gz
-    tar -xvf ga-5.8.tar.gz
-    cd ga-5.8
-
-    ./configure --with-mpi-ts --disable-f77 --without-blas --enable-cxx --enable-i4 \
-        --prefix=/usr/local/ga-5.8
-
-    make -j 12 install
-
-    # GridPACK dependency: PETSc-3.16.4
-    cd ~/develop
-
-    git clone https://gitlab.com/petsc/petsc.git
-    cd petsc
-    git checkout -b v3.16.4 tags/v3.16.4
-
-    export PETSC_DIR=/root/develop/petsc
-    wget http://ftp.mcs.anl.gov/pub/petsc/externalpackages/f2cblaslapack-3.4.2.q4.tar.gz
-    ./configure --download-superlu_dist \
-				--download-metis \
-				--download-parmetis \
-				--download-suitesparse \
-				--download-f2cblaslapack=./f2cblaslapack-3.4.2.q4.tar.gz \
-				--prefix=/usr/local/petsc-3.16.4
-
-    make && make install
-
-    export OMPI_ALLOW_RUN_AS_ROOT=1
-    export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
-
-    export PETSC_DIR=/usr/local/petsc-3.16.4
-    export LD_LIBRARY_PATH=/usr/local/petsc-3.16.4/lib
-
     # Now for GridPACK
     cd ~/develop
 

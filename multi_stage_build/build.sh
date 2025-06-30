@@ -16,7 +16,6 @@ if [ "$#" -ne 1 ]; then
    echo "                     + builds."
    echo "'helics'           - rebuilds helics and all dependencies"
    echo "'gridlab-gridpack' - builds Gridlab-D then GridPACK only"
-   echo "'gridpack-gridlab' - builds GridPACK then Gridlab-D only"
    echo "'gridlab'          - builds Gridlab-D only"
    echo "'gridpack'         - builds GridPACK only"
    exit 1
@@ -42,11 +41,6 @@ elif [ $1 == "gridlab-gridpack" ]; then
    rm rl8_uncc_${stages[0]}_${stages[1]}_${stages[2]}.sif
    rm rl8_uncc_${stages[0]}_${stages[1]}_${stages[2]}_${stages[3]}.sif
    ls *.sif
-elif [ $1 == "gridpack-gridlab" ]; then
-   declare -i start=2
-   declare -a stages=("sys" "helics" "gridpack" "gridlab")
-   rm rl8_uncc_${stages[0]}_${stages[1]}_${stages[2]}.sif
-   rm rl8_uncc_${stages[0]}_${stages[1]}_${stages[2]}_${stages[3]}.sif
 elif [ $1 == "gridlab" ]; then
    declare -i start=3
    declare -a stages=("sys" "helics" "gridpack" "gridlab")
@@ -62,7 +56,6 @@ else
    echo "'sys'              - rebuilds system and all dependencies (everything)"
    echo "'helics'           - rebuilds helics and all dependencies (except sys)"
    echo "'gridlab-gridpack' - rebuilds Gridlab-D then GridPACK"
-   echo "'gridpack-gridlab' - rebuilds GridPACK then Gridlab-D"
    echo "'gridlab'          - rebuilds Gridlab-D only"
    echo "'gridpack'         - rebuilds GridPACK only"
    exit 1
@@ -96,6 +89,7 @@ do
 
    # Define $TMPDIR
    export TMPDIR=/dev/shm/${USER}/${random_string}/${stages[i]}
+   echo "Temporary directory is: " $TMPDIR
 
    # Delete $TMPDIR if it exists
    if [ -d "$TMPDIR" ]; then
@@ -103,7 +97,7 @@ do
       command rm -rf $TMPDIR
    fi
 
-   # Create $TMPDIR (same as using --tmpdir= in apptainer)
+   # Create $TMPDIR
    mkdir -p $TMPDIR
 
    # Define apptainer sif and def file names
@@ -122,7 +116,7 @@ do
    fi
 
    # Apptainer build command
-   apptainer build --fakeroot ${apptainer_sif} ${apptainer_def}
+   apptainer build --fakeroot --tmpdir $TMPDIR ${apptainer_sif} ${apptainer_def}
 
    echo "Finished Building Stage "$i
    echo ""
