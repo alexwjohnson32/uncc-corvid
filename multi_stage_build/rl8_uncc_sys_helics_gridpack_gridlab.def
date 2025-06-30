@@ -1,0 +1,53 @@
+Bootstrap: localimage
+From: rl8_uncc_sys_helics_gridpack.sif
+
+%environment
+    export PATH=/usr/local/gridlabd/bin:/usr/local/bin:/usr/bin:/bin
+    export LANG=C.UTF-8
+    export LC_ALL=C.UTF-8
+    export OMPI_ALLOW_RUN_AS_ROOT=1
+    export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    export PETSC_DIR=/usr/local/petsc-3.16.4
+    export LD_LIBRARY_PATH=/usr/local/petsc-3.16.4/lib:$LD_LIBRARY_PATH
+    export PATH=/opt/rh/gcc-toolset-11/root/usr/bin:$PATH
+    export CPATH=/opt/rh/gcc-toolset-11/root/usr/include:$CPATH
+    export LIBRARY_PATH=/opt/rh/gcc-toolset-11/root/usr/lib64:$LIBRARY_PATH
+    export CPLUS_INCLUDE_PATH=/opt/rh/gcc-toolset-11/root/usr/include:$CPLUS_INCLUDE_PATH
+    export PATH=/opt/myenv/bin/:/usr/lib64/openmpi/bin:$PATH
+    export LD_LIBRARY_PATH=/usr/lib64/openmpi/lib:$LD_LIBRARY_PATH
+    export CC=/opt/rh/gcc-toolset-11/root/usr/bin/gcc
+    export CXX=/opt/rh/gcc-toolset-11/root/usr/bin/g++
+    export LD_LIBRARY_PATH=/opt/rh/gcc-toolset-11/root/usr/lib64:$LD_LIBRARY_PATH
+    export BOOST_ROOT=/usr/local/boost-1.78.0
+
+%post
+    # Install GridLab-D
+    cd ~/develop
+    dnf install -y \
+	 xerces-c-devel \
+    	 hdf5-devel \
+	 curl \
+	 gcc-gfortran \
+	 ncurses-devel
+
+    git clone https://github.com/gridlab-d/gridlab-d.git gridlabd
+    cd gridlabd
+    git checkout -b v5.3.0 tags/v5.3.0
+    git submodule update --init --recursive
+
+    cmake -DCMAKE_INSTALL_PREFIX=/usr/local/gridlabd \
+		  -DGLD_USE_HELICS=ON \
+		  -DGLD_HELICS_DIR=/usr/local \
+		  -B build
+
+    cd build
+    make -j12 && make install
+
+%labels
+    Author Alex Johnson
+    Version 1.0
+    Description Rocky Linux 8 Base Image
+
+%runscript
+    echo "Welcome to your Rocky Linux 8 container"
+    exec /bin/bash
