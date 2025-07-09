@@ -10,3 +10,4 @@ outputs/
 *.csv
 
 tmp/
+temp/
