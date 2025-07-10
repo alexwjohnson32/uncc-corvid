@@ -96,58 +96,6 @@ From: rockylinux:8
     ./b2 -a -d+2 link=static stage
     ./b2 -a -d+2 link=static install
 
-    # Download, build and install HELICS
-    cd ~/develop
-    git clone --recurse-submodules https://github.com/GMLC-TDC/HELICS.git helics
-    cd helics
-    git checkout -b v3.6.1 tags/v3.6.1
-
-    cmake -DCMAKE_INSTALL_PREFIX=/usr/local/helics \
-	-DCMAKE_C_COMPILER=$CC \
-      	-DCMAKE_CXX_COMPILER=$CXX \
-        -DBOOST_ROOT=/usr/local/boost-1.78.0 \
-	-DCMAKE_BUILD_TYPE=Release \
-        -DHELICS_BUILD_CXX_SHARED_LIB=ON \
-        -B build
-    cmake --build build -j12 -t install
-
-    # Creating venv
-    python3 -m venv /opt/myenv
-    . /opt/myenv/bin/activate
-
-    # pip install dependencies
-    pip3 install --upgrade pip \
-	 wheel \
-	 matplotlib \
-	 pypower \
-	 scipy \
-	 numpy==1.26.4
-
-    # Install HELICS python API and pypower for testing
-    pip3 install helics[cli] --no-cache-dir --no-warn-script-location
-
-    # Install GridLab-D
-    cd ~/develop
-    dnf install -y \
-	 xerces-c-devel \
-    	 hdf5-devel \
-	 curl \
-	 gcc-gfortran \
-	 ncurses-devel
-
-    git clone https://github.com/gridlab-d/gridlab-d.git gridlabd
-    cd gridlabd
-    git checkout -b v5.3.0 tags/v5.3.0
-    git submodule update --init --recursive
-
-    cmake -DCMAKE_INSTALL_PREFIX=/usr/local/gridlabd \
-		  -DGLD_USE_HELICS=ON \
-		  -DGLD_HELICS_DIR=/usr/local \
-		  -B build
-
-    cd build
-    make -j12 && make install
-
     # GridPACK dependency: GA-5.8
     cd ~/develop
 
@@ -183,37 +131,6 @@ From: rockylinux:8
 
     export PETSC_DIR=/usr/local/petsc-3.16.4
     export LD_LIBRARY_PATH=/usr/local/petsc-3.16.4/lib
-
-    # Now for GridPACK
-    cd ~/develop
-
-    git clone https://github.com/GridOPTICS/GridPACK.git
-    cd GridPACK
-    git checkout -b local_develop 03c716fbaeff037290a5a06cc54b205ec9965800
-    git submodule update --init
-
-    cd src
-    mkdir build
-    cd build
-
-    cmake -D GA_DIR:STRING="/usr/local/ga-5.8" \
-		  -D BOOST_ROOT:STRING="/usr/local/boost-1.78.0" \
-		  -D Boost_DIR:STRING="/usr/local/boost-1.78.0/lib/cmake/Boost-1.78.0" \
-		  -D BOOST_LIBRARYDIR:STRING="/usr/local/boost-1.78.0/lib"\
-		  -D PETSC_DIR:STRING="/usr/local/petsc-3.16.4" \
-		  -D MPI_CXX_COMPILER:STRING='mpicxx' \
-		  -D MPI_C_COMPILER:STRING='mpicc' \
-		  -D MPIEXEC:STRING='mpiexec' \
-		  -D GRIDPACK_TEST_TIMEOUT:STRING=30 \
-		  -D CMAKE_INSTALL_PREFIX:PATH="/usr/local/GridPACK" \
-		  -D HELICS_INSTALL_DIR:STRING='/usr/local/helics' \
-		  -D CMAKE_BUILD_TYPE:STRING=Debug ..
-
-    make -j 12 install
-    cd ~
-
-    # Clean up
-    dnf clean all
 
 %labels
     Author Alex Johnson
