@@ -56,7 +56,9 @@ From: rockylinux:8
 	openmpi \
 	openmpi-devel \
 	pkg-config \
-        libaec-devel
+        libaec-devel \
+    gtest \
+        gtest-devel
 
     # Set up symlinks to make python3 and pip3 point to Python 3.11
     ln -sf /usr/bin/python3.11 /usr/bin/python3

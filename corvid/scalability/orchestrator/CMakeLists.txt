@@ -1,0 +1,3 @@
+add_executable(orchestrator main.cpp)
+
+target_link_libraries(orchestrator corvid_helics_lib)
