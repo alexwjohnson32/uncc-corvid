@@ -87,7 +87,7 @@ From: rockylinux:8
     wget https://archives.boost.io/release/1.78.0/source/boost_1_78_0.tar.gz
     tar -xvf boost_1_78_0.tar.gz
     cd boost_1_78_0
-    ./bootstrap.sh --prefix=/usr/local/boost-1.78.0 --with-libraries=mpi,serialization,random,filesystem,system
+    ./bootstrap.sh --prefix=/usr/local/boost-1.78.0 --with-libraries=mpi,serialization,random,filesystem,system,json
 
     export BOOST_ROOT=/usr/local/boost-1.78.0
 
