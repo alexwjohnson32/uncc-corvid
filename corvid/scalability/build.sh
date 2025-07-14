@@ -1,5 +1,12 @@
 #!/bin/bash
 
 cd build
-cmake ..
-make -j10
+
+cmake_args=(
+    -DCMAKE_BUILD_TYPE=Debug
+    ..
+)
+
+cmake "${cmake_args[@]}"
+
+make -j16
