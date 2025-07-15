@@ -1,39 +1,60 @@
+#include <cstdlib>
 #include <string>
-#include <vector>
-#include <boost/filesystem.hpp>
 #include <boost/json.hpp>
 #include <iostream>
-#include <sstream>
 
 #include "orchestrator.hpp"
+#include "JsonTemplates.hpp"
 
-void TestJson(const std::string &input_value)
+orchestrator::HelicsRunner GetRunner()
 {
-    std::stringstream ss;
-    orchestrator::CustomObject data{ input_value };
-    ss << boost::json::serialize(boost::json::value_from(data));
+    orchestrator::HelicsRunner runner;
+    runner.name = "example_corvid_cosim";
+    runner.broker = true;
+    runner.logging_path = "";
 
-    orchestrator::CustomObject copied_data =
-        boost::json::value_to<orchestrator::CustomObject>(boost::json::parse(ss.str()));
-    data.m_member = "";
+    orchestrator::HelicsRunner::Federate fed1;
+    fed1.directory = ".";
+    fed1.exec = "gridlabd gridlabd/oneline-right-w-gpk.glm";
+    fed1.host = "localhost";
+    fed1.name = "gridlabd_right_federate";
+    runner.federates.push_back(fed1);
 
-    std::cout << "Original Object: '" << data.m_member << "'" << std::endl;
-    std::cout << "Copied Object: '" << copied_data.m_member << "'" << std::endl;
+    orchestrator::HelicsRunner::Federate fed2;
+    fed2.directory = ".";
+    fed2.exec = "gridpack/build/gpk-left-fed.x";
+    fed2.host = "localhost";
+    fed2.name = "gridpack_left_federate";
+    runner.federates.push_back(fed2);
+
+    return runner;
+}
+
+void TestJson(orchestrator::HelicsRunner input)
+{
+    std::cout << "original object:\n" << json_templates::ToJsonString(input) << std::endl;
+    input.name = "replaced name";
+    auto copied_runner =
+        json_templates::FromJsonString<orchestrator::HelicsRunner>(json_templates::ToJsonString(input));
+    std::cout << "\ncopied object:\n" << json_templates::ToJsonString(copied_runner) << std::endl;
 }
 
 int main(int argc, char **argv)
 {
-    boost::filesystem::path p("");
+    orchestrator::HelicsRunner runner = GetRunner();
+    TestJson(runner);
 
-    std::vector<std::string> vec;
-    vec.push_back(p.generic_string());
+    const std::string runnable_path = "runnable_cosim.json";
+    bool written = json_templates::ToJsonFile(runner, runnable_path);
 
-    for (auto s : vec)
+    if (written)
     {
-        std::cout << "vector content: '" << s << "'" << std::endl;
+        std::cout << "Json file written to " << std::getenv("PWD") << "/" << runnable_path << std::endl;
     }
-
-    TestJson("Testing Input");
+    else
+    {
+        std::cout << "Json file could not be written to " << std::getenv("PWD") << "/" << runnable_path << std::endl;
+    }
 
     return 0;
 }

@@ -1,9 +1,13 @@
 #pragma once
 
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
 #include <type_traits>
 #include <vector>
 #include <array>
 #include <string>
+
+#include <iostream>
 
 #include <boost/json.hpp>
 #include <boost/filesystem.hpp>
@@ -247,8 +251,7 @@ template <typename T> std::string ToJsonString(const T &input)
 template <typename T> bool ToJsonFile(const T &input, const std::string &output_file)
 {
     bool was_write_successful = false;
-
-    boost::filesystem::path json_file_path(output_file.c_str());
+    boost::filesystem::path json_file_path = boost::filesystem::absolute(output_file.c_str());
 
     // I don't care if the json file exists yet, but I do care if we have a valid directory path
     if (boost::filesystem::exists(json_file_path.parent_path()))
