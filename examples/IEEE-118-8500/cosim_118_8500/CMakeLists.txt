@@ -11,13 +11,14 @@ add_executable(powerflow_ex.x
 
 target_include_directories(powerflow_ex.x
   PRIVATE
+  /usr/include/openmpi-x86_64
   /usr/lib/x86_64-linux-gnu/openmpi/include
   /usr/local/ga-5.8/include
   /usr/local/GridPACK/include
   /usr/local/helics/include
   )
 
- 
+
  # List of library names
  set(LIBRARIES_NAMES
    "mpi"
@@ -57,6 +58,7 @@ foreach(LIBRARY_NAME IN LISTS LIBRARIES_NAMES)
     /usr/local/ga-5.8/lib
     /usr/local/petsc-3.16.4/lib
     /usr/local/boost-1.78.0/lib
+    /usr/lib64/openmpi/lib
     /usr/lib/x86_64-linux-gnu/openmpi/lib
     /usr/local/helics/lib
     NO_CACHE
