@@ -22,16 +22,14 @@
 #include "gridpack/include/gridpack.hpp"
 #include "gridpack/applications/components/pf_matrix/pf_components.hpp"
 
-namespace gridpack
-{
-namespace powerflow
-{
+namespace gridpack {
+namespace powerflow {
 
 // Define the type of network used in the powerflow application
-typedef network::BaseNetwork<PFBus, PFBranch> PFNetwork;
+typedef network::BaseNetwork<PFBus, PFBranch > PFNetwork;
 
-class PFFactory : public gridpack::factory::BaseFactory<PFNetwork>
-{
+class PFFactory
+  : public gridpack::factory::BaseFactory<PFNetwork> {
   public:
     /**
      * Basic constructor
@@ -55,9 +53,10 @@ class PFFactory : public gridpack::factory::BaseFactory<PFNetwork>
     void setSBus(void);
 
   private:
+
     NetworkPtr p_network;
 };
 
-} // namespace powerflow
-} // namespace gridpack
+} // powerflow
+} // gridpack
 #endif

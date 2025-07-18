@@ -21,10 +21,8 @@
 #include "boost/smart_ptr/shared_ptr.hpp"
 #include "pf_factory.hpp"
 
-namespace gridpack
-{
-namespace powerflow
-{
+namespace gridpack {
+namespace powerflow {
 
 // Calling program for powerflow application. This file has class definition
 // and methods.
@@ -47,11 +45,14 @@ class PFApp
      * @param argc number of arguments
      * @param argv list of character strings
      */
-    void execute(int argc, char **argv, std::complex<double> &Vc, std::complex<double> &Sa);
+  void execute(int argc,
+	       char** argv,
+	       std::complex<double>& Vc,
+	       std::complex<double>& Sa);
 
   private:
 };
 
-} // namespace powerflow
-} // namespace gridpack
+} // powerflow
+} // gridpack
 #endif

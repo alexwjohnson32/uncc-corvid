@@ -11,3 +11,5 @@ outputs/
 
 tmp/
 temp/
+
+**/gridlabd.xml

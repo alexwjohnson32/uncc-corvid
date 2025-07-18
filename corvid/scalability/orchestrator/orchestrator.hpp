@@ -16,9 +16,15 @@ struct HelicsRunner
         std::string name{};
     };
 
+    struct Broker
+    {
+        std::string core_type{};
+        std::string init_string{};
+    };
+
     std::string name{};
     std::string logging_path{};
-    bool broker{};
+    Broker broker{};
     std::vector<Federate> federates{};
 };
 
@@ -30,4 +36,9 @@ void tag_invoke(boost::json::value_from_tag, boost::json::value &json_value,
                 const orchestrator::HelicsRunner::Federate &data);
 orchestrator::HelicsRunner::Federate tag_invoke(boost::json::value_to_tag<orchestrator::HelicsRunner::Federate>,
                                                 const boost::json::value &json_value);
+
+void tag_invoke(boost::json::value_from_tag, boost::json::value &json_value,
+                const orchestrator::HelicsRunner::Broker &data);
+orchestrator::HelicsRunner::Broker tag_invoke(boost::json::value_to_tag<orchestrator::HelicsRunner::Broker>,
+                                              const boost::json::value &json_value);
 } // namespace orchestrator

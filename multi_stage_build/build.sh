@@ -125,4 +125,6 @@ do
    echo ""
 done
 
+echo "Copying full image to rl8_uncc_full_image.sif"
 cp rl8_uncc_${stages[0]}_${stages[1]}_${stages[2]}_${stages[3]}.sif rl8_uncc_full_image.sif
+echo "Complete'

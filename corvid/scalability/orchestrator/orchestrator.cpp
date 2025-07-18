@@ -47,3 +47,22 @@ orchestrator::tag_invoke(boost::json::value_to_tag<orchestrator::HelicsRunner::F
 
     return data;
 }
+
+void orchestrator::tag_invoke(boost::json::value_from_tag, boost::json::value &json_value,
+                              const orchestrator::HelicsRunner::Broker &data)
+{
+    json_value = { { "coreType", data.core_type }, { "initString", data.init_string } };
+}
+
+orchestrator::HelicsRunner::Broker
+orchestrator::tag_invoke(boost::json::value_to_tag<orchestrator::HelicsRunner::Broker>,
+                         const boost::json::value &json_value)
+{
+    orchestrator::HelicsRunner::Broker data;
+    const boost::json::object &obj = json_value.as_object();
+
+    json_templates::extract(obj, "coreType", data.core_type);
+    json_templates::extract(obj, "initString", data.init_string);
+
+    return data;
+}

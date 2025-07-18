@@ -7,22 +7,16 @@ add_executable(powerflow_ex.x
 target_include_directories(powerflow_ex.x
   PRIVATE
   /usr/include/openmpi-x86_64
-  /usr/lib/x86_64-linux-gnu/openmpi/include
   /usr/local/ga-5.8/include
   /usr/local/GridPACK/include
   /usr/local/helics/include
   )
 
-
- # List of library names
- set(LIBRARIES_NAMES
+set(LIBRARIES_NAMES
    "mpi"
    "mpi_cxx"
    "petsc"
    "parmetis"
-   "boost_random"
-   "boost_serialization"
-   "boost_mpi"
    "armci"
    "ga"
    "ga++"
@@ -49,45 +43,45 @@ set(LIBRARIES_FOUND)
 foreach(LIBRARY_NAME IN LISTS LIBRARIES_NAMES)
 
   find_library(LIBRARY_PATH NAMES ${LIBRARY_NAME}
-    PATHS /usr/local/GridPACK/lib
-    /usr/local/ga-5.8/lib
-    /usr/local/petsc-3.16.4/lib
-    /usr/local/boost-1.78.0/lib
+    PATHS
     /usr/lib64/openmpi/lib
-    /usr/lib/x86_64-linux-gnu/openmpi/lib
-    /usr/local/helics/lib
+    /usr/local/petsc-3.16.4/lib
+    /usr/local/ga-5.8/lib
+    /usr/local/GridPACK/lib
+    /usr/local/helics/lib64
     NO_CACHE
     NO_DEFAULT_PATH
     )
 
   # Check if the library was found
   if(NOT LIBRARY_PATH)
-    message(FATAL_ERROR "Library '${LIBRARY_NAME}' could not be found.")
+    message(FATAL_ERROR "'${LIBRARY_NAME}' could not be found.")
+  else()
+    message(STATUS "'${LIBRARY_NAME}' found at '${LIBRARY_PATH}`.")
   endif()
 
   # Append the found library path to the LIBRARIES_FOUND list
   list(INSERT LIBRARIES_FOUND 0  ${LIBRARY_PATH})
+
   unset(LIBRARY_PATH)
 endforeach()
 
-message(STATUS "All Libraries found: ${LIBRARIES_FOUND}")
-
-
 # Step 2: Link all found libraries to the executable
-target_link_libraries(powerflow_ex.x PRIVATE ${LIBRARIES_FOUND} )
+target_link_libraries(powerflow_ex.x PRIVATE ${LIBRARIES_FOUND} corvid_helics_lib)
+# target_include_directories(powerflow_ex.x PRIVATE ${Boost_INCLUDE_DIRS})
 
 # Copy example files
 add_custom_command(
     TARGET powerflow_ex.x POST_BUILD  # Run after the executable is built
     COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/118.xml" "${CMAKE_BINARY_DIR}"
+        "${CMAKE_SOURCE_DIR}/gridpack/IEEE-118/118.xml" "${CMAKE_BINARY_DIR}"
     COMMENT "Copying xml configuration to the build directory"
     )
 
 add_custom_command(
     TARGET powerflow_ex.x POST_BUILD  # Run after the executable is built
     COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/118.raw" "${CMAKE_BINARY_DIR}"
+        "${CMAKE_SOURCE_DIR}/gridpack/IEEE-118/118.raw" "${CMAKE_BINARY_DIR}"
     COMMENT "Copying network file to the build directory"
     )
 

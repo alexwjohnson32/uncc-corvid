@@ -1,6 +1,7 @@
 {
   "name": "IEEE_8500node_IEEE118_gpk_CoSimulation-HELICSRunner",
-  "broker": {
+  "broker":
+  {
     "coreType": "zmq",
     "initString": "--federates=2 --localport=23500"
   },

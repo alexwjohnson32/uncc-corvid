@@ -2,6 +2,7 @@
 #include <string>
 #include <boost/json.hpp>
 #include <iostream>
+#include <sstream>
 
 #include "orchestrator.hpp"
 #include "JsonTemplates.hpp"
@@ -9,52 +10,45 @@
 orchestrator::HelicsRunner GetRunner()
 {
     orchestrator::HelicsRunner runner;
-    runner.name = "example_corvid_cosim";
-    runner.broker = true;
+    runner.name = "IEEE_8500node_IEEE118_gpk_CoSimulation-HELICSRunner";
+    runner.broker.core_type = "zmq";
+    runner.broker.init_string = "--federates=2 --localport=23500";
     runner.logging_path = "";
 
-    orchestrator::HelicsRunner::Federate fed1;
-    fed1.directory = ".";
-    fed1.exec = "gridlabd gridlabd/oneline-right-w-gpk.glm";
-    fed1.host = "localhost";
-    fed1.name = "gridlabd_right_federate";
-    runner.federates.push_back(fed1);
+    orchestrator::HelicsRunner::Federate gridlab_fed;
+    gridlab_fed.directory = ".";
+    gridlab_fed.exec = "gridlabd.sh gridlabd/IEEE_8500node.glm";
+    gridlab_fed.host = "localhost";
+    gridlab_fed.name = "gld_fed";
+    runner.federates.push_back(gridlab_fed);
 
-    orchestrator::HelicsRunner::Federate fed2;
-    fed2.directory = ".";
-    fed2.exec = "gridpack/build/gpk-left-fed.x";
-    fed2.host = "localhost";
-    fed2.name = "gridpack_left_federate";
-    runner.federates.push_back(fed2);
+    orchestrator::HelicsRunner::Federate gridpack_fed;
+    gridpack_fed.directory = ".";
+    gridpack_fed.exec = "./gridpack/IEEE-118/powerflow_ex.x";
+    gridpack_fed.host = "localhost";
+    gridpack_fed.name = "gpk_fed";
+    runner.federates.push_back(gridpack_fed);
 
     return runner;
-}
-
-void TestJson(orchestrator::HelicsRunner input)
-{
-    std::cout << "original object:\n" << json_templates::ToJsonString(input) << std::endl;
-    input.name = "replaced name";
-    auto copied_runner =
-        json_templates::FromJsonString<orchestrator::HelicsRunner>(json_templates::ToJsonString(input));
-    std::cout << "\ncopied object:\n" << json_templates::ToJsonString(copied_runner) << std::endl;
 }
 
 int main(int argc, char **argv)
 {
     orchestrator::HelicsRunner runner = GetRunner();
-    TestJson(runner);
-
     const std::string runnable_path = "runnable_cosim.json";
-    bool written = json_templates::ToJsonFile(runner, runnable_path);
 
-    if (written)
+    if (json_templates::ToJsonFile(runner, runnable_path))
     {
-        std::cout << "Json file written to " << std::getenv("PWD") << "/" << runnable_path << std::endl;
+        std::stringstream system_command;
+        system_command << "helics run --path=" << runnable_path;
+
+        std::cout << "Attempting to run command: '" << system_command.str() << "'" << std::endl;
+        return std::system(system_command.str().c_str());
     }
     else
     {
-        std::cout << "Json file could not be written to " << std::getenv("PWD") << "/" << runnable_path << std::endl;
+        std::cout << "Unable to run because json file could not be written to " << std::getenv("PWD") << "/"
+                  << runnable_path << std::endl;
+        return 0;
     }
-
-    return 0;
 }
