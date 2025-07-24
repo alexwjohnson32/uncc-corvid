@@ -70,23 +70,6 @@ endforeach()
 target_link_libraries(powerflow_ex.x PRIVATE ${LIBRARIES_FOUND} corvid_helics_lib)
 # target_include_directories(powerflow_ex.x PRIVATE ${Boost_INCLUDE_DIRS})
 
-# Copy example files
-add_custom_command(
-    TARGET powerflow_ex.x POST_BUILD  # Run after the executable is built
-    COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/gridpack/IEEE-118/118.xml" "${CMAKE_BINARY_DIR}"
-    COMMENT "Copying xml configuration to the build directory"
-    )
-
-add_custom_command(
-    TARGET powerflow_ex.x POST_BUILD  # Run after the executable is built
-    COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/gridpack/IEEE-118/118.raw" "${CMAKE_BINARY_DIR}"
-    COMMENT "Copying network file to the build directory"
-    )
-
 install(TARGETS powerflow_ex.x DESTINATION ${CMAKE_INSTALL_PREFIX}/gridpack/IEEE-118)
-install(FILES 118.raw
-              118.xml
-              gridpack.petscrc
+install(FILES 118.raw 118.xml
         DESTINATION ${CMAKE_INSTALL_PREFIX}/gridpack/IEEE-118)
