@@ -1,4 +1,4 @@
-add_library(orchestrator orchestrator.cpp)
+add_library(orchestrator orchestrator.cpp model.cpp)
 target_link_libraries(orchestrator corvid_helics_lib)
 
 add_executable(orchestrator_exec main.cpp)

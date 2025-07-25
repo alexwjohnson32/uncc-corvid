@@ -1,54 +1,111 @@
 #include <cstdlib>
+#include <optional>
 #include <string>
 #include <boost/json.hpp>
+#include <boost/filesystem.hpp>
 #include <iostream>
 #include <sstream>
+#include <memory>
 
+#include "model.hpp"
 #include "orchestrator.hpp"
 #include "JsonTemplates.hpp"
 
-orchestrator::HelicsRunner GetRunner()
+namespace fs = boost::filesystem;
+
+bool DeployCosim(const fs::path &deploy_dir, const std::vector<std::unique_ptr<orchestrator::IModel>> &models)
 {
+    for (const std::unique_ptr<orchestrator::IModel> &model : models)
+    {
+        if (!model->DeployExecutables(deploy_dir.generic_string()))
+        {
+            return false;
+        }
+
+        if (!model->DeployResources(deploy_dir.generic_string()))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+std::optional<fs::path> GenerateJson(const fs::path &deploy_dir,
+                                     const std::vector<std::unique_ptr<orchestrator::IModel>> &models)
+{
+    std::optional<fs::path> json_path{};
+
     orchestrator::HelicsRunner runner;
     runner.name = "IEEE_8500node_IEEE118_gpk_CoSimulation-HELICSRunner";
     runner.broker.core_type = "zmq";
     runner.broker.init_string = "--federates=2 --localport=23500";
     runner.logging_path = "";
 
-    orchestrator::HelicsRunner::Federate gridlab_fed;
-    gridlab_fed.directory = ".";
-    gridlab_fed.exec = "gridlabd.sh gridlabd/IEEE_8500node.glm";
-    gridlab_fed.host = "localhost";
-    gridlab_fed.name = "gld_fed";
-    runner.federates.push_back(gridlab_fed);
+    for (const std::unique_ptr<orchestrator::IModel> &model : models)
+    {
+        orchestrator::HelicsRunner::Federate federate;
+        federate.directory = model->GetExecutableDirectory();
+        federate.exec = model->GetExecString();
+        federate.host = model->GetHost();
+        federate.name = model->GetName();
+        runner.federates.push_back(federate);
+    }
 
-    orchestrator::HelicsRunner::Federate gridpack_fed;
-    gridpack_fed.directory = ".";
-    gridpack_fed.exec = "./gridpack/IEEE-118/powerflow_ex.x";
-    gridpack_fed.host = "localhost";
-    gridpack_fed.name = "gpk_fed";
-    runner.federates.push_back(gridpack_fed);
+    fs::path file_path(deploy_dir);
+    file_path /= "runnable_cosim.json";
 
-    return runner;
+    if (json_templates::ToJsonFile(runner, file_path.generic_string()))
+    {
+        json_path = file_path;
+    }
+
+    return json_path;
+}
+
+int RunHelics(const fs::path &helics_run_file)
+{
+    fs::path helics_run_dir = helics_run_file.parent_path();
+
+    std::stringstream command_builder;
+    command_builder << "cd " << helics_run_dir.generic_string() << " && "
+                    << "helics run --path=" << helics_run_file.filename();
+    std::string command_string = command_builder.str();
+
+    std::cout << "Attempting to run command: '" << command_string << "'" << std::endl;
+    return std::system(command_string.c_str());
 }
 
 int main(int argc, char **argv)
 {
-    orchestrator::HelicsRunner runner = GetRunner();
-    const std::string runnable_path = "runnable_cosim.json";
-
-    if (json_templates::ToJsonFile(runner, runnable_path))
+    if (argc < 2)
     {
-        std::stringstream system_command;
-        system_command << "helics run --path=" << runnable_path;
-
-        std::cout << "Attempting to run command: '" << system_command.str() << "'" << std::endl;
-        return std::system(system_command.str().c_str());
-    }
-    else
-    {
-        std::cout << "Unable to run because json file could not be written to " << std::getenv("PWD") << "/"
-                  << runnable_path << std::endl;
+        std::cout << "Please provide a Deploy directory." << std::endl;
         return 0;
     }
+
+    fs::path deploy_dir(argv[1]);
+    if (!fs::exists(deploy_dir))
+    {
+        std::cout << "Provided directory `" << deploy_dir.generic_string() << "' does not exist." << std::endl;
+        return 0;
+    }
+
+    std::vector<std::unique_ptr<orchestrator::IModel>> models;
+    models.push_back(std::make_unique<orchestrator::GridPack118BusModel>());
+    models.push_back(std::make_unique<orchestrator::GridLabD8500NodeModel>());
+
+    if (!DeployCosim(deploy_dir, models))
+    {
+        std::cout << "Could not deploy cosim to directory `" << deploy_dir.generic_string() << "'." << std::endl;
+        return 0;
+    }
+
+    std::optional<fs::path> json_file = GenerateJson(deploy_dir, models);
+    if (!json_file.has_value())
+    {
+        std::cout << "Could not generate json file at '" << deploy_dir.generic_string() << "'." << std::endl;
+        return 0;
+    }
+
+    return RunHelics(json_file.value());
 }
