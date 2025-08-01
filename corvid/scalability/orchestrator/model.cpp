@@ -7,6 +7,26 @@
 
 namespace fs = boost::filesystem;
 
+namespace
+{
+
+void PrintError(const fs::filesystem_error &err, const fs::path &source_path, const fs::path &destination_path)
+{
+    std::cout << "Error copying files: '" << err.what() << "'" << std::endl;
+    std::cout << "CWD: '" << fs::current_path() << "'" << std::endl;
+    std::cout << "Source: '" << source_path.generic_string() << "', exists: " << fs::exists(source_path) << std::endl;
+    std::cout << "Destination: '" << destination_path.generic_string() << "', exists: " << fs::exists(destination_path)
+              << std::endl;
+}
+
+void PrintSuccess(const fs::path &source_path, const fs::path &destination_path)
+{
+    std::cout << "Copied '" << source_path.generic_path() << "' to '" << destination_path.generic_path() << "'!"
+              << std::endl;
+}
+
+} // namespace
+
 std::string orchestrator::GridPack118BusModel::GetExecString() const
 {
     fs::path relative_dir(".");
@@ -19,7 +39,8 @@ std::string orchestrator::GridPack118BusModel::GetExecString() const
 
 std::string orchestrator::GridPack118BusModel::GetExecutableDirectory() const
 {
-    fs::path relative_dir("IEEE-118");
+    fs::path relative_dir(m_instance_name);
+    relative_dir /= "IEEE-118";
     relative_dir /= "resources";
 
     return relative_dir.generic_string();
@@ -40,11 +61,13 @@ bool orchestrator::GridPack118BusModel::DeployExecutables(const std::string &dep
 
     try
     {
+        fs::create_directories(destination_exec.parent_path());
         fs::copy_file(source_exec, destination_exec, fs::copy_option::overwrite_if_exists);
+        PrintSuccess(source_exec, destination_exec);
     }
     catch (const fs::filesystem_error &err)
     {
-        std::cout << err.what() << std::endl;
+        PrintError(err, source_exec, destination_exec);
         return false;
     }
 
@@ -76,12 +99,25 @@ bool orchestrator::GridPack118BusModel::DeployResources(const std::string &deplo
 
     try
     {
+        fs::create_directories(destination_xml_path.parent_path());
         fs::copy_file(source_xml_path, destination_xml_path, fs::copy_option::overwrite_if_exists);
-        fs::copy_file(source_raw_path, destination_raw_path, fs::copy_option::overwrite_if_exists);
+        PrintSuccess(source_xml_path, destination_xml_path);
     }
     catch (const fs::filesystem_error &err)
     {
-        std::cout << err.what() << std::endl;
+        PrintError(err, source_xml_path, destination_xml_path);
+        return false;
+    }
+
+    try
+    {
+        fs::create_directories(destination_raw_path.parent_path());
+        fs::copy_file(source_raw_path, destination_raw_path, fs::copy_option::overwrite_if_exists);
+        PrintSuccess(source_raw_path, destination_raw_path);
+    }
+    catch (const fs::filesystem_error &err)
+    {
+        PrintError(err, source_raw_path, destination_raw_path);
         return false;
     }
 
@@ -92,7 +128,8 @@ std::string orchestrator::GridLabD8500NodeModel::GetExecString() const { return 
 
 std::string orchestrator::GridLabD8500NodeModel::GetExecutableDirectory() const
 {
-    fs::path relative_dir("IEEE_8500");
+    fs::path relative_dir(m_instance_name);
+    relative_dir /= "IEEE_8500";
     relative_dir /= "resources";
 
     return relative_dir.generic_string();
@@ -101,7 +138,7 @@ std::string orchestrator::GridLabD8500NodeModel::GetExecutableDirectory() const
 bool orchestrator::GridLabD8500NodeModel::DeployExecutables(const std::string &deploy_root_dir) const
 {
     fs::path source_exec("bin");
-    source_exec /= "gridlab";
+    source_exec /= "gridlabd";
     source_exec /= "IEEE_8500node.glm";
 
     fs::path destination_exec(deploy_root_dir);
@@ -112,11 +149,13 @@ bool orchestrator::GridLabD8500NodeModel::DeployExecutables(const std::string &d
 
     try
     {
+        fs::create_directories(destination_exec.parent_path());
         fs::copy_file(source_exec, destination_exec, fs::copy_option::overwrite_if_exists);
+        PrintSuccess(source_exec, destination_exec);
     }
     catch (const fs::filesystem_error &err)
     {
-        std::cout << err.what() << std::endl;
+        PrintError(err, source_exec, destination_exec);
         return false;
     }
 
@@ -126,7 +165,7 @@ bool orchestrator::GridLabD8500NodeModel::DeployExecutables(const std::string &d
 bool orchestrator::GridLabD8500NodeModel::DeployResources(const std::string &deploy_root_dir) const
 {
     fs::path source_json("bin");
-    source_json /= "gridlab";
+    source_json /= "gridlabd";
     source_json /= "json";
     source_json /= "IEEE_8500node.json";
 
@@ -139,11 +178,13 @@ bool orchestrator::GridLabD8500NodeModel::DeployResources(const std::string &dep
 
     try
     {
+        fs::create_directories(destination_json.parent_path());
         fs::copy_file(source_json, destination_json, fs::copy_option::overwrite_if_exists);
+        PrintSuccess(source_json, destination_json);
     }
     catch (const fs::filesystem_error &err)
     {
-        std::cout << err.what() << std::endl;
+        PrintError(err, source_json, destination_json);
         return false;
     }
 
