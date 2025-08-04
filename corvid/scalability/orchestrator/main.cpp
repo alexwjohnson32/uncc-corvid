@@ -2,27 +2,25 @@
 #include <optional>
 #include <string>
 #include <boost/json.hpp>
-#include <boost/filesystem.hpp>
 #include <iostream>
 #include <sstream>
 #include <memory>
+#include <filesystem>
 
 #include "model.hpp"
 #include "orchestrator.hpp"
 #include "JsonTemplates.hpp"
 
-namespace fs = boost::filesystem;
-
-bool DeployCosim(const fs::path &deploy_dir, const std::vector<std::unique_ptr<orchestrator::IModel>> &models)
+bool DeployCosim(const std::vector<std::unique_ptr<orchestrator::IModel>> &models)
 {
     for (const std::unique_ptr<orchestrator::IModel> &model : models)
     {
-        if (!model->DeployExecutables(deploy_dir.generic_string()))
+        if (!model->DeployExecutables())
         {
             return false;
         }
 
-        if (!model->DeployResources(deploy_dir.generic_string()))
+        if (!model->DeployResources())
         {
             return false;
         }
@@ -30,10 +28,10 @@ bool DeployCosim(const fs::path &deploy_dir, const std::vector<std::unique_ptr<o
     return true;
 }
 
-std::optional<fs::path> GenerateJson(const fs::path &deploy_dir,
+std::optional<std::filesystem::path> GenerateJson(const std::filesystem::path &deploy_dir,
                                      const std::vector<std::unique_ptr<orchestrator::IModel>> &models)
 {
-    std::optional<fs::path> json_path{};
+    std::optional<std::filesystem::path> json_path{};
 
     orchestrator::HelicsRunner runner;
     runner.name = "IEEE_8500node_IEEE118_gpk_CoSimulation-HELICSRunner";
@@ -51,7 +49,7 @@ std::optional<fs::path> GenerateJson(const fs::path &deploy_dir,
         runner.federates.push_back(federate);
     }
 
-    fs::path file_path(deploy_dir);
+    std::filesystem::path file_path(deploy_dir);
     file_path /= "runnable_cosim.json";
 
     if (json_templates::ToJsonFile(runner, file_path.generic_string()))
@@ -62,9 +60,9 @@ std::optional<fs::path> GenerateJson(const fs::path &deploy_dir,
     return json_path;
 }
 
-int RunHelics(const fs::path &helics_run_file)
+int RunHelics(const std::filesystem::path &helics_run_file)
 {
-    fs::path helics_run_dir = helics_run_file.parent_path();
+    std::filesystem::path helics_run_dir = helics_run_file.parent_path();
 
     std::stringstream command_builder;
     command_builder << "cd " << helics_run_dir.generic_string() << " && "
@@ -83,24 +81,24 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    fs::path deploy_dir(argv[1]);
-    if (!fs::exists(deploy_dir))
+    std::filesystem::path deploy_dir(argv[1]);
+    if (!std::filesystem::exists(deploy_dir))
     {
         std::cout << "Provided directory `" << deploy_dir.generic_string() << "' does not exist." << std::endl;
         return 0;
     }
 
     std::vector<std::unique_ptr<orchestrator::IModel>> models;
-    models.push_back(std::make_unique<orchestrator::GridPack118BusModel>());
-    models.push_back(std::make_unique<orchestrator::GridLabD8500NodeModel>());
+    models.push_back(std::make_unique<orchestrator::GridPack118BusModel>(deploy_dir));
+    models.push_back(std::make_unique<orchestrator::GridLabD8500NodeModel>(deploy_dir));
 
-    if (!DeployCosim(deploy_dir, models))
+    if (!DeployCosim(models))
     {
         std::cout << "Could not deploy cosim to directory `" << deploy_dir.generic_string() << "'." << std::endl;
         return 0;
     }
 
-    std::optional<fs::path> json_file = GenerateJson(deploy_dir, models);
+    std::optional<std::filesystem::path> json_file = GenerateJson(deploy_dir, models);
     if (!json_file.has_value())
     {
         std::cout << "Could not generate json file at '" << deploy_dir.generic_string() << "'." << std::endl;

@@ -1,16 +1,13 @@
 #pragma once
 
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
+#include <fstream>
 #include <type_traits>
 #include <vector>
 #include <array>
 #include <string>
-
-#include <iostream>
+#include <filesystem>
 
 #include <boost/json.hpp>
-#include <boost/filesystem.hpp>
 
 namespace json_templates
 {
@@ -251,12 +248,12 @@ template <typename T> std::string ToJsonString(const T &input)
 template <typename T> bool ToJsonFile(const T &input, const std::string &output_file)
 {
     bool was_write_successful = false;
-    boost::filesystem::path json_file_path = boost::filesystem::absolute(output_file.c_str());
+    std::filesystem::path json_file_path = std::filesystem::absolute(output_file.c_str());
 
     // I don't care if the json file exists yet, but I do care if we have a valid directory path
-    if (boost::filesystem::exists(json_file_path.parent_path()))
+    if (std::filesystem::exists(json_file_path.parent_path()))
     {
-        boost::filesystem::ofstream json_stream(json_file_path);
+        std::ofstream json_stream(json_file_path);
         json_stream << ToJsonString(input);
         json_stream.close();
 
@@ -291,10 +288,10 @@ template <typename T> T FromJsonString(const std::string &json_string)
  */
 template <typename T> T FromJsonFile(const std::string &input_file)
 {
-    boost::filesystem::path boost_path_to_json(input_file);
-
-    std::string json_content;
-    boost::filesystem::load_string_file(boost_path_to_json, json_content);
+    auto size = std::filesystem::file_size(input_file);
+    std::string json_content(size, '\0');
+    std::ifstream in(input_file);
+    in.read(&json_content[0], size);
 
     return FromJsonString<T>(json_content);
 }
