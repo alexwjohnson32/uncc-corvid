@@ -18,11 +18,14 @@
 #ifndef _pf_app_h_
 #define _pf_app_h_
 
-#include "boost/smart_ptr/shared_ptr.hpp"
-#include "pf_factory.hpp"
+#include <complex>
+#include <optional>
+#include <string>
 
-namespace gridpack {
-namespace powerflow {
+namespace gridpack
+{
+namespace powerflow
+{
 
 // Calling program for powerflow application. This file has class definition
 // and methods.
@@ -40,19 +43,11 @@ class PFApp
      */
     ~PFApp(void);
 
-    /**
-     * Execute application
-     * @param argc number of arguments
-     * @param argv list of character strings
-     */
-  void execute(int argc,
-	       char** argv,
-	       std::complex<double>& Vc,
-	       std::complex<double>& Sa);
-
-  private:
+    std::optional<std::complex<double>> ComputeVoltageCurrent(const std::string &config_file, int target_bus_id,
+                                                              const std::string &phase_name,
+                                                              const std::complex<double> &Sa) const;
 };
 
-} // powerflow
-} // gridpack
+} // namespace powerflow
+} // namespace gridpack
 #endif

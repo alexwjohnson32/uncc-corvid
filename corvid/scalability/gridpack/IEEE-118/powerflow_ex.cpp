@@ -1,9 +1,14 @@
 #include <iostream>
+#include <optional>
+#include <string>
 #include <vector>
 #include <cmath>
 #include <fstream>
 #include <complex>
+#include <unordered_map>
 #include <helics/application_api/ValueFederate.hpp>
+#include <helics/application_api/Publications.hpp>
+#include <helics/application_api/Inputs.hpp>
 
 // GridPACK includes
 #include "mpi.h"
@@ -11,96 +16,191 @@
 #include <macdecls.h>
 #include "gridpack/include/gridpack.hpp"
 #include "pf_app.hpp"
+#include "pf_input.hpp"
+#include "JsonTemplates.hpp"
+
+#include <boost/json.hpp>
+
+struct ThreePhaseSubscriptions
+{
+    helics::Input a{};
+    helics::Input b{};
+    helics::Input c{};
+};
+
+struct PhasedPower
+{
+    std::complex<double> a;
+    std::complex<double> b;
+    std::complex<double> c;
+};
+
+struct PhasedVoltage
+{
+    std::complex<double> a;
+    std::complex<double> b;
+    std::complex<double> c;
+};
+
+class VoltagePublisher
+{
+  private:
+    helics::Publication &m_a;
+    helics::Publication &m_b;
+    helics::Publication &m_c;
+    const double m_ln_magnitude{};
+
+  public:
+    VoltagePublisher(helics::Publication &a, helics::Publication &b, helics::Publication &c, double ln_magnitude)
+        : m_a{ a }, m_b{ b }, m_c{ c }, m_ln_magnitude{}
+    {
+    }
+
+    void Publish(const PhasedVoltage &v)
+    {
+        m_a.publish(v.a * m_ln_magnitude);
+        m_b.publish(v.b * m_ln_magnitude);
+        m_c.publish(v.c * m_ln_magnitude);
+    }
+};
+
+std::complex<double> LimitPower(const std::complex<double> &s, double max_v)
+{
+    const double abs_s = std::abs(s);
+    if (abs_s > max_v)
+    {
+        return s * (max_v / abs_s);
+    }
+    else
+    {
+        return s;
+    }
+}
+
+PhasedPower LimitPower(ThreePhaseSubscriptions &sub, double max_v)
+{
+    PhasedPower limited_power;
+
+    limited_power.a = LimitPower(sub.a.getValue<std::complex<double>>() / 1e8, max_v);
+    limited_power.b = LimitPower(sub.b.getValue<std::complex<double>>() / 1e8, max_v);
+    limited_power.c = LimitPower(sub.c.getValue<std::complex<double>>() / 1e8, max_v);
+
+    return limited_power;
+}
+
+class VoltageComputer
+{
+  private:
+    gridpack::powerflow::PFApp m_app_A{};
+    gridpack::powerflow::PFApp m_app_B{};
+    gridpack::powerflow::PFApp m_app_C{};
+
+    const std::string m_xml_file{};
+    const PhasedVoltage &m_default_voltage{};
+
+  public:
+    VoltageComputer(const std::string &xml_file, const PhasedVoltage &default_voltage)
+        : m_xml_file{ xml_file }, m_default_voltage{ default_voltage }
+    {
+    }
+
+    PhasedVoltage ComputeVoltage(const PhasedPower &s, int bus_id, const std::complex<double> &r)
+    {
+        PhasedVoltage v;
+        v.a = m_app_A.ComputeVoltageCurrent(m_xml_file, bus_id, "A", s.a).value_or(m_default_voltage.a);
+        v.b = m_app_B.ComputeVoltageCurrent(m_xml_file, bus_id, "B", s.b).value_or(m_default_voltage.b);
+        v.c = m_app_C.ComputeVoltageCurrent(m_xml_file, bus_id, "C", s.c).value_or(m_default_voltage.c);
+
+        v.b = v.b * r;
+        v.c = v.c * r * r;
+
+        return v;
+    }
+};
 
 int main(int argc, char **argv)
 {
+    const static int expected_argc = 2;
+    if (argc != expected_argc)
+    {
+        std::cout << "Cannot launch, no json file given to read!" << std::endl;
+        return 0;
+    }
+
+    const std::string json_file(argv[1]);
+
+    const powerflow::PowerflowInput pf_input = json_templates::FromJsonFile<powerflow::PowerflowInput>(json_file);
+
     // Create a FederateInfo object
     helics::FederateInfo fi;
     fi.coreType = helics::CoreType::ZMQ;
     fi.coreInitString = "--federates=1";
     fi.setProperty(HELICS_PROPERTY_INT_LOG_LEVEL, HELICS_LOG_LEVEL_DEBUG);
-    double period = 1.0;
+    const double period = 1.0;
     fi.setProperty(HELICS_PROPERTY_TIME_PERIOD, period);
     fi.setFlagOption(HELICS_FLAG_UNINTERRUPTIBLE, false);
     fi.setFlagOption(HELICS_FLAG_TERMINATE_ON_ERROR, true);
     fi.setFlagOption(HELICS_FLAG_WAIT_FOR_CURRENT_TIME_UPDATE, true);
 
-    helics::ValueFederate gpk_118("gridpack", fi);
+    helics::ValueFederate gpk_118(pf_input.gridpack_name, fi);
     std::cout << "HELICS GridPACK Federate created successfully." << std::endl;
 
     // Publications
-    auto Va_id = gpk_118.registerPublication("Va", "complex", "V");
-    auto Vb_id = gpk_118.registerPublication("Vb", "complex", "V");
-    auto Vc_id = gpk_118.registerPublication("Vc", "complex", "V");
+    VoltagePublisher pub(gpk_118.registerPublication("Va", "complex", "V"),
+                         gpk_118.registerPublication("Vb", "complex", "V"),
+                         gpk_118.registerPublication("Vc", "complex", "V"), pf_input.ln_magnitude);
 
     // Subscriptions
-    auto Sa_id = gpk_118.registerSubscription("gld_hlc_conn/Sa", "VA");
-    auto Sb_id = gpk_118.registerSubscription("gld_hlc_conn/Sb", "VA");
-    auto Sc_id = gpk_118.registerSubscription("gld_hlc_conn/Sc", "VA");
+    std::unordered_map<std::string, ThreePhaseSubscriptions> subs;
+    for (const powerflow::GridlabDInput &gridlabd_info : pf_input.gridlabd_infos)
+    {
+        subs[gridlabd_info.name] = { gpk_118.registerSubscription(gridlabd_info.name + "/Sa", "VA"),
+                                     gpk_118.registerSubscription(gridlabd_info.name + "/Sb", "VA"),
+                                     gpk_118.registerSubscription(gridlabd_info.name + "/Sc", "VA") };
+    }
 
-    std::ofstream outFile("gpk_118.csv");
+    // output file
+    std::ofstream outFile(pf_input.gridpack_name + "_gpk_118.csv");
+
+    // initialize constants
+    const std::string xml_file = "118.xml";
+    const PhasedVoltage default_phased_voltage = { { 1.0, 0.0 }, { -0.5, -0.866025 }, { -0.5, 0.866025 } };
+    const std::complex<double> r120({ -0.5, -0.866025 });
 
     // Prepare GridPACK Environment
     gridpack::Environment env(argc, argv);
     gridpack::math::Initialize(&argc, &argv);
-    gridpack::powerflow::PFApp app_A, app_B, app_C;
+    VoltageComputer executor(xml_file, default_phased_voltage);
 
     // Enter execution mode
     gpk_118.enterExecutingMode();
     std::cout << "GridPACK Federate has entered execution mode." << std::endl;
 
-    double total_interval = 60.0;
-    double grantedtime = 0.0;
+    // Initial voltage publish
+    pub.Publish(default_phased_voltage);
 
-    auto Sa = std::complex<double>(0.0, 0.0);
-    auto Sb = std::complex<double>(0.0, 0.0);
-    auto Sc = std::complex<double>(0.0, 0.0);
-
-    auto Va = std::complex<double>(1.0, 0.0);
-    auto Vb = std::complex<double>(-0.5, -0.866025);
-    auto Vc = std::complex<double>(-0.5, 0.866025);
-    const auto r120 = std::complex<double>(-0.5, -0.866025);
-
-    // Initial voltage publish (LN magnitude = 79600V)
-    Va_id.publish(Va * 79600.0);
-    Vb_id.publish(Vb * 79600.0);
-    Vc_id.publish(Vc * 79600.0);
-
-    const char *xml_file = "118.xml";
-
-    auto limitPower = [](std::complex<double> s, double max_mva)
-    { return (std::abs(s) > max_mva) ? s * (max_mva / std::abs(s)) : s; };
-
-    while (grantedtime + period <= total_interval)
+    const double total_interval = pf_input.total_time;
+    double granted_time = 0.0;
+    while (granted_time + period <= total_interval)
     {
-        grantedtime = gpk_118.requestTime(grantedtime + period);
+        granted_time = gpk_118.requestTime(granted_time + period);
 
-        Sa = limitPower(Sa_id.getValue<std::complex<double>>() / 1e8, 1.0);
-        Sb = limitPower(Sb_id.getValue<std::complex<double>>() / 1e8, 1.0);
-        Sc = limitPower(Sc_id.getValue<std::complex<double>>() / 1e8, 1.0);
+        for (const powerflow::GridlabDInput &gridlabd_input : pf_input.gridlabd_infos)
+        {
+            PhasedPower s = LimitPower(subs.at(gridlabd_input.name), 1.0);
+            PhasedVoltage v = executor.ComputeVoltage(s, gridlabd_input.bus_id, r120);
 
-        char *argsA[] = { argv[0], (char *)xml_file, (char *)"A" };
-        char *argsB[] = { argv[0], (char *)xml_file, (char *)"B" };
-        char *argsC[] = { argv[0], (char *)xml_file, (char *)"C" };
+            std::stringstream ss;
+            ss << "GridlabdD Name: " << gridlabd_input.name << "\n"
+               << "[Time " << granted_time << "]\n"
+               << "S received from Gridlab-D, Sa: " << s.a << ", Sb: " << s.b << ", Sc: " << s.c << "\n"
+               << "Updated V by GridPACK, Va: " << v.a << ", Vb: " << v.b << ", Vc: " << v.c << "\n";
 
-        app_A.execute(3, argsA, Va, Sa);
-        app_B.execute(3, argsB, Vb, Sb);
-        app_C.execute(3, argsC, Vc, Sc);
+            std::cout << ss.str();
+            outFile << ss.str();
 
-        Vb *= r120;
-        Vc *= r120 * r120;
-
-        std::cout << "[Time " << grantedtime << "]\n"
-                  << "Sa: " << Sa << ", Sb: " << Sb << ", Sc: " << Sc << "\n"
-                  << "Va: " << Va << ", Vb: " << Vb << ", Vc: " << Vc << "\n";
-
-        outFile << "Time (s): " << grantedtime << "\n"
-                << "S received from Gridlab-D, Sa: " << Sa << " Sb: " << Sb << " Sc: " << Sc << "\n"
-                << "Updated V by GridPACK, Va: " << Va << " Vb: " << Vb << " Vc: " << Vc << "\n\n";
-
-        Va_id.publish(Va * 79600.0);
-        Vb_id.publish(Vb * 79600.0);
-        Vc_id.publish(Vc * 79600.0);
+            pub.Publish(v);
+        }
     }
 
     outFile << "End of Cosimulation.";
@@ -108,6 +208,6 @@ int main(int argc, char **argv)
 
     gridpack::math::Finalize();
     gpk_118.finalize();
-    std::cout << "Federate finalized.\nGranted time: " << grantedtime << std::endl;
+    std::cout << "Federate finalized.\nGranted time: " << granted_time << std::endl;
     return 0;
 }

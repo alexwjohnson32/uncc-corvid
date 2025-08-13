@@ -2,6 +2,7 @@ add_executable(powerflow_ex.x
   powerflow_ex.cpp
   pf_app.cpp
   pf_factory.cpp
+  pf_input.cpp
   )
 
 target_include_directories(powerflow_ex.x
@@ -67,9 +68,9 @@ foreach(LIBRARY_NAME IN LISTS LIBRARIES_NAMES)
 endforeach()
 
 # Step 2: Link all found libraries to the executable
-target_link_libraries(powerflow_ex.x PRIVATE ${LIBRARIES_FOUND} corvid_helics_lib)
-# target_include_directories(powerflow_ex.x PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries(powerflow_ex.x ${LIBRARIES_FOUND} corvid_helics_lib)
+# target_include_directories(powerflow_ex.x ${Boost_INCLUDE_DIRS})
 
 install(TARGETS powerflow_ex.x DESTINATION ${CMAKE_INSTALL_PREFIX}/gridpack/IEEE-118)
-install(FILES 118.raw 118.xml
+install(FILES 118.raw 118.xml helics_setup.json
         DESTINATION ${CMAKE_INSTALL_PREFIX}/gridpack/IEEE-118)

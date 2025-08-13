@@ -1,6 +1,7 @@
 #include "model.hpp"
 
 #include <iostream>
+#include <sstream>
 
 namespace
 {
@@ -28,7 +29,14 @@ std::string orchestrator::GridPack118BusModel::GetExecString() const
     exec_path /= "exec";
     exec_path /= "powerflow_ex.x";
 
-    return exec_path;
+    std::filesystem::path helics_setup_path(m_deploy_directory);
+    helics_setup_path /= "resources";
+    helics_setup_path /= "helics_setup.json";
+
+    std::stringstream exec_string;
+    exec_string << exec_path << " " << helics_setup_path;
+
+    return exec_string.str();
 }
 
 std::filesystem::path orchestrator::GridPack118BusModel::GetExecutableDirectory() const
@@ -77,6 +85,9 @@ bool orchestrator::GridPack118BusModel::DeployResources() const
     std::filesystem::path source_raw_path(source_dir);
     source_raw_path /= "118.raw";
 
+    std::filesystem::path source_json_path(source_dir);
+    source_json_path /= "helics_setup.json";
+
     std::filesystem::path destination_dir(m_deploy_directory);
     destination_dir /= "resources";
 
@@ -85,6 +96,9 @@ bool orchestrator::GridPack118BusModel::DeployResources() const
 
     std::filesystem::path destination_raw_path(destination_dir);
     destination_raw_path /= "118.raw";
+
+    std::filesystem::path destination_json_path(destination_dir);
+    destination_json_path /= "helics_setup.json";
 
     try
     {
@@ -109,6 +123,19 @@ bool orchestrator::GridPack118BusModel::DeployResources() const
     catch (const std::filesystem::filesystem_error &err)
     {
         PrintError(err, source_raw_path, destination_raw_path);
+        return false;
+    }
+
+    try
+    {
+        std::filesystem::create_directories(destination_json_path.parent_path());
+        std::filesystem::copy_file(source_json_path, destination_json_path,
+                                   std::filesystem::copy_options::overwrite_existing);
+        PrintSuccess(source_json_path, destination_json_path);
+    }
+    catch (const std::filesystem::filesystem_error &err)
+    {
+        PrintError(err, source_json_path, destination_json_path);
         return false;
     }
 

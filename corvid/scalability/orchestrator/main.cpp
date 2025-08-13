@@ -28,8 +28,18 @@ bool DeployCosim(const std::vector<std::unique_ptr<orchestrator::IModel>> &model
     return true;
 }
 
+void PrintModelAndFederate(const orchestrator::HelicsRunner::Federate &federate,
+                           const std::unique_ptr<orchestrator::IModel> &model)
+{
+    std::cout << "Executable Dir:" << "\nmodel:\t" << model->GetExecutableDirectory()
+              << "\nfederate:\t" << federate.directory << std::endl;
+    std::cout << "Executable:" << "\nmodel:\t" << model->GetExecString() << "\nfederate:\t" << federate.exec << std::endl;
+    std::cout << "Host:" << "\nmodel:\t" << model->GetHost() << "\nfederate:\t" << federate.host << std::endl;
+    std::cout << "Name:" << "\nmodel:\t" << model->GetName() << "\nfederate:\t" << federate.directory << std::endl;
+}
+
 std::optional<std::filesystem::path> GenerateJson(const std::filesystem::path &deploy_dir,
-                                     const std::vector<std::unique_ptr<orchestrator::IModel>> &models)
+                                                  const std::vector<std::unique_ptr<orchestrator::IModel>> &models)
 {
     std::optional<std::filesystem::path> json_path{};
 
