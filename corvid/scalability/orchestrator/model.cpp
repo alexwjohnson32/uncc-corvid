@@ -29,14 +29,15 @@ std::string orchestrator::GridPack118BusModel::GetExecString() const
     exec_path /= "exec";
     exec_path /= "powerflow_ex.x";
 
-    std::filesystem::path helics_setup_path(m_deploy_directory);
-    helics_setup_path /= "resources";
-    helics_setup_path /= "helics_setup.json";
+    // std::filesystem::path helics_setup_path(m_deploy_directory);
+    // helics_setup_path /= "resources";
+    // helics_setup_path /= "helics_setup.json";
 
-    std::stringstream exec_string;
-    exec_string << exec_path << " " << helics_setup_path;
+    // std::stringstream exec_string;
+    // exec_string << exec_path << " " << helics_setup_path;
 
-    return exec_string.str();
+    // return exec_string.str();
+    return exec_path;
 }
 
 std::filesystem::path orchestrator::GridPack118BusModel::GetExecutableDirectory() const

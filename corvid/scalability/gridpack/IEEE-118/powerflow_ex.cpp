@@ -120,14 +120,17 @@ class VoltageComputer
 
 int main(int argc, char **argv)
 {
-    const static int expected_argc = 2;
-    if (argc != expected_argc)
-    {
-        std::cout << "Cannot launch, no json file given to read!" << std::endl;
-        return 0;
-    }
+    std::ofstream output_console("gpk_118_console.txt");
 
-    const std::string json_file(argv[1]);
+    // const static int expected_argc = 2;
+    // if (argc != expected_argc)
+    // {
+    //     output_console << "Cannot launch, no json file given to read!" << std::endl;
+    //     return 0;
+    // }
+
+    // const std::string json_file(argv[1]);
+    const std::string json_file("helics_setup.json");
 
     const powerflow::PowerflowInput pf_input = json_templates::FromJsonFile<powerflow::PowerflowInput>(json_file);
 
@@ -143,7 +146,7 @@ int main(int argc, char **argv)
     fi.setFlagOption(HELICS_FLAG_WAIT_FOR_CURRENT_TIME_UPDATE, true);
 
     helics::ValueFederate gpk_118(pf_input.gridpack_name, fi);
-    std::cout << "HELICS GridPACK Federate created successfully." << std::endl;
+    output_console << "HELICS GridPACK Federate created successfully." << std::endl;
 
     // Publications
     VoltagePublisher pub(gpk_118.registerPublication("Va", "complex", "V"),
@@ -174,19 +177,26 @@ int main(int argc, char **argv)
 
     // Enter execution mode
     gpk_118.enterExecutingMode();
-    std::cout << "GridPACK Federate has entered execution mode." << std::endl;
+    output_console << "GridPACK Federate has entered execution mode." << std::endl;
 
     // Initial voltage publish
+    output_console << "Publish initial voltage." << std::endl;
     pub.Publish(default_phased_voltage);
+    output_console << "Published." << std::endl;
 
     const double total_interval = pf_input.total_time;
     double granted_time = 0.0;
     while (granted_time + period <= total_interval)
     {
+        output_console << "Granted Time + Period: " << granted_time + period << ", Total Interval: " << total_interval
+                       << std::endl;
         granted_time = gpk_118.requestTime(granted_time + period);
+        output_console << "Granted Time: " << granted_time << ", Period: " << period
+                       << ", Total Interval: " << total_interval << std::endl;
 
         for (const powerflow::GridlabDInput &gridlabd_input : pf_input.gridlabd_infos)
         {
+            output_console << "GridlabD Name Computation: " << gridlabd_input.name << std::endl;
             PhasedPower s = LimitPower(subs.at(gridlabd_input.name), 1.0);
             PhasedVoltage v = executor.ComputeVoltage(s, gridlabd_input.bus_id, r120);
 
@@ -196,11 +206,13 @@ int main(int argc, char **argv)
                << "S received from Gridlab-D, Sa: " << s.a << ", Sb: " << s.b << ", Sc: " << s.c << "\n"
                << "Updated V by GridPACK, Va: " << v.a << ", Vb: " << v.b << ", Vc: " << v.c << "\n";
 
-            std::cout << ss.str();
+            output_console << ss.str();
             outFile << ss.str();
 
             pub.Publish(v);
         }
+
+        output_console << "Completed Computation of current Granted Time." << std::endl;
     }
 
     outFile << "End of Cosimulation.";
@@ -208,6 +220,6 @@ int main(int argc, char **argv)
 
     gridpack::math::Finalize();
     gpk_118.finalize();
-    std::cout << "Federate finalized.\nGranted time: " << granted_time << std::endl;
+    output_console << "Federate finalized.\nGranted time: " << granted_time << std::endl;
     return 0;
 }
