@@ -1,5 +1,6 @@
 #include <iostream>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <cmath>
@@ -118,6 +119,29 @@ class VoltageComputer
     }
 };
 
+std::string FederateToString(helics::ValueFederate &fed)
+{
+    std::stringstream fed_string;
+
+    fed_string << "Federate Name: " << fed.getName() << "\n";
+
+    fed_string << "Publications (" << fed.getPublicationCount() << "):\n";
+    for (int i = 0; i < fed.getPublicationCount(); i++)
+    {
+        helics::Publication pub = fed.getPublication(i);
+        fed_string << "  - " << pub.getDisplayName() << " (" << pub.getType() << ")\n";
+    }
+
+    fed_string << "Subscriptions (" << fed.getInputCount() << "):\n";
+    for (int i = 0; i < fed.getInputCount(); i++)
+    {
+        helics::Input input = fed.getInput(i);
+        fed_string << "  - " << input.getDisplayName() << " (" << input.getType() << ")\n";
+    }
+
+    return fed_string.str();
+}
+
 int main(int argc, char **argv)
 {
     std::ofstream output_console("gpk_118_console.txt");
@@ -133,6 +157,7 @@ int main(int argc, char **argv)
     const std::string json_file("helics_setup.json");
 
     const powerflow::PowerflowInput pf_input = json_templates::FromJsonFile<powerflow::PowerflowInput>(json_file);
+    output_console << json_templates::ToJsonString(pf_input) << std::endl;
 
     // Create a FederateInfo object
     helics::FederateInfo fi;
@@ -161,6 +186,10 @@ int main(int argc, char **argv)
                                      gpk_118.registerSubscription(gridlabd_info.name + "/Sb", "VA"),
                                      gpk_118.registerSubscription(gridlabd_info.name + "/Sc", "VA") };
     }
+
+    output_console << "Registered Pubs/Subs" << std::endl;
+    output_console << "\n" << FederateToString(gpk_118) << std::endl;
+    ;
 
     // output file
     std::ofstream outFile(pf_input.gridpack_name + "_gpk_118.csv");
