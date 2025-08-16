@@ -46,15 +46,17 @@ struct PhasedVoltage
 class VoltagePublisher
 {
   private:
-    helics::Publication &m_a;
-    helics::Publication &m_b;
-    helics::Publication &m_c;
+    helics::Publication m_a;
+    helics::Publication m_b;
+    helics::Publication m_c;
     const double m_ln_magnitude{};
 
   public:
-    VoltagePublisher(helics::Publication &a, helics::Publication &b, helics::Publication &c, double ln_magnitude)
-        : m_a{ a }, m_b{ b }, m_c{ c }, m_ln_magnitude{}
+    VoltagePublisher(helics::ValueFederate &fed, double ln_magnitude) : m_ln_magnitude(ln_magnitude)
     {
+        m_a = fed.registerPublication("Va", "complex", "V");
+        m_b = fed.registerPublication("Vb", "complex", "V");
+        m_c = fed.registerPublication("Vc", "complex", "V");
     }
 
     void Publish(const PhasedVoltage &v)
@@ -174,9 +176,7 @@ int main(int argc, char **argv)
     output_console << "HELICS GridPACK Federate created successfully." << std::endl;
 
     // Publications
-    VoltagePublisher pub(gpk_118.registerPublication("Va", "complex", "V"),
-                         gpk_118.registerPublication("Vb", "complex", "V"),
-                         gpk_118.registerPublication("Vc", "complex", "V"), pf_input.ln_magnitude);
+    VoltagePublisher pub(gpk_118, pf_input.ln_magnitude);
 
     // Subscriptions
     std::unordered_map<std::string, ThreePhaseSubscriptions> subs;
