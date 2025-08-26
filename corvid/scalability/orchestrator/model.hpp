@@ -13,9 +13,17 @@ class IModel
     std::filesystem::path m_deploy_directory{};
 
   public:
-    IModel(const std::string &instance_name, const std::string &deploy_directory)
-        : m_instance_name(instance_name), m_deploy_directory(std::filesystem::canonical(deploy_directory))
+    IModel(const std::string &instance_name, const std::string &deploy_directory) : m_instance_name(instance_name)
     {
+        std::filesystem::path base =
+            deploy_directory.empty() ? std::filesystem::current_path() : std::filesystem::path(deploy_directory);
+
+        // Don’t throw if parts don’t exist yet
+        std::error_code ec;
+        std::filesystem::path normalized = std::filesystem::weakly_canonical(base, ec);
+        if (ec) normalized = std::filesystem::absolute(base);
+
+        m_deploy_directory = normalized;
         m_deploy_directory /= m_instance_name;
     }
 
@@ -33,10 +41,10 @@ class IModel
 class GridPack118BusModel : public IModel
 {
   public:
-    GridPack118BusModel() : IModel("gpk_fed", "") {}
-    GridPack118BusModel(const std::string &deploy_directory) : IModel("gpk_fed", deploy_directory)
+    GridPack118BusModel() : IModel("T1", "") {}
+    GridPack118BusModel(const std::string &deploy_directory)
+        : IModel("T1", (std::filesystem::path(deploy_directory) / "transmission" / "IEEE-118").string())
     {
-        m_deploy_directory /= "IEEE-118";
     }
 
     virtual std::string GetExecString() const override;
@@ -49,10 +57,10 @@ class GridPack118BusModel : public IModel
 class GridLabD8500NodeModel : public IModel
 {
   public:
-    GridLabD8500NodeModel() : IModel("gld_fed", "") {}
-    GridLabD8500NodeModel(const std::string &deploy_directory) : IModel("gld_fed", deploy_directory)
+    GridLabD8500NodeModel() : IModel("T1-D1", "") {}
+    GridLabD8500NodeModel(const std::string &deploy_directory)
+        : IModel("T1-D1", (std::filesystem::path(deploy_directory) / "distribution" / "IEEE_8500").string())
     {
-        m_deploy_directory /= "IEEE_8500";
     }
 
     virtual std::string GetExecString() const override;

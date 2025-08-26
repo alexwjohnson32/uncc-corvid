@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <fstream>
 
 namespace
 {
@@ -25,9 +26,10 @@ void PrintSuccess(const std::filesystem::path &source_path, const std::filesyste
 
 std::string orchestrator::GridPack118BusModel::GetExecString() const
 {
+    // Binary sits directly in the instance folder
     std::filesystem::path exec_path(m_deploy_directory);
-    exec_path /= "exec";
     exec_path /= "powerflow_ex.x";
+    return exec_path.string();
 
     // std::filesystem::path helics_setup_path(m_deploy_directory);
     // helics_setup_path /= "resources";
@@ -37,15 +39,12 @@ std::string orchestrator::GridPack118BusModel::GetExecString() const
     // exec_string << exec_path << " " << helics_setup_path;
 
     // return exec_string.str();
-    return exec_path;
 }
 
 std::filesystem::path orchestrator::GridPack118BusModel::GetExecutableDirectory() const
 {
-    std::filesystem::path exec_dir(m_deploy_directory);
-    exec_dir /= "resources";
-
-    return exec_dir;
+    // Working dir is the instance folder (xml/raw/json live here too)
+    return m_deploy_directory;
 }
 
 bool orchestrator::GridPack118BusModel::DeployExecutables() const
@@ -56,7 +55,6 @@ bool orchestrator::GridPack118BusModel::DeployExecutables() const
     source_exec /= "powerflow_ex.x";
 
     std::filesystem::path destination_exec(m_deploy_directory);
-    destination_exec /= "exec";
     destination_exec /= "powerflow_ex.x";
 
     try
@@ -89,16 +87,13 @@ bool orchestrator::GridPack118BusModel::DeployResources() const
     std::filesystem::path source_json_path(source_dir);
     source_json_path /= "helics_setup.json";
 
-    std::filesystem::path destination_dir(m_deploy_directory);
-    destination_dir /= "resources";
-
-    std::filesystem::path destination_xml_path(destination_dir);
+    std::filesystem::path destination_xml_path(m_deploy_directory);
     destination_xml_path /= "118.xml";
 
-    std::filesystem::path destination_raw_path(destination_dir);
+    std::filesystem::path destination_raw_path(m_deploy_directory);
     destination_raw_path /= "118.raw";
 
-    std::filesystem::path destination_json_path(destination_dir);
+    std::filesystem::path destination_json_path(m_deploy_directory);
     destination_json_path /= "helics_setup.json";
 
     try
@@ -146,8 +141,7 @@ bool orchestrator::GridPack118BusModel::DeployResources() const
 std::string orchestrator::GridLabD8500NodeModel::GetExecString() const
 {
     std::filesystem::path glm_path(m_deploy_directory);
-    glm_path /= "resources";
-    glm_path /= "IEEE_8500node.glm";
+    glm_path /= m_instance_name + ".glm";
 
     return "gridlabd.sh " + glm_path.string();
 }
@@ -155,30 +149,61 @@ std::string orchestrator::GridLabD8500NodeModel::GetExecString() const
 std::filesystem::path orchestrator::GridLabD8500NodeModel::GetExecutableDirectory() const
 {
     std::filesystem::path exec_dir(m_deploy_directory);
-    exec_dir /= "resources";
 
     return exec_dir;
 }
 
 bool orchestrator::GridLabD8500NodeModel::DeployExecutables() const
 {
-    std::filesystem::path source_exec("bin");
-    source_exec /= "gridlabd";
-    source_exec /= "IEEE_8500node.glm";
+    // Sources
+    const std::filesystem::path source_baseline = std::filesystem::path("bin") / "gridlabd" / "baseline_IEEE_8500.glm";
 
-    std::filesystem::path destination_exec(m_deploy_directory);
-    destination_exec /= "resources";
-    destination_exec /= "IEEE_8500node.glm";
+    // Destinations
+    const std::filesystem::path model_level_dir = m_deploy_directory.parent_path(); // .../distribution/IEEE_8500
+    const std::filesystem::path dest_baseline = model_level_dir / "baseline_IEEE_8500.glm";
+    const std::filesystem::path dest_instance =
+        m_deploy_directory / (m_instance_name + ".glm"); // .../<instance>/<m_instance_name>.glm
 
     try
     {
-        std::filesystem::create_directories(destination_exec.parent_path());
-        std::filesystem::copy_file(source_exec, destination_exec, std::filesystem::copy_options::overwrite_existing);
-        PrintSuccess(source_exec, destination_exec);
+        // Ensure directories exist
+        std::filesystem::create_directories(model_level_dir);
+        std::filesystem::create_directories(m_deploy_directory);
+
+        // Copy baseline to model level
+        std::filesystem::copy_file(source_baseline, dest_baseline, std::filesystem::copy_options::overwrite_existing);
+        PrintSuccess(source_baseline, dest_baseline);
+
+        // Generate the per-federate .glm in the federate folder
+        // Contents reference baseline via a relative path, and use m_instance_name for both fields.
+        const std::string instance_glm_contents = "#include \"../baseline_IEEE_8500.glm\"\n"
+                                                  "\n"
+                                                  "object helics_msg {\n"
+                                                  "    name " +
+                                                  m_instance_name +
+                                                  "_conn;\n"
+                                                  "    configure " +
+                                                  m_instance_name +
+                                                  ".json;\n"
+                                                  "}\n";
+
+        {
+            std::ofstream ofs(dest_instance, std::ios::out | std::ios::trunc);
+            if (!ofs)
+                throw std::filesystem::filesystem_error("Failed to open instance glm for write", dest_instance,
+                                                        std::make_error_code(std::errc::io_error));
+            ofs << instance_glm_contents;
+            ofs.flush();
+            if (!ofs)
+                throw std::filesystem::filesystem_error("Failed to write instance glm", dest_instance,
+                                                        std::make_error_code(std::errc::io_error));
+        }
+        PrintSuccess(std::filesystem::path("<generated>"), dest_instance);
     }
     catch (const std::filesystem::filesystem_error &err)
     {
-        PrintError(err, source_exec, destination_exec);
+        // Report whichever copy/create failed
+        PrintError(err, source_baseline, dest_baseline);
         return false;
     }
 
@@ -193,9 +218,7 @@ bool orchestrator::GridLabD8500NodeModel::DeployResources() const
     source_json /= "IEEE_8500node.json";
 
     std::filesystem::path destination_json(m_deploy_directory);
-    destination_json /= "resources";
-    destination_json /= "json";
-    destination_json /= "IEEE_8500node.json";
+    destination_json /= (m_instance_name + ".json");
 
     try
     {
