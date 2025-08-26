@@ -4,4 +4,5 @@ mkdir -p build/deploy
 
 cd build
 
-./orchestrator/orchestrator_exec deploy
+# ./orchestrator/orchestrator_exec
+./orchestrator/orchestrator_exec --existing

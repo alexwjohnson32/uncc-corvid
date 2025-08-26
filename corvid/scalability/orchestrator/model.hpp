@@ -11,25 +11,24 @@ class IModel
   protected:
     std::string m_instance_name{};
     std::filesystem::path m_deploy_directory{};
+    bool m_allow_create_dirs{ true };
 
   public:
     IModel(const std::string &instance_name, const std::string &deploy_directory) : m_instance_name(instance_name)
     {
-        std::filesystem::path base =
-            deploy_directory.empty() ? std::filesystem::current_path() : std::filesystem::path(deploy_directory);
-
-        // Don’t throw if parts don’t exist yet
         std::error_code ec;
-        std::filesystem::path normalized = std::filesystem::weakly_canonical(base, ec);
-        if (ec) normalized = std::filesystem::absolute(base);
-
-        m_deploy_directory = normalized;
-        m_deploy_directory /= m_instance_name;
+        auto base =
+            deploy_directory.empty() ? std::filesystem::current_path() : std::filesystem::path(deploy_directory);
+        auto norm = std::filesystem::weakly_canonical(base, ec);
+        if (ec) norm = std::filesystem::absolute(base);
+        m_deploy_directory = norm / m_instance_name;
     }
 
     std::string GetName() const { return m_instance_name; }
     std::string GetHost() const { return "localhost"; }
     std::filesystem::path GetDeployDir() const { return m_deploy_directory; }
+    void SetAllowCreateDirs(bool allow) { m_allow_create_dirs = allow; }
+    bool GetAllowCreateDirs() const { return m_allow_create_dirs; }
 
     virtual std::string GetExecString() const = 0;
     virtual std::filesystem::path GetExecutableDirectory() const = 0;
