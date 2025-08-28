@@ -46,8 +46,20 @@ std::optional<std::filesystem::path> GenerateJson(const std::filesystem::path &d
     for (const std::unique_ptr<orchestrator::IModel> &model : models)
     {
         orchestrator::HelicsRunner::Federate federate;
-        federate.directory = model->GetExecutableDirectory();
-        federate.exec = model->GetExecString();
+
+        // Make directory RELATIVE to where runnable_cosim.json will live (deploy_dir)
+        std::error_code ec;
+        std::filesystem::path model_dir = model->GetExecutableDirectory();
+        std::filesystem::path rel = std::filesystem::relative(model_dir, deploy_dir, ec);
+        if (ec || rel.empty())
+        {
+            // Fallback: lexical relative (doesn't touch filesystem)
+            auto lex = model_dir.lexically_relative(deploy_dir);
+            rel = lex.empty() ? model_dir : lex;
+        }
+
+        federate.directory = rel.generic_string(); // e.g. "transmission/IEEE-118/T1"
+        federate.exec = model->GetExecString();    // e.g. "./powerflow_ex.x helics_setup.json"
         federate.host = model->GetHost();
         federate.name = model->GetName();
         runner.federates.push_back(federate);

@@ -148,15 +148,28 @@ int main(int argc, char **argv)
 {
     std::ofstream output_console("gpk_118_console.txt");
 
-    // const static int expected_argc = 2;
-    // if (argc != expected_argc)
-    // {
-    //     output_console << "Cannot launch, no json file given to read!" << std::endl;
-    //     return 0;
-    // }
+    const std::string json_file = (argc >= 2) ? std::string(argv[1]) : std::string("helics_setup.json");
 
-    // const std::string json_file(argv[1]);
-    const std::string json_file("helics_setup.json");
+    namespace fs = std::filesystem;
+    const fs::path cwd = fs::current_path();
+    output_console << "[preflight] CWD: " << cwd << "\n";
+    std::cerr << "[preflight] CWD: " << cwd << "\n";
+
+    const fs::path json_path = json_file;
+    const fs::path xml_path = "118.xml";
+
+    if (!fs::exists(json_path))
+    {
+        output_console << "[error] Missing JSON: " << json_path << " (expected in " << cwd << ")\n";
+        std::cerr << "[error] Missing JSON: " << json_path << " (expected in " << cwd << ")\n";
+        return 2;
+    }
+    if (!fs::exists(xml_path))
+    {
+        output_console << "[error] Missing XML: " << xml_path << " (expected in " << cwd << ")\n";
+        std::cerr << "[error] Missing XML: " << xml_path << " (expected in " << cwd << ")\n";
+        return 3;
+    }
 
     const powerflow::PowerflowInput pf_input = json_templates::FromJsonFile<powerflow::PowerflowInput>(json_file);
     output_console << json_templates::ToJsonString(pf_input) << std::endl;

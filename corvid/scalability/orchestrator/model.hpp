@@ -14,14 +14,10 @@ class IModel
     bool m_allow_create_dirs{ true };
 
   public:
-    IModel(const std::string &instance_name, const std::string &deploy_directory) : m_instance_name(instance_name)
+    IModel(const std::string &instance_name, const std::string &deploy_directory)
+        : m_instance_name(instance_name), m_deploy_directory(deploy_directory)
     {
-        std::error_code ec;
-        auto base =
-            deploy_directory.empty() ? std::filesystem::current_path() : std::filesystem::path(deploy_directory);
-        auto norm = std::filesystem::weakly_canonical(base, ec);
-        if (ec) norm = std::filesystem::absolute(base);
-        m_deploy_directory = norm / m_instance_name;
+        m_deploy_directory /= m_instance_name;
     }
 
     std::string GetName() const { return m_instance_name; }
