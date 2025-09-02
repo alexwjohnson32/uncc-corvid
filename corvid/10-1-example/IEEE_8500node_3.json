@@ -1,0 +1,77 @@
+{
+  "coreInit": "--federates=3",
+  "coreType": "zmq",
+  "name": "IEEE_8500node_3_fed",
+  "offset": 0.0,
+  "period": 1.0,
+  "uninterruptible" : true,
+  "logfile": "IEEE_8500node_3.log",
+  "log_level": "debug",
+  "publications": [
+    {
+      "global": true,
+      "key": "gld_hlc_conn_3/Sa",
+      "type": "complex",
+      "unit": "VA",
+      "info": {
+        "object": "HVMV_Sub_HSB",
+        "property": "measured_power_A"
+      }
+    },
+    {
+      "global": true,
+      "key": "gld_hlc_conn_3/Sb",
+      "type": "complex",
+      "unit": "VA",
+      "info": {
+        "object": "HVMV_Sub_HSB",
+        "property": "measured_power_B"
+      }
+    },
+    {
+      "global": true,
+      "key": "gld_hlc_conn_3/Sc",
+      "type": "complex",
+      "unit": "VA",
+      "info": {
+        "object": "HVMV_Sub_HSB",
+        "property": "measured_power_C"
+      }
+    }
+  ],
+  "subscriptions": [
+    {
+      "required": true,
+      "key": "gridpack/Va",
+      "type": "complex",
+      "unit": "V",
+      "global": true,
+      "info": {
+        "object": "HVMV_Sub_HSB",
+        "property": "voltage_A"
+      }
+    },
+    {
+      "required": true,
+      "key": "gridpack/Vb",
+      "type": "complex",
+      "unit": "V",
+      "global": true,
+      "info": {
+        "object": "HVMV_Sub_HSB",
+        "property": "voltage_B"
+      }
+    },
+    {
+      "required": true,
+      "key": "gridpack/Vc",
+      "type": "complex",
+      "unit": "V",
+      "global": true,
+      "info": {
+        "object": "HVMV_Sub_HSB",
+        "property": "voltage_C"
+      }
+    }
+  ]
+}
