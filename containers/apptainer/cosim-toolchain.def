@@ -15,14 +15,16 @@ From: ubuntu:noble
     export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     export PETSC_DIR=/usr/local/petsc-3.16.4
     export LD_LIBRARY_PATH=/usr/local/petsc-3.16.4/lib
+    export OPENSSL_FORCE_FIPS_MODE=0
 
 
 %post
-    export DEBIAN_FRONTEND=noninteractive
+    export OPENSSL_FORCE_FIPS_MODE=0
+
     echo "Installing basic packages..."
     apt-get update && apt-get install -y --fix-missing \
         build-essential cmake git \
-        emacs libzmq5 pip python3.12-venv\
+        vim emacs libzmq5 pip python3.12-venv\
         libzmq5-dev libboost-all-dev swig
 
     # Download, build and install HELICS
