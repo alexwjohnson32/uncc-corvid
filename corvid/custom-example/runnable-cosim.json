@@ -1,0 +1,24 @@
+{
+    "name": "PowerFlow_Corvid_Cosim",
+    "broker": true,
+    "federates": [
+        {
+            "directory": ".",
+            "exec": "gridlabd gridlabd/oneline-right-w-gpk-1.glm",
+            "host": "localhost",
+            "name": "gridlabd_right_federate_1"
+        },
+        {
+            "directory": ".",
+            "exec": "gridlabd gridlabd/oneline-right-w-gpk-2.glm",
+            "host": "localhost",
+            "name": "gridlabd_right_federate_2"
+        },
+        {
+            "directory": ".",
+            "exec": "gridpack/build/gpk-left-fed.x",
+            "host": "localhost",
+            "name": "gridpack_left_federate"
+        }
+    ]
+}

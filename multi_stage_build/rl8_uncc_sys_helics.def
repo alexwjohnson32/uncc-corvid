@@ -1,0 +1,45 @@
+Bootstrap: localimage
+From: rl8_uncc_sys.sif
+
+%environment
+    export LD_LIBRARY_PATH=/usr/local/helics/lib64/:$LD_LIBRARY_PATH
+
+%post
+    # Download, build and install HELICS
+    cd ~/develop
+    git clone --recurse-submodules https://github.com/GMLC-TDC/HELICS.git helics
+    cd helics
+    git checkout -b v3.6.1 tags/v3.6.1
+
+    cmake -DCMAKE_INSTALL_PREFIX=/usr/local/helics \
+	-DCMAKE_C_COMPILER=$CC \
+      	-DCMAKE_CXX_COMPILER=$CXX \
+        -DBOOST_ROOT=/usr/local/boost-1.78.0 \
+	-DCMAKE_BUILD_TYPE=Release \
+        -DHELICS_BUILD_CXX_SHARED_LIB=ON \
+        -B build
+    cmake --build build -j12 -t install
+
+    # Creating venv
+    python3 -m venv /opt/myenv
+    . /opt/myenv/bin/activate
+
+    # pip install dependencies
+    pip3 install --upgrade pip \
+	 wheel \
+	 matplotlib \
+	 pypower \
+	 scipy \
+	 numpy==1.26.4
+
+    # Install HELICS python API and pypower for testing
+    pip3 install helics[cli] --no-cache-dir --no-warn-script-location
+
+%labels
+    Author Alex Johnson
+    Version 1.0
+    Description Rocky Linux 8 Base Image
+
+%runscript
+    echo "Welcome to your Rocky Linux 8 container"
+    exec /bin/bash

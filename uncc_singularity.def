@@ -1,0 +1,174 @@
+Bootstrap: docker
+From: ubuntu:22.04
+Stage: spython-base
+
+%post
+
+apt-get clean && rm -rf /var/lib/apt/lists/* && apt-get update
+apt-get install -y build-essential cmake git
+
+# Download, build and install HELICS
+
+mkdir -p /root/develop
+cd /root/develop
+apt-get install -y libzmq5-dev libboost-all-dev swig
+git clone --recurse-submodules https://github.com/GMLC-TDC/HELICS.git helics
+mkdir -p /root/develop/helics
+cd /root/develop/helics
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local/helics \
+-DCMAKE_BUILD_TYPE=Release \
+-DHELICS_BUILD_CXX_SHARED_LIB=ON \
+-B build
+cmake --build build -j -t install
+
+PYTHONPATH=/usr/local/python
+apt-get install -y --no-install-recommends \
+libboost-filesystem1.74.0 \
+libboost-program-options1.74.0 libboost-test1.74.0 \
+libzmq5 pip python3-dev
+
+# Installing PYPOWER to run examples to confirm correct HELICS installation
+# Using older versions of pyrlu and numpy to accommodate PYPOWER
+pip install helics "helics[cli]" matplotlib \
+pypower pyrlu==0.1.2 \
+scipy numpy==1.26.4
+
+# Download, build and install GridLab-D
+
+mkdir -p /root/develop
+cd /root/develop
+apt-get install -y wget libxerces-c-dev \
+libhdf5-serial-dev curl \
+libzmq3-dev gfortran libncurses5-dev \
+libncursesw5-dev
+git clone https://github.com/gridlab-d/gridlab-d.git gridlabd
+mkdir -p /root/develop/gridlabd
+cd /root/develop/gridlabd
+git submodule update --init --recursive
+
+sed -i '/add_subdirectory(third_party\/jsoncpp_lib)/d' CMakeLists.txt && \
+sed -i '/get_target_property(jsoncpp_lib/d' CMakeLists.txt && \
+sed -i '/target_link_libraries(jsoncpp_lib/d' CMakeLists.txt
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local/gridlabd \
+-DGLD_USE_HELICS=ON \
+-DGLD_HELICS_DIR=/usr/local \
+-B build
+mkdir -p /root/develop/gridlabd/build
+cd /root/develop/gridlabd/build
+make -j8 && make install
+PATH=/usr/local/gridlabd/bin:${PATH}
+
+# Download, build and install GridPACK
+
+mkdir -p /root/develop
+cd /root/develop
+
+# GridPACK dependency: Boost-1.78.0
+
+wget https://archives.boost.io/release/1.78.0/source/boost_1_78_0.tar.gz
+tar -xvf boost_1_78_0.tar.gz
+rm boost_1_78_0.tar.gz
+
+mkdir -p /root/develop/boost_1_78_0
+cd /root/develop/boost_1_78_0
+
+./bootstrap.sh --prefix=/usr/local/boost-1.78.0 \
+--with-libraries=mpi,serialization,random,filesystem,system
+
+echo "using mpi ;" >> project-config.jam
+./b2 -a -d+2 link=static stage
+./b2 -a -d+2 link=static install
+
+# GridPACK dependency: GA-5.8
+
+mkdir -p /root/develop
+cd /root/develop
+
+wget https://github.com/GlobalArrays/ga/releases/download/v5.8/ga-5.8.tar.gz
+tar -xvf ga-5.8.tar.gz
+rm ga-5.8.tar.gz
+
+mkdir -p /root/develop/ga-5.8
+cd /root/develop/ga-5.8
+
+./configure --with-mpi-ts --disable-f77 --without-blas --enable-cxx --enable-i4 \
+--prefix=/usr/local/ga-5.8
+make -j 10 install
+
+# GridPACK dependency: PETSc-3.16.4
+
+mkdir -p /root/develop
+cd /root/develop
+
+git clone https://gitlab.com/petsc/petsc.git
+
+mkdir -p /root/develop/petsc
+cd /root/develop/petsc
+
+git checkout v3.16.4
+PETSC_DIR=/root/develop/petsc
+
+./configure --download-superlu_dist \
+--download-metis \
+--download-parmetis \
+--download-suitesparse \
+--download-f2cblaslapack \
+--prefix=/usr/local/petsc-3.16.4
+
+make && make install
+
+OMPI_ALLOW_RUN_AS_ROOT=1
+OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+
+PETSC_DIR=/usr/local/petsc-3.16.4
+LD_LIBRARY_PATH=/usr/local/petsc-3.16.4/lib
+
+# Now for GridPACK
+
+mkdir -p /root/develop
+cd /root/develop
+git clone https://github.com/GridOPTICS/GridPACK.git
+
+mkdir -p /root/develop/GridPACK
+cd /root/develop/GridPACK
+git submodule update --init
+
+mkdir -p /root/develop/GridPACK/src
+cd /root/develop/GridPACK/src
+git checkout develop
+
+mkdir -p /root/develop/GridPACK/src/build
+cd /root/develop/GridPACK/src/build
+apt-get install -y pkg-config
+
+cmake -D GA_DIR:STRING="/usr/local/ga-5.8" \
+-D BOOST_ROOT:STRING="/usr/local/boost-1.78.0" \
+-D Boost_DIR:STRING="/usr/local/boost-1.78.0/lib/cmake/Boost-1.78.0" \
+-D BOOST_LIBRARYDIR:STRING="/usr/local/boost-1.78.0/lib"\
+-D PETSC_DIR:STRING="/usr/local/petsc-3.16.4" \
+-D MPI_CXX_COMPILER:STRING='mpicxx' \
+-D MPI_C_COMPILER:STRING='mpicc' \
+-D MPIEXEC:STRING='mpiexec' \
+-D GRIDPACK_TEST_TIMEOUT:STRING=30 \
+-D CMAKE_INSTALL_PREFIX:PATH="/usr/local/GridPACK" \
+-D HELICS_INSTALL_DIR:STRING='/usr/local/helics' \
+-D CMAKE_BUILD_TYPE:STRING=Debug ..
+
+make -j 10 install
+
+mkdir -p /root
+cd /root
+%environment
+export PYTHONPATH=/usr/local/python
+export PATH=/usr/local/gridlabd/bin:${PATH}
+export PETSC_DIR=/root/develop/petsc
+export OMPI_ALLOW_RUN_AS_ROOT=1
+export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+export PETSC_DIR=/usr/local/petsc-3.16.4
+export LD_LIBRARY_PATH=/usr/local/petsc-3.16.4/lib
+%runscript
+cd /root
+exec /bin/bash "$@"
+%startscript
+cd /root
+exec /bin/bash "$@"

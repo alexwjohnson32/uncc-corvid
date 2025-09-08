@@ -1,0 +1,17 @@
+#include "gridlabd/baseline-gpk.glm";
+
+// Add a recorder for voltage magnitude and phase at the center bus
+object recorder {
+    name voltage_recorder;
+    parent slack_bus;
+    property measured_voltage_A, measured_power_A, measured_current_A;
+    interval 1;  // Record every second
+    limit 20;  // Record for 10 seconds
+    file "gld_cosim_right_2.csv";  // Output file
+};
+
+// Connect to HELICS
+object helics_msg {
+    name gridlabd_right_federate_2;
+    configure "gridlabd/json/gridlabd_right_federate_2.json";
+};

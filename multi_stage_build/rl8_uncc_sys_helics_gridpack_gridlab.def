@@ -1,0 +1,34 @@
+Bootstrap: localimage
+From: rl8_uncc_sys_helics_gridpack.sif
+
+%post
+    # Install GridLab-D
+    cd ~/develop
+    dnf install -y \
+	 xerces-c-devel \
+    	 hdf5-devel \
+	 curl \
+	 gcc-gfortran \
+	 ncurses-devel
+
+    git clone https://github.com/gridlab-d/gridlab-d.git gridlabd
+    cd gridlabd
+    git checkout -b v5.3.0 tags/v5.3.0
+    git submodule update --init --recursive
+
+    cmake -DCMAKE_INSTALL_PREFIX=/usr/local/gridlabd \
+		  -DGLD_USE_HELICS=ON \
+		  -DGLD_HELICS_DIR=/usr/local \
+		  -B build
+
+    cd build
+    make -j12 && make install
+
+%labels
+    Author Alex Johnson
+    Version 1.0
+    Description Rocky Linux 8 Base Image
+
+%runscript
+    echo "Welcome to your Rocky Linux 8 container"
+    exec /bin/bash

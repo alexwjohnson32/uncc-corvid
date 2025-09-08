@@ -1,0 +1,43 @@
+Bootstrap: localimage
+From: rl8_uncc_sys_helics.sif
+
+%post
+    # Now for GridPACK
+    cd ~/develop
+
+    git clone https://github.com/GridOPTICS/GridPACK.git
+    cd GridPACK
+    git checkout -b local_develop 03c716fbaeff037290a5a06cc54b205ec9965800
+    git submodule update --init
+
+    cd src
+    mkdir build
+    cd build
+
+    cmake -D GA_DIR:STRING="/usr/local/ga-5.8" \
+		  -D BOOST_ROOT:STRING="/usr/local/boost-1.78.0" \
+		  -D Boost_DIR:STRING="/usr/local/boost-1.78.0/lib/cmake/Boost-1.78.0" \
+		  -D BOOST_LIBRARYDIR:STRING="/usr/local/boost-1.78.0/lib"\
+		  -D PETSC_DIR:STRING="/usr/local/petsc-3.16.4" \
+		  -D MPI_CXX_COMPILER:STRING='mpicxx' \
+		  -D MPI_C_COMPILER:STRING='mpicc' \
+		  -D MPIEXEC:STRING='mpiexec' \
+		  -D GRIDPACK_TEST_TIMEOUT:STRING=30 \
+		  -D CMAKE_INSTALL_PREFIX:PATH="/usr/local/GridPACK" \
+		  -D HELICS_INSTALL_DIR:STRING='/usr/local/helics' \
+		  -D CMAKE_BUILD_TYPE:STRING=Debug ..
+
+    make -j 12 install
+    cd ~
+
+    # Clean up
+    dnf clean all
+
+%labels
+    Author Alex Johnson
+    Version 1.0
+    Description Rocky Linux 8 Base Image
+
+%runscript
+    echo "Welcome to your Rocky Linux 8 container"
+    exec /bin/bash

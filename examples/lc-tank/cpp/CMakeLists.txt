@@ -5,6 +5,7 @@ project(LC_TANK)
 add_executable(Capacitor Capacitor.cpp)
 target_include_directories(Capacitor
   PRIVATE
+  /usr/include/openmpi-x86_64
   /usr/lib/x86_64-linux-gnu/openmpi/include
   /usr/local/ga-5.8/include
   /usr/local/GridPACK/include
@@ -14,6 +15,7 @@ target_include_directories(Capacitor
 add_executable(Inductor Inductor.cpp)
 target_include_directories(Inductor
   PRIVATE
+  /usr/include/openmpi-x86_64
   /usr/lib/x86_64-linux-gnu/openmpi/include
   /usr/local/ga-5.8/include
   /usr/local/GridPACK/include
@@ -59,6 +61,7 @@ foreach(LIBRARY_NAME IN LISTS LIBRARIES_NAMES)
     /usr/local/ga-5.8/lib
     /usr/local/petsc-3.16.4/lib
     /usr/local/boost-1.78.0/lib
+    /usr/lib64/openmpi/lib
     /usr/lib/x86_64-linux-gnu/openmpi/lib
     /usr/local/helics/lib
     NO_CACHE
