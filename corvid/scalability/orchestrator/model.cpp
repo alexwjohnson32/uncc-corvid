@@ -54,11 +54,8 @@ bool orchestrator::GridPack118BusModel::DeployExecutables() const
 
     try
     {
-        if (m_allow_create_dirs)
-        {
-            std::filesystem::create_directories(destination_exec.parent_path());
-        }
-        else if (!std::filesystem::exists(destination_exec.parent_path()))
+        std::filesystem::create_directories(destination_exec.parent_path());
+        if (!std::filesystem::exists(destination_exec.parent_path()))
         {
             throw std::filesystem::filesystem_error("Destination directory missing and creation disabled",
                                                     destination_exec.parent_path(),
@@ -105,10 +102,7 @@ bool orchestrator::GridPack118BusModel::DeployResources() const
 
     try
     {
-        if (m_allow_create_dirs)
-        {
-            std::filesystem::create_directories(destination_xml_path.parent_path());
-        }
+        std::filesystem::create_directories(destination_xml_path.parent_path());
         else if (!std::filesystem::exists(destination_xml_path.parent_path()))
         {
             throw std::filesystem::filesystem_error("Destination directory missing and creation disabled",
@@ -127,10 +121,7 @@ bool orchestrator::GridPack118BusModel::DeployResources() const
 
     try
     {
-        if (m_allow_create_dirs)
-        {
-            std::filesystem::create_directories(destination_raw_path.parent_path());
-        }
+        std::filesystem::create_directories(destination_raw_path.parent_path());
         else if (!std::filesystem::exists(destination_raw_path.parent_path()))
         {
             throw std::filesystem::filesystem_error("Destination directory missing and creation disabled",
@@ -150,10 +141,7 @@ bool orchestrator::GridPack118BusModel::DeployResources() const
     // generate helics_setup.json here (instead of copying)
     try
     {
-        if (m_allow_create_dirs)
-        {
-            std::filesystem::create_directories(destination_json_path.parent_path());
-        }
+        std::filesystem::create_directories(destination_json_path.parent_path());
         else if (!std::filesystem::exists(destination_json_path.parent_path()))
         {
             throw std::filesystem::filesystem_error("Destination directory missing and creation disabled",
@@ -224,23 +212,16 @@ bool orchestrator::GridLabD8500NodeModel::DeployExecutables() const
 
     try
     {
-        // Ensure directories exist (or fail if creation is disabled)
-        if (m_allow_create_dirs)
-        {
-            std::filesystem::create_directories(model_level_dir);
-            std::filesystem::create_directories(m_deploy_directory);
-        }
-        else
-        {
-            if (!std::filesystem::exists(model_level_dir))
-                throw std::filesystem::filesystem_error("Model-level directory missing and creation disabled",
-                                                        model_level_dir,
-                                                        std::make_error_code(std::errc::no_such_file_or_directory));
-            if (!std::filesystem::exists(m_deploy_directory))
-                throw std::filesystem::filesystem_error("Instance directory missing and creation disabled",
-                                                        m_deploy_directory,
-                                                        std::make_error_code(std::errc::no_such_file_or_directory));
-        }
+        std::filesystem::create_directories(model_level_dir);
+        std::filesystem::create_directories(m_deploy_directory);
+        if (!std::filesystem::exists(model_level_dir))
+            throw std::filesystem::filesystem_error("Model-level directory missing and creation disabled",
+                                                    model_level_dir,
+                                                    std::make_error_code(std::errc::no_such_file_or_directory));
+        if (!std::filesystem::exists(m_deploy_directory))
+            throw std::filesystem::filesystem_error("Instance directory missing and creation disabled",
+                                                    m_deploy_directory,
+                                                    std::make_error_code(std::errc::no_such_file_or_directory));
 
         // Copy baseline to model level
         std::filesystem::copy_file(source_baseline, dest_baseline, std::filesystem::copy_options::overwrite_existing);
@@ -299,11 +280,8 @@ bool orchestrator::GridLabD8500NodeModel::DeployResources() const
 
     try
     {
-        if (m_allow_create_dirs)
-        {
-            std::filesystem::create_directories(destination_json.parent_path());
-        }
-        else if (!std::filesystem::exists(destination_json.parent_path()))
+        std::filesystem::create_directories(destination_json.parent_path());
+        if (!std::filesystem::exists(destination_json.parent_path()))
         {
             throw std::filesystem::filesystem_error("Destination directory missing and creation disabled",
                                                     destination_json.parent_path(),
