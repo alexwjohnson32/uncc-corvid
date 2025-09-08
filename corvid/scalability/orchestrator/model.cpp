@@ -103,7 +103,7 @@ bool orchestrator::GridPack118BusModel::DeployResources() const
     try
     {
         std::filesystem::create_directories(destination_xml_path.parent_path());
-        else if (!std::filesystem::exists(destination_xml_path.parent_path()))
+        if (!std::filesystem::exists(destination_xml_path.parent_path()))
         {
             throw std::filesystem::filesystem_error("Destination directory missing and creation disabled",
                                                     destination_xml_path.parent_path(),
@@ -122,7 +122,7 @@ bool orchestrator::GridPack118BusModel::DeployResources() const
     try
     {
         std::filesystem::create_directories(destination_raw_path.parent_path());
-        else if (!std::filesystem::exists(destination_raw_path.parent_path()))
+        if (!std::filesystem::exists(destination_raw_path.parent_path()))
         {
             throw std::filesystem::filesystem_error("Destination directory missing and creation disabled",
                                                     destination_raw_path.parent_path(),
@@ -142,7 +142,7 @@ bool orchestrator::GridPack118BusModel::DeployResources() const
     try
     {
         std::filesystem::create_directories(destination_json_path.parent_path());
-        else if (!std::filesystem::exists(destination_json_path.parent_path()))
+        if (!std::filesystem::exists(destination_json_path.parent_path()))
         {
             throw std::filesystem::filesystem_error("Destination directory missing and creation disabled",
                                                     destination_json_path.parent_path(),
