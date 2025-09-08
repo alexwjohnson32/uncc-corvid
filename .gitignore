@@ -13,3 +13,5 @@ tmp/
 temp/
 
 **/gridlabd.xml
+
+deploy_output/
