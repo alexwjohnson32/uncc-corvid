@@ -1,0 +1,5 @@
+add_executable(testing_client testing_websocket_client.cpp)
+target_link_libraries(testing_client corvid_helics_lib)
+
+add_executable(testing_server testing_websocket_server.cpp)
+target_link_libraries(testing_server corvid_helics_lib)

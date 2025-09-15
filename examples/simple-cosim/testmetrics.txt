@@ -1,5 +1,0 @@
-Reliability report for main.glm
-Number of customers = 2
-
-1366 metrics based around 1-minute base (outage-minutes)
-
