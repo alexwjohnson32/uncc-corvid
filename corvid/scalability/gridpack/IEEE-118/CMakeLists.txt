@@ -3,6 +3,8 @@ add_executable(powerflow_ex.x
   pf_app.cpp
   pf_factory.cpp
   pf_input.cpp
+  pf_state.cpp
+  three_phase_pf_app.cpp
   )
 
 target_include_directories(powerflow_ex.x

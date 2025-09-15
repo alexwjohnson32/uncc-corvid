@@ -8,14 +8,16 @@
 #include <memory>
 #include <cmath>
 
-namespace {
-  constexpr double PI = 3.14159265358979323846;
-  using PFNetwork = gridpack::powerflow::PFNetwork;
+namespace
+{
+constexpr double PI = 3.14159265358979323846;
+using PFNetwork = gridpack::powerflow::PFNetwork;
 
-  struct PFState {
+struct PFState
+{
     bool inited = false;
     boost::shared_ptr<PFNetwork> net;
-    gridpack::utility::Configuration* cfg = nullptr;
+    gridpack::utility::Configuration *cfg = nullptr;
     gridpack::utility::Configuration::CursorPtr cursor;
     int bus_idx = -1;
     double baseMVA = 100.0;
@@ -26,164 +28,198 @@ namespace {
     boost::shared_ptr<gridpack::math::Vector> PQ, X;
     boost::shared_ptr<gridpack::math::Matrix> J;
     std::unique_ptr<gridpack::math::LinearSolver> solver;
-  };
+};
 
-  inline PFState& state() { static PFState S; return S; }
+inline PFState &state()
+{
+    static PFState S;
+    return S;
 }
+} // namespace
 
 gridpack::powerflow::PFApp::PFApp(void) {}
 gridpack::powerflow::PFApp::~PFApp(void) {}
 
-enum Parser { PTI23, PTI33 };
-
-void gridpack::powerflow::PFApp::execute(int argc,
-                                         char** argv,
-                                         std::complex<double>& Vout,                 // output: bus-2 phasor
-                                         const std::complex<double>& Sinj)           // input: aggregated S in pu
+enum Parser
 {
-  gridpack::parallel::Communicator world;
-  auto& S = state();
+    PTI23,
+    PTI33
+};
 
-  if (!S.inited) {
-    S.net.reset(new PFNetwork(world));
+void gridpack::powerflow::PFApp::execute(int argc, char **argv,
+                                         std::complex<double> &Vout,       // output: bus-2 phasor
+                                         const std::complex<double> &Sinj) // input: aggregated S in pu
+{
+    gridpack::parallel::Communicator world;
 
-    S.cfg = gridpack::utility::Configuration::configuration();
-    S.cfg->enableLogging(&std::cout);
+    if (!state().inited)
+    {
+        state().net.reset(new PFNetwork(world));
 
-    bool opened = false;
-    if (argc >= 2 && argv[1] != nullptr) opened = S.cfg->open(argv[1], world);
-    else                                 opened = S.cfg->open("118.xml", world);
-    if (!opened) { if (world.rank()==0) std::cerr<<"PFApp: open config failed\n"; return; }
+        state().cfg = gridpack::utility::Configuration::configuration();
+        state().cfg->enableLogging(&std::cout);
 
-    S.cursor = S.cfg->getCursor("Configuration.Powerflow");
-    S.baseMVA = S.cursor->get("baseMVA", 100.0);
+        bool opened = false;
+        if (argc >= 2 && argv[1] != nullptr)
+            opened = state().cfg->open(argv[1], world);
+        else
+            opened = state().cfg->open("118.xml", world);
+        if (!opened)
+        {
+            if (world.rank() == 0) std::cerr << "PFApp: open config failed\n";
+            return;
+        }
 
-    std::string filename;
-    int filetype = PTI23;
-    if (!S.cursor->get("networkConfiguration", &filename)) {
-      if (S.cursor->get("networkConfiguration_v33", &filename)) filetype = PTI33;
-      else { if (world.rank()==0) std::cerr<<"No networkConfiguration\n"; return; }
+        state().cursor = state().cfg->getCursor("Configuration.Powerflow");
+        state().baseMVA = state().cursor->get("baseMVA", 100.0);
+
+        std::string filename;
+        int filetype = PTI23;
+        if (!state().cursor->get("networkConfiguration", &filename))
+        {
+            if (state().cursor->get("networkConfiguration_v33", &filename))
+                filetype = PTI33;
+            else
+            {
+                if (world.rank() == 0) std::cerr << "No networkConfiguration\n";
+                return;
+            }
+        }
+        const double phaseShiftSign = state().cursor->get("phaseShiftSign", 1.0);
+
+        if (filetype == PTI23)
+        {
+            if (world.rank() == 0) std::cout << "Using V23 parser for " << filename << "\n";
+            gridpack::parser::PTI23_parser<PFNetwork> parser(state().net);
+            parser.parse(filename.c_str());
+            if (phaseShiftSign == -1.0) parser.changePhaseShiftSign();
+        }
+        else
+        {
+            if (world.rank() == 0) std::cout << "Using V33 parser for " << filename << "\n";
+            gridpack::parser::PTI33_parser<PFNetwork> parser(state().net);
+            parser.parse(filename.c_str());
+            if (phaseShiftSign == -1.0) parser.changePhaseShiftSign();
+        }
+
+        // Locate original bus 2
+        state().bus_idx = -1;
+        for (int i = 0; i < state().net->numBuses(); ++i)
+        {
+            if (state().net->getOriginalBusIndex(i) == 2)
+            {
+                state().bus_idx = i;
+                break;
+            }
+        }
+        if (state().bus_idx == -1)
+        {
+            if (world.rank() == 0) std::cerr << "Bus 2 not found\n";
+            return;
+        }
+
+        // One-time build
+        state().net->partition();
+
+        state().fact.reset(new gridpack::powerflow::PFFactory(state().net));
+        state().fact->load();
+        state().fact->setComponents();
+        state().fact->setExchange();
+        state().net->initBusUpdate();
+        state().fact->setYBus();
+        state().fact->setSBus();
+
+        // Solver/maps
+        state().fact->setMode(RHS);
+        state().vMap.reset(new gridpack::mapper::BusVectorMap<PFNetwork>(state().net));
+        state().PQ = state().vMap->mapToVector();
+
+        state().fact->setMode(Jacobian);
+        state().jMap.reset(new gridpack::mapper::FullMatrixMap<PFNetwork>(state().net));
+        state().J = state().jMap->mapToMatrix();
+
+        state().X.reset(state().PQ->clone());
+        state().solver.reset(new gridpack::math::LinearSolver(*state().J));
+        state().solver->configure(state().cursor);
+
+        state().inited = true;
     }
-    const double phaseShiftSign = S.cursor->get("phaseShiftSign", 1.0);
 
-    if (filetype == PTI23) {
-      if (world.rank()==0) std::cout<<"Using V23 parser for "<<filename<<"\n";
-      gridpack::parser::PTI23_parser<PFNetwork> parser(S.net);
-      parser.parse(filename.c_str());
-      if (phaseShiftSign == -1.0) parser.changePhaseShiftSign();
-    } else {
-      if (world.rank()==0) std::cout<<"Using V33 parser for "<<filename<<"\n";
-      gridpack::parser::PTI33_parser<PFNetwork> parser(S.net);
-      parser.parse(filename.c_str());
-      if (phaseShiftSign == -1.0) parser.changePhaseShiftSign();
+    // Apply S (pu in MW/Mvar) and solve
+    const double P_MW = Sinj.real() * state().baseMVA;
+    const double Q_Mvar = Sinj.imag() * state().baseMVA;
+    state().net->getBusData(state().bus_idx)->setValue(LOAD_PL, P_MW, 0);
+    state().net->getBusData(state().bus_idx)->setValue(LOAD_QL, Q_Mvar, 0);
+
+    const double tolerance = state().cursor->get("tolerance", 1.0e-6);
+    const int maxIt = state().cursor->get("maxIteration", 50);
+
+    state().fact->setMode(RHS);
+    state().vMap->mapToVector(state().PQ);
+
+    state().fact->setMode(Jacobian);
+    state().jMap->mapToMatrix(state().J);
+
+    state().X->zero();
+    state().solver->solve(*state().PQ, *state().X);
+    auto tol = state().PQ->normInfinity();
+
+    int it = 0;
+    while (std::real(tol) > tolerance && it < maxIt)
+    {
+        state().fact->setMode(RHS);
+        state().vMap->mapToBus(state().X);
+        state().net->updateBuses();
+        state().vMap->mapToVector(state().PQ);
+
+        state().fact->setMode(Jacobian);
+        state().jMap->mapToMatrix(state().J);
+
+        state().X->zero();
+        state().solver->solve(*state().PQ, *state().X);
+        tol = state().PQ->normInfinity();
+        ++it;
     }
 
-    // Locate original bus 2
-    S.bus_idx = -1;
-    for (int i=0; i<S.net->numBuses(); ++i) {
-      if (S.net->getOriginalBusIndex(i) == 2) { S.bus_idx = i; break; }
+    // Push solution and return bus-2 voltage
+    state().fact->setMode(RHS);
+    state().vMap->mapToBus(state().X);
+    state().net->updateBuses();
+
+    std::string phase = "A";
+    if (argc >= 3 && argv[2] != nullptr) phase = argv[2];
+
+    const double vmag = state().net->getBus(state().bus_idx)->getVoltage();
+    const double vang_deg = state().net->getBus(state().bus_idx)->getPhase(); // deg
+    Vout = std::polar(vmag, vang_deg * PI / 180.0);
+
+    if (world.rank() == 0)
+    {
+        const std::string filename_out = "bus_voltages_phase" + phase + ".csv";
+        std::ofstream outFile(filename_out);
+        outFile << "Original Bus Number,Voltage Magnitude (pu),Voltage Angle (deg)\n";
+        for (int i = 0; i < state().net->numBuses(); ++i)
+        {
+            outFile << state().net->getOriginalBusIndex(i) << "," << state().net->getBus(i)->getVoltage() << ","
+                    << state().net->getBus(i)->getPhase() << "\n";
+        }
+        outFile.close();
+        std::cout << "Bus voltages written to " << filename_out << "\n";
     }
-    if (S.bus_idx == -1) { if (world.rank()==0) std::cerr<<"Bus 2 not found\n"; return; }
-
-    // One-time build
-    S.net->partition();
-
-    S.fact.reset(new gridpack::powerflow::PFFactory(S.net));
-    S.fact->load();
-    S.fact->setComponents();
-    S.fact->setExchange();
-    S.net->initBusUpdate();
-    S.fact->setYBus();
-    S.fact->setSBus();
-
-    // Solver/maps
-    S.fact->setMode(RHS);
-    S.vMap.reset(new gridpack::mapper::BusVectorMap<PFNetwork>(S.net));
-    S.PQ = S.vMap->mapToVector();
-
-    S.fact->setMode(Jacobian);
-    S.jMap.reset(new gridpack::mapper::FullMatrixMap<PFNetwork>(S.net));
-    S.J = S.jMap->mapToMatrix();
-
-    S.X.reset(S.PQ->clone());
-    S.solver.reset(new gridpack::math::LinearSolver(*S.J));
-    S.solver->configure(S.cursor);
-
-    S.inited = true;
-  }
-
-  // Apply S (pu in MW/Mvar) and solve
-  const double P_MW   = Sinj.real() * S.baseMVA;
-  const double Q_Mvar = Sinj.imag() * S.baseMVA;
-  S.net->getBusData(S.bus_idx)->setValue(LOAD_PL, P_MW, 0);
-  S.net->getBusData(S.bus_idx)->setValue(LOAD_QL, Q_Mvar, 0);
-
-  const double tolerance = S.cursor->get("tolerance", 1.0e-6);
-  const int    maxIt     = S.cursor->get("maxIteration", 50);
-
-  S.fact->setMode(RHS);
-  S.vMap->mapToVector(S.PQ);
-
-  S.fact->setMode(Jacobian);
-  S.jMap->mapToMatrix(S.J);
-
-  S.X->zero();
-  S.solver->solve(*S.PQ, *S.X);
-  auto tol = S.PQ->normInfinity();
-
-  int it = 0;
-  while (std::real(tol) > tolerance && it < maxIt) {
-    S.fact->setMode(RHS);
-    S.vMap->mapToBus(S.X);
-    S.net->updateBuses();
-    S.vMap->mapToVector(S.PQ);
-
-    S.fact->setMode(Jacobian);
-    S.jMap->mapToMatrix(S.J);
-
-    S.X->zero();
-    S.solver->solve(*S.PQ, *S.X);
-    tol = S.PQ->normInfinity();
-    ++it;
-  }
-
-  // Push solution and return bus-2 voltage
-  S.fact->setMode(RHS);
-  S.vMap->mapToBus(S.X);
-  S.net->updateBuses();
-
-  std::string phase = "A";
-  if (argc >= 3 && argv[2] != nullptr) phase = argv[2];
-
-  const double vmag     = S.net->getBus(S.bus_idx)->getVoltage();
-  const double vang_deg = S.net->getBus(S.bus_idx)->getPhase(); // deg
-  Vout = std::polar(vmag, vang_deg * PI / 180.0);
-
-  if (world.rank() == 0) {
-    const std::string filename_out = "bus_voltages_phase" + phase + ".csv";
-    std::ofstream outFile(filename_out);
-    outFile << "Original Bus Number,Voltage Magnitude (pu),Voltage Angle (deg)\n";
-    for (int i = 0; i < S.net->numBuses(); ++i) {
-      outFile << S.net->getOriginalBusIndex(i) << ","
-              << S.net->getBus(i)->getVoltage() << ","
-              << S.net->getBus(i)->getPhase()   << "\n";
-    }
-    outFile.close();
-    std::cout << "Bus voltages written to " << filename_out << "\n";
-  }
 }
 
-void gridpack::powerflow::PFApp::finalize() {
-  auto& S = state();
-  S.solver.reset();
-  S.J.reset();
-  S.X.reset();
-  S.PQ.reset();
-  S.jMap.reset();
-  S.vMap.reset();
-  S.fact.reset();
-  S.net.reset();
-  S.cfg = nullptr;
-  S.bus_idx = -1;
-  S.inited = false;
+void gridpack::powerflow::PFApp::finalize()
+{
+    auto &state() = state();
+    state().solver.reset();
+    state().J.reset();
+    state().X.reset();
+    state().PQ.reset();
+    state().jMap.reset();
+    state().vMap.reset();
+    state().fact.reset();
+    state().net.reset();
+    state().cfg = nullptr;
+    state().bus_idx = -1;
+    state().inited = false;
 }

@@ -18,6 +18,8 @@
 #ifndef _pf_app_h_
 #define _pf_app_h_
 
+#include "pf_state.hpp"
+
 #include <complex>
 #include <optional>
 #include <string>
@@ -43,9 +45,9 @@ class PFApp
      */
     ~PFApp(void);
 
-    std::optional<std::complex<double>> ComputeVoltageCurrent(const std::string &config_file, int target_bus_id,
-                                                              const std::string &phase_name,
-                                                              const std::complex<double> &Sa) const;
+    std::complex<double> ComputeVoltageCurrent(const std::string &config_file, int target_bus_id,
+                                               const std::string &phase_name, const std::complex<double> &Sa,
+                                               gridpack::powerflow::PFState &state) const;
 };
 
 } // namespace powerflow
