@@ -116,8 +116,14 @@ std::optional<powerflow::PowerflowInput> GetPowerflowInput(int argc, char **argv
 {
     std::optional<powerflow::PowerflowInput> pf_input{};
 
-    const std::string json_file = (argc >= 2) ? std::string(argv[1]) : std::string("helics_setup.json");
+    if (argc < 2)
+    {
+        output_console << "[error] Missing JSON: No json file provided in execution call.\n";
+        std::cerr << "[error] Missing JSON: No json file provided in execution call.\n";
+        return pf_input;
+    }
 
+    const std::string json_file = std::string(argv[1]);
     const std::filesystem::path cwd = std::filesystem::current_path();
     output_console << "[preflight] CWD: " << cwd << "\n";
 
