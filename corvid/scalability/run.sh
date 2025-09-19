@@ -2,6 +2,6 @@
 
 mkdir -p build/deploy
 
-cd build
+cd build/deploy
 
-./orchestrator/orchestrator_exec "$@"
+helics run --path runnable_cosim.json
