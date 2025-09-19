@@ -7,22 +7,24 @@
 
 namespace powerflow
 {
-struct GridlabDInput
+struct GridlabDInputs
 {
-    std::string name{};
     int bus_id{};
+    std::vector<std::string> names{};
 };
 
 struct PowerflowInput
 {
     std::string gridpack_name{};
-    std::vector<powerflow::GridlabDInput> gridlabd_infos{};
+    std::vector<powerflow::GridlabDInputs> gridlabd_infos{};
     double total_time{};
     double ln_magnitude{};
+
+    std::vector<std::string> GetGridalabDNames() const;
 };
 
-void tag_invoke(boost::json::value_from_tag, boost::json::value &json_value, const powerflow::GridlabDInput &data);
-powerflow::GridlabDInput tag_invoke(boost::json::value_to_tag<powerflow::GridlabDInput>,
+void tag_invoke(boost::json::value_from_tag, boost::json::value &json_value, const powerflow::GridlabDInputs &data);
+powerflow::GridlabDInputs tag_invoke(boost::json::value_to_tag<powerflow::GridlabDInputs>,
                                     const boost::json::value &json_value);
 
 void tag_invoke(boost::json::value_from_tag, boost::json::value &json_value, const powerflow::PowerflowInput &data);

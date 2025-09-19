@@ -5,19 +5,19 @@
 #include <boost/json.hpp>
 
 void powerflow::tag_invoke(boost::json::value_from_tag, boost::json::value &json_value,
-                           const powerflow::GridlabDInput &data)
+                           const powerflow::GridlabDInputs &data)
 {
-    json_value = { { "name", data.name }, { "bus_id", data.bus_id } };
+    json_value = { { "bus_id", data.bus_id }, { "names", data.names } };
 }
 
-powerflow::GridlabDInput powerflow::tag_invoke(boost::json::value_to_tag<powerflow::GridlabDInput>,
-                                               const boost::json::value &json_value)
+powerflow::GridlabDInputs powerflow::tag_invoke(boost::json::value_to_tag<powerflow::GridlabDInputs>,
+                                                const boost::json::value &json_value)
 {
-    powerflow::GridlabDInput data;
+    powerflow::GridlabDInputs data;
     const boost::json::object &obj = json_value.as_object();
 
-    json_templates::extract(obj, "name", data.name);
     json_templates::extract(obj, "bus_id", data.bus_id);
+    json_templates::extract(obj, "names", data.names);
 
     return data;
 }
@@ -43,4 +43,19 @@ powerflow::PowerflowInput powerflow::tag_invoke(boost::json::value_to_tag<powerf
     json_templates::extract(obj, "ln_magnitude", data.ln_magnitude);
 
     return data;
+}
+
+std::vector<std::string> powerflow::PowerflowInput::GetGridalabDNames() const
+{
+    std::vector<std::string> names;
+
+    for (const powerflow::GridlabDInputs &info : gridlabd_infos)
+    {
+        for (const std::string &name : info.names)
+        {
+            names.push_back(name);
+        }
+    }
+
+    return names;
 }

@@ -105,7 +105,7 @@ std::string FederateToString(helics::ValueFederate &fed)
 std::vector<int> GetBusIds(const powerflow::PowerflowInput &input)
 {
     std::vector<int> bus_ids;
-    for (const powerflow::GridlabDInput &gridlabd_info : input.gridlabd_infos)
+    for (const powerflow::GridlabDInputs &gridlabd_info : input.gridlabd_infos)
     {
         bus_ids.push_back(gridlabd_info.bus_id);
     }
@@ -173,11 +173,11 @@ double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInp
 
     // Subscriptions
     std::unordered_map<std::string, ThreePhaseSubscriptions> subs;
-    for (const powerflow::GridlabDInput &gridlabd_info : pf_input.gridlabd_infos)
+    for (const std::string &gridlabd_name : pf_input.GetGridalabDNames())
     {
-        subs[gridlabd_info.name] = { gpk_118.registerSubscription(gridlabd_info.name + "/Sa", "VA"),
-                                     gpk_118.registerSubscription(gridlabd_info.name + "/Sb", "VA"),
-                                     gpk_118.registerSubscription(gridlabd_info.name + "/Sc", "VA") };
+        subs[gridlabd_name] = { gpk_118.registerSubscription(gridlabd_name + "/Sa", "VA"),
+                                gpk_118.registerSubscription(gridlabd_name + "/Sb", "VA"),
+                                gpk_118.registerSubscription(gridlabd_name + "/Sc", "VA") };
     }
 
     output_console << "Registered Pubs/Subs" << std::endl;
@@ -205,6 +205,12 @@ double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInp
         return -1.0;
     }
 
+    std::unordered_map<std::string, gridpack::powerflow::ThreePhaseValues> last_known_values;
+    for (const std::string &gridlabd_name : pf_input.GetGridalabDNames())
+    {
+        last_known_values[gridlabd_name] = gridpack::powerflow::ThreePhaseValues();
+    }
+
     // Enter execution mode
     gpk_118.enterExecutingMode();
     output_console << "GridPACK Federate has entered execution mode." << std::endl;
@@ -215,35 +221,83 @@ double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInp
     output_console << "Published." << std::endl;
 
     // Perform Simulation
+
+    /*
+     * What performing the simulation looks like:
+     * 1. Get the granted time
+     * 2. Separate the distribution systems based on bus_id
+     * 3. For each bus_id, aggregate the total power from the distribution systems. Meaning, limt the power for each
+     * phase and keep a total of all limited power for each phase per bus_id.
+     * 4. Run the powerflow application per bus id (maybe this means one application, or it means an application per
+     * bus_id).
+     * 5. Publish individual calculated V for each ID at the same granted time.
+     */
+
     const double total_interval = pf_input.total_time;
     double granted_time = 0.0;
     while (granted_time + period <= total_interval)
     {
-        output_console << "Granted Time + Period: " << granted_time + period << ", Total Interval: " << total_interval
-                       << std::endl;
+        std::stringstream ss;
+
+        ss << "\n##########################################\n";
+        ss << "New Loop Iteration Information:\n\tGranted Time + Period: " << granted_time + period
+           << "\n\tTotal Interval: " << total_interval << std::endl;
+        ss << "Requesting New Granted Time: " << granted_time + period << std::endl;
+
         granted_time = gpk_118.requestTime(granted_time + period);
-        output_console << "Granted Time: " << granted_time << ", Period: " << period
-                       << ", Total Interval: " << total_interval << std::endl;
+        ss << " Received Granted Time: " << granted_time << std::endl;
 
-        for (const powerflow::GridlabDInput &gridlabd_input : pf_input.gridlabd_infos)
+        ss << "\n[Time " << granted_time << "]\n";
+        output_console << ss.str();
+        output_file << ss.str();
+        ss.str(""); // reset
+
+        for (const powerflow::GridlabDInputs &gridlabd_info : pf_input.gridlabd_infos)
         {
-            output_console << "GridlabD Name Computation: " << gridlabd_input.name << std::endl;
-            gridpack::powerflow::ThreePhaseValues s = LimitPower(subs.at(gridlabd_input.name), 1.0);
-            gridpack::powerflow::ThreePhaseValues v = executor.ComputeVoltage(s, gridlabd_input.bus_id);
+            ss << "\nBus Id: " << gridlabd_info.bus_id << "\n";
+            ss << "Gridlabd Names:\n\t";
 
-            std::stringstream ss;
-            ss << "GridlabdD Name: " << gridlabd_input.name << "\n"
-               << "[Time " << granted_time << "]\n"
-               << "S received from Gridlab-D, Sa: " << s.a << ", Sb: " << s.b << ", Sc: " << s.c << "\n"
-               << "Updated V by GridPACK, Va: " << v.a << ", Vb: " << v.b << ", Vc: " << v.c << "\n";
+            gridpack::powerflow::ThreePhaseValues s_total;
+            for (const std::string &gridlabd_name : gridlabd_info.names)
+            {
+                ss << "\"" << gridlabd_name << "\" ";
+                ThreePhaseSubscriptions &current_subs = subs.at(gridlabd_name);
+                if (current_subs.a.isUpdated() || current_subs.a.isValid())
+                {
+                    last_known_values.at(gridlabd_name).a = current_subs.a.getValue<std::complex<double>>();
+                }
+                if (current_subs.b.isUpdated() || current_subs.b.isValid())
+                {
+                    last_known_values.at(gridlabd_name).b = current_subs.b.getValue<std::complex<double>>();
+                }
+                if (current_subs.c.isUpdated() || current_subs.c.isValid())
+                {
+                    last_known_values.at(gridlabd_name).c = current_subs.c.getValue<std::complex<double>>();
+                }
+
+                gridpack::powerflow::ThreePhaseValues limited_power = LimitPower(subs.at(gridlabd_name), 1.0);
+                s_total.a += limited_power.a;
+                s_total.b += limited_power.b;
+                s_total.c += limited_power.c;
+            }
+
+            ss << "\n";
+            ss << "Total S received from Gridlab-D: [" << s_total.a << ", " << s_total.b << ", " << s_total.c << "]\n";
+
+            gridpack::powerflow::ThreePhaseValues v = executor.ComputeVoltage(s_total, gridlabd_info.bus_id);
+
+            ss << "Updated V by GridPACK: [" << v.a << ", " << v.b << ", " << v.c << "]\n";
 
             output_console << ss.str();
             output_file << ss.str();
+            ss.str(""); // reset
 
             pub.Publish(v);
         }
 
-        output_console << "Completed Computation of current Granted Time." << std::endl;
+        ss << "##########################################\n";
+        output_console << ss.str();
+        output_file << ss.str();
     }
 
     output_file << "End of Cosimulation.";
@@ -257,7 +311,6 @@ int main(int argc, char **argv)
 {
     // Prepare GridPACK Environment
     gridpack::Environment env(argc, argv);
-    // gridpack::math::Initialize(&argc, &argv);
 
     // Use this instead of std::cout.
     std::ofstream output_console("gpk_118_console.txt");
@@ -282,7 +335,8 @@ int main(int argc, char **argv)
 
     if (granted_time < 0.0)
     {
-        output_console << "Could not perform simulation! Federate finalized.\nGranted time: " << granted_time << std::endl;
+        output_console << "Could not perform simulation! Federate finalized.\nGranted time: " << granted_time
+                       << std::endl;
     }
     else
     {

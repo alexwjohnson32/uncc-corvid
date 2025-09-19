@@ -14,9 +14,9 @@ namespace powerflow
 
 struct ThreePhaseValues
 {
-    std::complex<double> a;
-    std::complex<double> b;
-    std::complex<double> c;
+    std::complex<double> a{ 0.0, 0.0 };
+    std::complex<double> b{ 0.0, 0.0 };
+    std::complex<double> c{ 0.0, 0.0 };
 };
 
 class ThreePhasePFApp
