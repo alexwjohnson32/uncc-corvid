@@ -13,3 +13,8 @@ cmake_args=(
 cmake "${cmake_args[@]}"
 
 make install -j16
+
+if [ "$#" -eq 1 ]; then
+    cd ..
+    ./export.sh $1
+fi

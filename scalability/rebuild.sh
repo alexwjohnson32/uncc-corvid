@@ -2,4 +2,9 @@
 
 ./clean_dir.sh
 
-./build.sh
+if [ "$#" -eq 1 ]; then
+    ./build.sh $1
+else
+    ./build.sh
+fi
+
