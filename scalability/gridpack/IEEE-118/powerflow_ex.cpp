@@ -7,6 +7,7 @@
 #include <fstream>
 #include <complex>
 #include <unordered_map>
+
 #include <helics/application_api/ValueFederate.hpp>
 #include <helics/application_api/Publications.hpp>
 #include <helics/application_api/Inputs.hpp>
@@ -24,6 +25,7 @@
 
 namespace
 {
+
 struct ThreePhaseSubscriptions
 {
     helics::Input a{};

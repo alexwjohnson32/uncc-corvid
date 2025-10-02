@@ -2,10 +2,13 @@
   "name": "IEEE_8500node_IEEE118_gpk_CoSimulation-HELICSRunner",
   "broker":
   {
-    "coreType": "zmq",
-    "initString": "--federates=2 --localport=23500"
+    "port": "23500",
   },
-  "stop_time": 1.0,
+  "tracer":
+  {
+    "directory": ".",
+    "config": "tracer_config.json"
+  },
   "federates": [
     {
       "name": "gld_fed",
