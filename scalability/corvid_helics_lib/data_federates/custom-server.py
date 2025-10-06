@@ -1,26 +1,51 @@
-import socket
-import sys
+import http.server
 
-HOST = "127.0.0.1"
-PORT = 23555
+import json
+import argparse
 
-def main(argv):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind((HOST, PORT))
-        s.listen()
+class MyServer(http.server.BaseHTTPRequestHandler):
+    path = ""
 
-        print(f"Connecting on {HOST}:{PORT}...")
+    def do_POST(self):
+        if self.path == self.path:
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            decoded_post_data = post_data.decode("utf-8")
+            print(decoded_post_data)
 
-        conn, addr = s.accept()
-        with conn:
-            print(f"Connected to {addr}")
-            while True:
-                data = conn.recv(4096)
-                if not data:
-                    break
+            response = { "message": "Received data." }
 
-                data_string = data.decode('utf-8')
-                print(data_string)
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode())
+        else:
+            self.send_response(404)
+            self.end_headers()
+            self.wfile.write(b'Path not found.')
+            print(f"Path '{self.path}' not found.")
+
+def main():
+    parser = argparse.ArgumentParser(description="An HTTP test server")
+    parser.add_argument("--hostname", dest="hostname", help="The hostname", default="127.0.0.1")
+    parser.add_argument("--port", dest="port", help="The port name", default=23555)
+    parser.add_argument("--path", dest="path", help="The POST Path", default="/ws/logs")
+
+    args = parser.parse_args()
+
+    MyServer.path = args.path
+
+    try:
+        with http.server.HTTPServer((args.hostname, args.port), MyServer) as server:
+            print(f"Serving on http://{args.hostname}:{args.port}")
+            print(f"POST Path: {MyServer.path}")
+            server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nUser requested close.")
+    except Exception as e:
+        print(f"\nUnhandled Exception: {e}")
+    finally:
+        print("Closing.")
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()
