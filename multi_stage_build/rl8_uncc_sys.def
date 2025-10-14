@@ -42,29 +42,29 @@ From: rockylinux:8
     # Install additional packages
     dnf install -y \
 	wget \
-        vim \
-      	which \
-        gcc-toolset-11 \
-        cmake \
-        zeromq \
-        zeromq-devel \
-        boost-devel \
-        swig \
+    vim \
+    which \
+    gcc-toolset-11 \
+    cmake \
+    zeromq \
+    zeromq-devel \
+    boost-devel \
+    swig \
 	python3.11 \
 	python3.11-devel \
 	python3.11-pip \
-        pkgconf-pkg-config \
-	openmpi \
-	openmpi-devel \
+    pkgconf-pkg-config \
 	pkg-config \
-        libaec-devel \
+    libaec-devel \
     gtest \
-        gtest-devel
+    gtest-devel \
+    libevent-devel \
+    hwloc-devel
+    #openmpi \
+	#openmpi-devel \
 
-    # Set up symlinks to make python3 and pip3 point to Python 3.11
-    ln -sf /usr/bin/python3.11 /usr/bin/python3
-    ln -sf /usr/bin/pip3.11 /usr/bin/pip3
-    ln -sf /usr/bin/pip3.11 /usr/bin/pip
+    dnf install -y gcc gcc-c++ make automake autoconf libtool
+
 
     # Activate GCC 11
     source /opt/rh/gcc-toolset-11/enable
@@ -79,6 +79,50 @@ From: rockylinux:8
     # Set up OpenMPI paths (optional but good for CMake later)
     export PATH=/usr/lib64/openmpi/bin:$PATH
     export LD_LIBRARY_PATH=/usr/lib64/openmpi/lib:$LD_LIBRARY_PATH
+
+    cd ~
+    mkdir -p develop
+
+    #---pmix install
+    cd ~/develop
+    wget https://github.com/openpmix/openpmix/releases/download/v5.0.3/pmix-5.0.3.tar.gz
+    tar -xzf pmix-5.0.3.tar.gz
+    cd pmix-5.0.3
+    ./configure \
+        --prefix=/usr/lib64/pmix \
+        --enable-shared \
+        --enable-static
+    make -j10
+    make install
+
+    export PATH=/usr/lib64/openmpi/bin:$PATH
+
+    #---mpi build from source (openmpi/4.1.6)   
+    cd ~/develop
+    wget https://www.open-mpi.org/software/ompi/v4.1/downloads/openmpi-4.1.6.tar.gz
+    tar -xvf openmpi-4.1.6.tar.gz
+    cd openmpi-4.1.6
+    ./configure --prefix=/usr/lib64/openmpi \
+                --with-pmix=/usr/lib64/pmix
+                #CC=your_c_compiler CXX=your_cxx_compiler F77=your_fortran77_compiler FC=your_fortran90_compiler
+
+    make all
+    make install
+    ldconfig
+    #---
+    cd ~/develop
+
+
+
+    #infiniband
+    dnf install libibverbs libibverbs-utils rdma-core librdmacm librdmacm-utils -y ##install IB support  
+
+
+    # Set up symlinks to make python3 and pip3 point to Python 3.11
+    ln -sf /usr/bin/python3.11 /usr/bin/python3
+    ln -sf /usr/bin/pip3.11 /usr/bin/pip3
+    ln -sf /usr/bin/pip3.11 /usr/bin/pip
+
 
     cd ~
     mkdir -p develop
