@@ -9,6 +9,8 @@
 
 #include <boost/json.hpp>
 
+#include <boost/beast.hpp>
+
 namespace json_templates
 {
 /**

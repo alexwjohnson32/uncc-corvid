@@ -60,7 +60,7 @@ foreach(LIBRARY_NAME IN LISTS LIBRARIES_NAMES)
   if(NOT LIBRARY_PATH)
     message(FATAL_ERROR "'${LIBRARY_NAME}' could not be found.")
   else()
-    message(STATUS "'${LIBRARY_NAME}' found at '${LIBRARY_PATH}`.")
+    # message(STATUS "'${LIBRARY_NAME}' found at '${LIBRARY_PATH}`.")
   endif()
 
   # Append the found library path to the LIBRARIES_FOUND list
