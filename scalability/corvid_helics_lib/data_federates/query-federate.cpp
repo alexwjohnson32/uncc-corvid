@@ -1,6 +1,5 @@
 #include <boost/property_tree/json_parser/error.hpp>
 #include <boost/property_tree/ptree_fwd.hpp>
-#include <exception>
 #include <helics/application_api/MessageFederate.hpp>
 #include <helics/application_api/Publications.hpp>
 #include <helics/application_api/Inputs.hpp>
@@ -12,10 +11,9 @@
 #include <sstream>
 #include <string>
 #include <fstream>
-#include <vector>
-#include <filesystem>
 #include <chrono>
 #include <thread>
+#include <exception>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -72,11 +70,54 @@ helics::MessageFederate GetFederate(const pt::ptree &config)
     return helics::MessageFederate(name, fi);
 }
 
+std::string DebugTimeQueryLoop(double granted_time, helics::MessageFederate &msg_fed)
+{
+    Stopwatch loop_watch;
+    std::stringstream ss;
+
+    ss << "\n##########################################\n";
+    ss << "Granted Time: " << granted_time << "\n";
+
+    loop_watch.start();
+
+    ss << msg_fed.query("root", "global_time_debugging");
+
+    double loop_execution_ms = loop_watch.elapsedMilliseconds();
+
+    ss << "\nQuery Execution Time: " << loop_execution_ms << " ms\n";
+    ss << "##########################################\n";
+
+    return ss.str();
+}
+
+std::string DiscreteQueriesLoop(double granted_time, helics::MessageFederate &msg_fed)
+{
+    Stopwatch loop_watch;
+    std::stringstream ss;
+
+    ss << "\n##########################################\n";
+    ss << "Granted Time: " << granted_time << "\n";
+
+    loop_watch.start();
+
+    ss << "Name: " << msg_fed.query("root", "name") << "\n";
+    ss << "Address: " << msg_fed.query("root", "address") << "\n";
+    ss << "IsInit: " << msg_fed.query("root", "isinit") << "\n";
+    ss << "IsConnected: " << msg_fed.query("root", "isconnected");
+
+    double loop_execution_ms = loop_watch.elapsedMilliseconds();
+
+    ss << "\nQuery Execution Time: " << loop_execution_ms << " ms\n";
+    ss << "##########################################\n";
+
+    return ss.str();
+}
+
 double PerformLoop(helics::MessageFederate &msg_fed, const double total_time, const double period,
                    std::ofstream &output_console)
 {
     Stopwatch main_watch;
-    Stopwatch loop_watch;
+
     double granted_time = 0.0;
 
     main_watch.start();
@@ -84,16 +125,10 @@ double PerformLoop(helics::MessageFederate &msg_fed, const double total_time, co
     {
         granted_time = msg_fed.requestTime(granted_time + period);
 
-        std::stringstream ss;
-        ss << "\n##########################################\n";
-        ss << "Granted Time: " << granted_time << "\n";
-        loop_watch.start();
-        ss << msg_fed.query("root", "global_time_debugging");
-        double loop_execution_ms = loop_watch.elapsedMilliseconds();
-        ss << "\nQuery Execution Time: " << loop_execution_ms << " ms\n";
-        ss << "\n##########################################\n";
+        // std::string output_string = DebugTimeQueryLoop(granted_time, msg_fed);
+        std::string output_string = DiscreteQueriesLoop(granted_time, msg_fed);
 
-        output_console << ss.str();
+        output_console << output_string;
     }
     double main_loop_ms = main_watch.elapsedMilliseconds();
 

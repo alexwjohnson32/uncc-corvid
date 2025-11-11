@@ -1,13 +1,4 @@
-add_executable(query-federate-exe
-  query-federate.cpp
-  )
-
-target_include_directories(query-federate-exe
-  PRIVATE
-  /usr/include/openmpi-x86_64
-  /usr/local/helics/include
-  )
-
+# Step 1: Loop through the list to find each library
 set(LIBRARIES_NAMES
    "mpi"
    "mpi_cxx"
@@ -17,7 +8,6 @@ set(LIBRARIES_NAMES
 # Variable to hold the paths of found libraries
 set(LIBRARIES_FOUND)
 
-# Step 1: Loop through the list to find each library
 foreach(LIBRARY_NAME IN LISTS LIBRARIES_NAMES)
 
   find_library(LIBRARY_PATH NAMES ${LIBRARY_NAME}
@@ -41,8 +31,30 @@ foreach(LIBRARY_NAME IN LISTS LIBRARIES_NAMES)
   unset(LIBRARY_PATH)
 endforeach()
 
-# Step 2: Link all found libraries to the executable
-target_link_libraries(query-federate-exe ${LIBRARIES_FOUND} corvid_helics_lib)
+# Step 2: Add executables
+add_executable(query-federate-exe query-federate.cpp)
+target_include_directories(query-federate-exe
+  PRIVATE
+  /usr/include/openmpi-x86_64
+  /usr/local/helics/include
+  )
 
+add_executable(websocket-client-exe websocket-client.cpp)
+target_include_directories(websocket-client-exe
+  PRIVATE
+  /usr/include/openmpi-x86_64
+  /usr/local/helics/include
+  )
+
+add_executable(websocket-server-exe websocket-server.cpp)
+
+# Step 3: Link all found libraries to the executables
+target_link_libraries(query-federate-exe ${LIBRARIES_FOUND} corvid_helics_lib)
+target_link_libraries(websocket-client-exe ${LIBRARIES_FOUND} corvid_helics_lib)
+target_link_libraries(websocket-server-exe corvid_helics_lib)
+
+# Step 4: Install built objects
 install(TARGETS query-federate-exe DESTINATION ${CMAKE_INSTALL_PREFIX}/corvid_helics_lib/data_federates)
 install(FILES query_config.json DESTINATION ${CMAKE_INSTALL_PREFIX}/corvid_helics_lib/data_federates)
+install(TARGETS websocket-client-exe DESTINATION ${CMAKE_INSTALL_PREFIX}/corvid_helics_lib/data_federates)
+install(TARGETS websocket-server-exe DESTINATION ${CMAKE_INSTALL_PREFIX}/corvid_helics_lib/data_federates)
