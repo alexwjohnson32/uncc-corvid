@@ -70,7 +70,7 @@ foreach(LIBRARY_NAME IN LISTS LIBRARIES_NAMES)
 endforeach()
 
 # Step 2: Link all found libraries to the executable
-target_link_libraries(powerflow_ex.x ${LIBRARIES_FOUND} corvid_helics_lib)
+target_link_libraries(powerflow_ex.x PRIVATE ${LIBRARIES_FOUND} corvid_helics_lib)
 
 install(TARGETS powerflow_ex.x DESTINATION ${CMAKE_INSTALL_PREFIX}/gridpack/IEEE-118)
-install(FILES 118.raw 118.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/gridpack/IEEE-118)
+install(FILES 118.raw 118.xml helics_fed_info_config.json DESTINATION ${CMAKE_INSTALL_PREFIX}/gridpack/IEEE-118)

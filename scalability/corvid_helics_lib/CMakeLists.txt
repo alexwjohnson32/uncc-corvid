@@ -1,4 +1,4 @@
-add_library(corvid_helics_lib INTERFACE)
+add_library(corvid_helics_lib)
 
 # link boost this way to silence warnings
 target_link_libraries(corvid_helics_lib INTERFACE ${Boost_LIBRARIES})

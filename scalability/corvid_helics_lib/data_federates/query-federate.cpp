@@ -1,5 +1,6 @@
 #include <boost/property_tree/json_parser/error.hpp>
 #include <boost/property_tree/ptree_fwd.hpp>
+#include <cstdlib>
 #include <helics/application_api/MessageFederate.hpp>
 #include <helics/application_api/Publications.hpp>
 #include <helics/application_api/Inputs.hpp>
@@ -17,27 +18,58 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/optional.hpp>
+
+#include "stopwatch.hpp"
+
+#include "persistent-websocket-client.hpp"
 
 namespace pt = boost::property_tree;
 
 namespace
 {
 
-class Stopwatch
+struct ClientDetails
+{
+    std::string address = "127.0.0.1";
+    std::string port = "23333";
+    std::string websocket_path = "/";
+};
+
+class WriteHelper
 {
   private:
-    std::chrono::high_resolution_clock::time_point m_start_time;
+    connections::PersistentWebSocketClient &m_client;
+    std::ofstream &m_output_console;
 
   public:
-    void start() { m_start_time = std::chrono::high_resolution_clock::now(); }
-
-    double elapsedMilliseconds() const
+    WriteHelper(connections::PersistentWebSocketClient &&client, std::ofstream &&output_console)
+        : m_client(client), m_output_console(output_console)
     {
-        auto now = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double, std::milli> elapsed = now - m_start_time;
-        return elapsed.count();
+        m_client.Run();
+    }
+
+    void Write(const std::string &message)
+    {
+        m_output_console << message;
+        m_client.SendMessage(message);
     }
 };
+
+ClientDetails GetClientDetails(const pt::ptree &config)
+{
+    ClientDetails details;
+
+    boost::optional<const pt::ptree &> details_tree = config.get_child_optional("client_details");
+    if (details_tree)
+    {
+        details.address = details_tree.value().get_optional<std::string>("address").value_or("127.0.0.1");
+        details.port = details_tree.value().get_optional<std::string>("port").value_or("23333");
+        details.websocket_path = details_tree.value().get_optional<std::string>("websocket_path").value_or("/");
+    }
+
+    return details;
+}
 
 helics::CoreType GetCoreType(const std::string &core_type)
 {
@@ -72,7 +104,7 @@ helics::MessageFederate GetFederate(const pt::ptree &config)
 
 std::string DebugTimeQueryLoop(double granted_time, helics::MessageFederate &msg_fed)
 {
-    Stopwatch loop_watch;
+    utils::Stopwatch loop_watch;
     std::stringstream ss;
 
     ss << "\n##########################################\n";
@@ -92,7 +124,7 @@ std::string DebugTimeQueryLoop(double granted_time, helics::MessageFederate &msg
 
 std::string DiscreteQueriesLoop(double granted_time, helics::MessageFederate &msg_fed)
 {
-    Stopwatch loop_watch;
+    utils::Stopwatch loop_watch;
     std::stringstream ss;
 
     ss << "\n##########################################\n";
@@ -113,10 +145,9 @@ std::string DiscreteQueriesLoop(double granted_time, helics::MessageFederate &ms
     return ss.str();
 }
 
-double PerformLoop(helics::MessageFederate &msg_fed, const double total_time, const double period,
-                   std::ofstream &output_console)
+double PerformLoop(helics::MessageFederate &msg_fed, const double total_time, const double period, WriteHelper &helper)
 {
-    Stopwatch main_watch;
+    utils::Stopwatch main_watch;
 
     double granted_time = 0.0;
 
@@ -128,18 +159,21 @@ double PerformLoop(helics::MessageFederate &msg_fed, const double total_time, co
         // std::string output_string = DebugTimeQueryLoop(granted_time, msg_fed);
         std::string output_string = DiscreteQueriesLoop(granted_time, msg_fed);
 
-        output_console << output_string;
+        helper.Write(output_string);
     }
     double main_loop_ms = main_watch.elapsedMilliseconds();
 
-    output_console << "\n##########################################\n";
-    output_console << "Total Loop Time: " << main_loop_ms << " ms";
-    output_console << "\n##########################################\n";
+    std::stringstream end;
+    end << "\n##########################################\n"
+        << "Total Loop Time: " << main_loop_ms << " ms"
+        << "\n##########################################\n"
+        << "\nFederate finalized.\nGranted time: " << granted_time << "\n";
+    helper.Write(end.str());
 
     return granted_time;
 }
 
-double ExecuteFederate(const pt::ptree &config, std::ofstream &output_console)
+double ExecuteFederate(const pt::ptree &config, WriteHelper &helper)
 {
     const double total_time = config.get<double>("total_time");
     const double period = config.get_optional<double>("period").value_or(1.0);
@@ -154,11 +188,13 @@ double ExecuteFederate(const pt::ptree &config, std::ofstream &output_console)
         // Sleep for a few seconds to enure the cosim is fully setup (this is the recommended approach....booo)
         std::this_thread::sleep_for(std::chrono::seconds(5));
 
-        granted_time = PerformLoop(msg_fed, total_time, period, output_console);
+        granted_time = PerformLoop(msg_fed, total_time, period, helper);
     }
     catch (const std::exception &e)
     {
-        output_console << "Error: " << e.what() << std::endl;
+        std::stringstream err;
+        err << "Error: " << e.what() << std::endl;
+        helper.Write(err.str());
     }
 
     // Remember to finalize the fed
@@ -170,43 +206,64 @@ double ExecuteFederate(const pt::ptree &config, std::ofstream &output_console)
 
 int main(int argc, char **argv)
 {
-    std::ofstream output_console("query-federate-cpp.log");
-
+    // Parse the command line
     if (argc != 2)
     {
-        output_console << "Cannot launch: This federate only accepts one argument, a json input file." << std::endl;
-        return 1;
+        std::cerr << "Cannot launch: This federate only accepts one argument, a json input file." << std::endl;
+        return EXIT_FAILURE;
     }
 
     std::string json_input_file(argv[1]);
-    pt::ptree config;
 
     try
     {
+        // Parse json into the ptree object
+        pt::ptree config;
         pt::read_json(json_input_file, config);
+
+
+        // Get local file to write to
+        std::string local_log_file =
+            config.get_optional<std::string>("local_log_file").value_or("query-federate-cpp.log");
+        std::cout << "Attempting to write to file: '" << local_log_file << "'." << std::endl;
+        std::ofstream output_console(local_log_file);
+        if (!output_console.is_open())
+        {
+            std::cerr << "Could not open file '" << local_log_file << "'!" << std::endl;
+            return EXIT_FAILURE;
+        }
+
+        // Get client to write to
+        ClientDetails client_details = GetClientDetails(config);
+        connections::PersistentWebSocketClient client(client_details.address, client_details.port,
+                                                      client_details.websocket_path);
+
+        // Connect to a helper class
+        WriteHelper helper(std::move(client), std::move(output_console));
+
+        // Configure and launch the federate
+        const double granted_time = ExecuteFederate(config, helper);
+        if (granted_time < 0.0)
+        {
+            std::cerr << "Could not perform simulation! Federate finalized.\nGranted time: " << granted_time
+                      << std::endl;
+        }
+
+        return EXIT_SUCCESS;
     }
     catch (const pt::json_parser::json_parser_error &e)
     {
-        output_console << "Error parsing json file '" << json_input_file << "'\n" << e.what() << std::endl;
-        return 1;
+        std::cerr << "Error parsing json file '" << json_input_file << "'\n" << e.what() << std::endl;
+        return EXIT_FAILURE;
     }
     catch (const std::exception &e)
     {
-        output_console << "Error: " << e.what() << std::endl;
-        return 1;
+        std::cerr << "Fatal error: " << e.what() << std::endl;
+        return EXIT_FAILURE;
     }
-
-    const double granted_time = ExecuteFederate(config, output_console);
-
-    if (granted_time < 0.0)
+    catch (...)
     {
-        output_console << "Could not perform simulation! Federate finalized.\nGranted time: " << granted_time
-                       << std::endl;
+        std::cerr << "Unknown Exception: An object that does not inherit std::exception was thrown!" << std::endl;
+        return EXIT_FAILURE;
     }
-    else
-    {
-        output_console << "Federate finalized.\nGranted time: " << granted_time << std::endl;
-    }
-
-    return 0;
 }

@@ -59,8 +59,12 @@ class WebSocketSession : public std::enable_shared_from_this<WebSocketSession>
         }
 
         // Echo the received message back
-        m_output_file_stream << "WebSocketSession: " << m_id << ", Received message: '"
+        std::stringstream msg_stream;
+        msg_stream << "\nWebSocketSession: " << m_id << ", Received message: '"
                              << boost::beast::buffers_to_string(m_buffer.data()) << "'" << std::endl;
+
+        std::cout << msg_stream.str();
+        m_output_file_stream << msg_stream.str();
 
         m_websocket.text(m_websocket.got_text());
         m_websocket.async_write(m_buffer.data(),

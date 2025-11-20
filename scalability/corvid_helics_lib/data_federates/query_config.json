@@ -2,5 +2,12 @@
     "name": "query_fed",
     "core_type": "zmq",
     "core_init_string": "--federates=1",
-    "total_time": 60.0
+    "total_time": 60.0,
+    "client_details":
+    {
+        "address": "127.0.0.1",
+        "port": "23333",
+        "websocket_path": "/"
+    },
+    "local_log_file": "query-federate-cpp.log"
 }

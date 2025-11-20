@@ -151,26 +151,19 @@ std::optional<powerflow::PowerflowInput> GetPowerflowInput(int argc, char **argv
     return pf_input;
 }
 
-helics::ValueFederate GetGridpackFederate(const std::string &gridpack_name, double period,
-                                          std::ofstream &output_console)
+helics::ValueFederate GetGridpackFederate(const powerflow::PowerflowInput &pf_input, std::ofstream &output_console)
 {
     // Create a FederateInfo object
     helics::FederateInfo fi;
-    fi.coreType = helics::CoreType::ZMQ;
-    fi.coreInitString = "--federates=1";
-    fi.setProperty(HELICS_PROPERTY_INT_LOG_LEVEL, HELICS_LOG_LEVEL_DEBUG);
-    fi.setProperty(HELICS_PROPERTY_TIME_PERIOD, period);
-    fi.setFlagOption(HELICS_FLAG_UNINTERRUPTIBLE, false);
-    fi.setFlagOption(HELICS_FLAG_TERMINATE_ON_ERROR, true);
-    fi.setFlagOption(HELICS_FLAG_WAIT_FOR_CURRENT_TIME_UPDATE, true);
+    fi.loadInfoFromJson(pf_input.fed_info_json_file);
 
-    helics::ValueFederate gpk_118(gridpack_name, fi);
+    helics::ValueFederate gpk_118(pf_input.gridpack_name, fi);
     output_console << "HELICS GridPACK Federate created successfully." << std::endl;
 
     return gpk_118;
 }
 
-double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInput &pf_input, double period,
+double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInput &pf_input,
                    std::ofstream &output_console)
 {
     // Create output file
@@ -198,6 +191,7 @@ double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInp
     const gridpack::powerflow::ThreePhaseValues initial_phased_voltage = { { 1.0, 0.0 },
                                                                            { -0.5, -0.866025 },
                                                                            { -0.5, 0.866025 } };
+    const double period = gpk_118.getTimeProperty(HELICS_PROPERTY_TIME_PERIOD);
 
     // Initialize variables
     gridpack::powerflow::ThreePhasePFApp executor;
@@ -332,11 +326,10 @@ int main(int argc, char **argv)
     output_console << json_templates::ToJsonString(pf_input.value()) << std::endl;
 
     // Create a FederateInfo object
-    const double period = 1.0;
-    helics::ValueFederate gpk_118 = GetGridpackFederate(pf_input.value().gridpack_name, period, output_console);
+    helics::ValueFederate gpk_118 = GetGridpackFederate(pf_input.value(), output_console);
 
     // Perform Simulation
-    const double granted_time = PerformLoop(gpk_118, pf_input.value(), period, output_console);
+    const double granted_time = PerformLoop(gpk_118, pf_input.value(), output_console);
 
     gridpack::math::Finalize();
     gpk_118.finalize();
