@@ -9,7 +9,8 @@
 
 #include <boost/json.hpp>
 
-#include <boost/beast.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 namespace json_templates
 {
@@ -296,5 +297,45 @@ template <typename T> T FromJsonFile(const std::string &input_file)
     in.read(&json_content[0], size);
 
     return FromJsonString<T>(json_content);
+}
+
+inline std::string GetPrettyJsonString(const std::string &raw_json)
+{
+    std::stringstream ss;
+
+    try
+    {
+        ss << raw_json;
+        boost::property_tree::ptree tree;
+        boost::property_tree::read_json(ss, tree);
+
+        ss.str("");
+        boost::property_tree::write_json(ss, tree, true);
+    }
+    catch (const std::exception &e)
+    {
+        ss << "Error parsing JSON with ptree: " << e.what() << "\nRaw Content:\n" << raw_json << "\n";
+    }
+
+    return ss.str();
+}
+
+inline std::string GetPrettyJsonFileAsString(const std::string &json_file)
+{
+    std::stringstream ss;
+
+    try
+    {
+        boost::property_tree::ptree tree;
+        boost::property_tree::read_json(json_file, tree);
+
+        boost::property_tree::write_json(ss, tree, true);
+    }
+    catch (const std::exception &e)
+    {
+        ss << "Error reading or parsing JSON file: " << e.what() << "\nFilepatht: " << json_file << "\n";
+    }
+
+    return ss.str();
 }
 } // namespace json_templates

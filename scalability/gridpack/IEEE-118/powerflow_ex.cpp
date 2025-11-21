@@ -1,3 +1,4 @@
+#include <boost/property_tree/ptree_fwd.hpp>
 #include <iostream>
 #include <optional>
 #include <sstream>
@@ -83,25 +84,8 @@ gridpack::powerflow::ThreePhaseValues LimitPower(ThreePhaseSubscriptions &sub, d
 
 std::string FederateToString(helics::ValueFederate &fed)
 {
-    std::stringstream fed_string;
-
-    fed_string << "Federate Name: " << fed.getName() << "\n";
-
-    fed_string << "Publications (" << fed.getPublicationCount() << "):\n";
-    for (int i = 0; i < fed.getPublicationCount(); i++)
-    {
-        helics::Publication pub = fed.getPublication(i);
-        fed_string << "  - " << pub.getDisplayName() << " (" << pub.getType() << ")\n";
-    }
-
-    fed_string << "Subscriptions (" << fed.getInputCount() << "):\n";
-    for (int i = 0; i < fed.getInputCount(); i++)
-    {
-        helics::Input input = fed.getInput(i);
-        fed_string << "  - " << input.getDisplayName() << " (" << input.getType() << ")\n";
-    }
-
-    return fed_string.str();
+    std::string json_result = fed.query(fed.getName(), "federate");
+    return json_templates::GetPrettyJsonString(json_result);
 }
 
 std::vector<int> GetBusIds(const powerflow::PowerflowInput &input)
@@ -166,9 +150,6 @@ helics::ValueFederate GetGridpackFederate(const powerflow::PowerflowInput &pf_in
 double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInput &pf_input,
                    std::ofstream &output_console)
 {
-    // Create output file
-    std::ofstream output_file(pf_input.gridpack_name + "_gpk_118.csv");
-
     // Publications
     VoltagePublisher pub(gpk_118, pf_input.ln_magnitude);
 
@@ -239,30 +220,22 @@ double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInp
     double granted_time = 0.0;
     while (granted_time + period <= total_interval)
     {
-        std::stringstream ss;
-
-        ss << "\n##########################################\n";
-        ss << "New Loop Iteration Information:\n\tGranted Time + Period: " << granted_time + period
-           << "\n\tTotal Interval: " << total_interval << std::endl;
-        ss << "Requesting New Granted Time: " << granted_time + period << std::endl;
+        output_console << "\n##########################################\n"
+                       << "New Loop Iteration Information:\n\tGranted Time + Period: " << granted_time + period
+                       << "\n\tTotal Interval: " << total_interval
+                       << "\nRequesting New Granted Time: " << granted_time + period << "\n";
 
         granted_time = gpk_118.requestTime(granted_time + period);
-        ss << " Received Granted Time: " << granted_time << std::endl;
-
-        ss << "\n[Time " << granted_time << "]\n";
-        output_console << ss.str();
-        output_file << ss.str();
-        ss.str(""); // reset
+        output_console << "\n[Time " << granted_time << "]\n";
 
         for (const powerflow::GridlabDInputs &gridlabd_info : pf_input.gridlabd_infos)
         {
-            ss << "\nBus Id: " << gridlabd_info.bus_id << "\n";
-            ss << "Gridlabd Names:\n\t";
+            output_console << "\nBus Id: " << gridlabd_info.bus_id << "\nGridlabd Names:\n\t";
 
             gridpack::powerflow::ThreePhaseValues s_total;
             for (const std::string &gridlabd_name : gridlabd_info.names)
             {
-                ss << "\"" << gridlabd_name << "\" ";
+                output_console << "\"" << gridlabd_name << "\" ";
                 ThreePhaseSubscriptions &current_subs = subs.at(gridlabd_name);
                 if (current_subs.a.isUpdated() || current_subs.a.isValid())
                 {
@@ -283,27 +256,19 @@ double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInp
                 s_total.c += limited_power.c;
             }
 
-            ss << "\n";
-            ss << "Total S received from Gridlab-D: [" << s_total.a << ", " << s_total.b << ", " << s_total.c << "]\n";
+            output_console << "\n";
+            output_console << "Total S received from Gridlab-D: [" << s_total.a << ", " << s_total.b << ", "
+                           << s_total.c << "]\n";
 
             gridpack::powerflow::ThreePhaseValues v = executor.ComputeVoltage(s_total, gridlabd_info.bus_id);
 
-            ss << "Updated V by GridPACK: [" << v.a << ", " << v.b << ", " << v.c << "]\n";
-
-            output_console << ss.str();
-            output_file << ss.str();
-            ss.str(""); // reset
+            output_console << "Updated V by GridPACK: [" << v.a << ", " << v.b << ", " << v.c << "]\n";
 
             pub.Publish(v);
         }
 
-        ss << "##########################################\n";
-        output_console << ss.str();
-        output_file << ss.str();
+        output_console << "##########################################\n";
     }
-
-    output_file << "End of Cosimulation.";
-    output_file.close();
 
     return granted_time;
 }
@@ -317,13 +282,17 @@ int main(int argc, char **argv)
     // Use this instead of std::cout.
     std::ofstream output_console("gpk_118_console.txt");
 
+    // Read PowerFlowInput and print json string
     const std::optional<powerflow::PowerflowInput> pf_input = GetPowerflowInput(argc, argv, output_console);
     if (!pf_input)
     {
         return 1;
     }
 
-    output_console << json_templates::ToJsonString(pf_input.value()) << std::endl;
+    output_console << "pf_input.value():\n"
+                   << json_templates::GetPrettyJsonString(json_templates::ToJsonString(pf_input.value())) << std::endl;
+    output_console << "pf_input.value().fed_info_json_file:\n"
+                   << json_templates::GetPrettyJsonFileAsString(pf_input.value().fed_info_json_file) << std::endl;
 
     // Create a FederateInfo object
     helics::ValueFederate gpk_118 = GetGridpackFederate(pf_input.value(), output_console);

@@ -1,5 +1,6 @@
 {
     "gridpack_name": "gridpack",
+    "fed_info_json_file": "helics_fed_info_config.json",
     "gridlabd_infos": [
         {
             "name": "gld_hlc_conn",
