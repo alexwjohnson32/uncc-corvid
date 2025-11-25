@@ -1,29 +1,9 @@
 #include "three_phase_pf_app.hpp"
 
 #include <iostream>
-#include <chrono>
-#include <sstream>
 #include <fstream>
 
-namespace
-{
-class Stopwatch
-{
-  public:
-    Stopwatch() : m_start_time(std::chrono::steady_clock::now()) {}
-
-    void reset() { m_start_time = std::chrono::steady_clock::now(); }
-
-    long long elapsed_milliseconds() const
-    {
-        auto end_time = std::chrono::steady_clock::now();
-        return std::chrono::duration_cast<std::chrono::milliseconds>(end_time - m_start_time).count();
-    }
-
-  private:
-    std::chrono::steady_clock::time_point m_start_time;
-};
-} // namespace
+#include "stopwatch.hpp"
 
 bool gridpack::powerflow::ThreePhasePFApp::Initialize(const std::string &config_file, const std::vector<int> &bus_ids,
                                                       const std::complex<double> &r)
@@ -68,19 +48,19 @@ gridpack::powerflow::ThreePhasePFApp::ComputeVoltage(const gridpack::powerflow::
     output_console << "Power B: " << power_s.b << "\n";
     output_console << "Power C: " << power_s.c << "\n";
 
-    Stopwatch watch;
+    utils::Stopwatch watch;
     phased_voltage.a = m_app_A.ComputeVoltageCurrent(m_config_file, bus_id, "A", power_s.a, m_state);
-    long long time_a = watch.elapsed_milliseconds();
+    long long time_a = watch.ElapsedMilliseconds();
     output_console << "Time A: " << time_a << " ms\n";
 
-    watch.reset();
+    watch.Start();
     phased_voltage.b = m_app_B.ComputeVoltageCurrent(m_config_file, bus_id, "B", power_s.b, m_state) * m_r;
-    long long time_b = watch.elapsed_milliseconds();
+    long long time_b = watch.ElapsedMilliseconds();
     output_console << "Time B: " << time_b << " ms\n";
 
-    watch.reset();
+    watch.Start();
     phased_voltage.c = m_app_C.ComputeVoltageCurrent(m_config_file, bus_id, "C", power_s.c, m_state) * m_r * m_r;
-    long long time_c = watch.elapsed_milliseconds();
+    long long time_c = watch.ElapsedMilliseconds();
     output_console << "Time C: " << time_c << " ms\n";
 
     output_console << "####################################\n\n";

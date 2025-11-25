@@ -1,7 +1,8 @@
 #include <boost/property_tree/ptree_fwd.hpp>
+#include <boost/json.hpp>
+
 #include <iostream>
 #include <optional>
-#include <sstream>
 #include <string>
 #include <vector>
 #include <cmath>
@@ -13,16 +14,15 @@
 #include <helics/application_api/Publications.hpp>
 #include <helics/application_api/Inputs.hpp>
 
+#include "three_phase_pf_app.hpp"
+#include "pf_input.hpp"
+#include "JsonTemplates.hpp"
+
 // GridPACK includes
 #include "mpi.h"
 #include <ga.h>
 #include <macdecls.h>
 #include "gridpack/include/gridpack.hpp"
-#include "three_phase_pf_app.hpp"
-#include "pf_input.hpp"
-#include "JsonTemplates.hpp"
-
-#include <boost/json.hpp>
 
 namespace
 {

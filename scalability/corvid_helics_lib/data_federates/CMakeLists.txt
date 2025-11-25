@@ -39,13 +39,13 @@ target_include_directories(query-federate-exe
   /usr/local/helics/include
   )
 
-add_executable(websocket-server-exe websocket-server.cpp)
+add_executable(testing-websocket-server-exe testing-websocket-server.cpp)
 
 # Step 3: Link all found libraries to the executables
 target_link_libraries(query-federate-exe ${LIBRARIES_FOUND} corvid_helics_lib)
-target_link_libraries(websocket-server-exe corvid_helics_lib)
+target_link_libraries(testing-websocket-server-exe corvid_helics_lib)
 
 # Step 4: Install built objects
 install(TARGETS query-federate-exe DESTINATION ${CMAKE_INSTALL_PREFIX}/corvid_helics_lib/data_federates)
 install(FILES query_config.json DESTINATION ${CMAKE_INSTALL_PREFIX}/corvid_helics_lib/data_federates)
-install(TARGETS websocket-server-exe DESTINATION ${CMAKE_INSTALL_PREFIX}/corvid_helics_lib/data_federates)
+install(TARGETS testing-websocket-server-exe DESTINATION ${CMAKE_INSTALL_PREFIX}/corvid_helics_lib/data_federates)

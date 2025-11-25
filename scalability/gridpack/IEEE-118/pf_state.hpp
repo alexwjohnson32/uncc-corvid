@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
+#include <string>
 
 #include "boost/smart_ptr/shared_ptr.hpp"
 

@@ -14,14 +14,11 @@
  *
  */
 // -------------------------------------------------------------
-
-#ifndef _pf_app_h_
-#define _pf_app_h_
+#pragma once
 
 #include "pf_state.hpp"
 
 #include <complex>
-#include <optional>
 #include <string>
 
 namespace gridpack
@@ -52,4 +49,3 @@ class PFApp
 
 } // namespace powerflow
 } // namespace gridpack
-#endif

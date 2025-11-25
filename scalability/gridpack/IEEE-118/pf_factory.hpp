@@ -15,10 +15,8 @@
  */
 // -------------------------------------------------------------
 
-#ifndef _pf_factory_h_
-#define _pf_factory_h_
+#pragma once
 
-#include "boost/smart_ptr/shared_ptr.hpp"
 #include "gridpack/include/gridpack.hpp"
 #include "gridpack/applications/components/pf_matrix/pf_components.hpp"
 
@@ -59,4 +57,3 @@ class PFFactory
 
 } // powerflow
 } // gridpack
-#endif

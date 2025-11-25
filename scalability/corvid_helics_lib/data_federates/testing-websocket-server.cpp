@@ -1,19 +1,19 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/socket_base.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/strand.hpp>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/core/error.hpp>
 #include <boost/beast/core/flat_buffer.hpp>
 #include <boost/beast/websocket.hpp>
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/strand.hpp>
-#include <boost/core/ignore_unused.hpp>
+
 #include <cstddef>
 #include <cstdlib>
 #include <ios>
 #include <iostream>
 #include <memory>
 #include <thread>
-
 #include <string>
 #include <fstream>
 
@@ -61,7 +61,7 @@ class WebSocketSession : public std::enable_shared_from_this<WebSocketSession>
         // Echo the received message back
         std::stringstream msg_stream;
         msg_stream << "\nWebSocketSession: " << m_id << ", Received message: '"
-                             << boost::beast::buffers_to_string(m_buffer.data()) << "'" << std::endl;
+                   << boost::beast::buffers_to_string(m_buffer.data()) << "'" << std::endl;
 
         std::cout << msg_stream.str();
         m_output_file_stream << msg_stream.str();

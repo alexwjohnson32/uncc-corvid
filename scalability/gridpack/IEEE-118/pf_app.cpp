@@ -1,10 +1,11 @@
 #include "gridpack/include/gridpack.hpp"
+
 #include "pf_app.hpp"
-#include "pf_factory.hpp"
+
 #include <iostream>
 #include <fstream>
-
-#include "boost/smart_ptr/shared_ptr.hpp"
+#include <complex>
+#include <string>
 
 namespace
 {

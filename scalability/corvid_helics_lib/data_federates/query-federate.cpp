@@ -110,11 +110,11 @@ std::string DebugTimeQueryLoop(double granted_time, helics::MessageFederate &msg
     ss << "\n##########################################\n";
     ss << "Granted Time: " << granted_time << "\n";
 
-    loop_watch.start();
+    loop_watch.Start();
 
     ss << msg_fed.query("root", "global_time_debugging");
 
-    double loop_execution_ms = loop_watch.elapsedMilliseconds();
+    double loop_execution_ms = loop_watch.ElapsedMilliseconds();
 
     ss << "\nQuery Execution Time: " << loop_execution_ms << " ms\n";
     ss << "##########################################\n";
@@ -130,14 +130,14 @@ std::string DiscreteQueriesLoop(double granted_time, helics::MessageFederate &ms
     ss << "\n##########################################\n";
     ss << "Granted Time: " << granted_time << "\n";
 
-    loop_watch.start();
+    loop_watch.Start();
 
     ss << "Name: " << msg_fed.query("root", "name") << "\n";
     ss << "Address: " << msg_fed.query("root", "address") << "\n";
     ss << "IsInit: " << msg_fed.query("root", "isinit") << "\n";
     ss << "IsConnected: " << msg_fed.query("root", "isconnected");
 
-    double loop_execution_ms = loop_watch.elapsedMilliseconds();
+    double loop_execution_ms = loop_watch.ElapsedMilliseconds();
 
     ss << "\nQuery Execution Time: " << loop_execution_ms << " ms\n";
     ss << "##########################################\n";
@@ -151,7 +151,7 @@ double PerformLoop(helics::MessageFederate &msg_fed, const double total_time, co
 
     double granted_time = 0.0;
 
-    main_watch.start();
+    main_watch.Start();
     while (granted_time + period <= total_time)
     {
         granted_time = msg_fed.requestTime(granted_time + period);
@@ -161,7 +161,7 @@ double PerformLoop(helics::MessageFederate &msg_fed, const double total_time, co
 
         helper.Write(output_string);
     }
-    double main_loop_ms = main_watch.elapsedMilliseconds();
+    double main_loop_ms = main_watch.ElapsedMilliseconds();
 
     std::stringstream end;
     end << "\n##########################################\n"
@@ -220,7 +220,6 @@ int main(int argc, char **argv)
         // Parse json into the ptree object
         pt::ptree config;
         pt::read_json(json_input_file, config);
-
 
         // Get local file to write to
         std::string local_log_file =
