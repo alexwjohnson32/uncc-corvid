@@ -14,5 +14,5 @@ cp build/bin/gridlabd/json/IEEE_8500node.json $export_gld/
 cp build/bin/gridpack/IEEE-118/118.raw $export_gpk/
 cp build/bin/gridpack/IEEE-118/118.xml $export_gpk/
 cp build/bin/gridpack/IEEE-118/helics_setup.json $export_gpk/
-cp build/bin/gridpack/IEEE-118/helics_fed_info_config.json $export_gpk/
+# cp build/bin/gridpack/IEEE-118/helics_fed_info_config.json $export_gpk/
 cp build/bin/gridpack/IEEE-118/powerflow_ex.x $export_gpk/

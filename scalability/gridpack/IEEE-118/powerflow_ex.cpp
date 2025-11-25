@@ -109,13 +109,11 @@ std::optional<powerflow::PowerflowInput> GetPowerflowInput(int argc, char **argv
         return pf_input;
     }
 
-    const std::string json_file = std::string(argv[1]);
     const std::filesystem::path cwd = std::filesystem::current_path();
     output_console << "[preflight] CWD: " << cwd << "\n";
 
+    const std::string json_file = std::string(argv[1]);
     const std::filesystem::path json_path = json_file;
-    const std::filesystem::path xml_path = "118.xml";
-
     if (!std::filesystem::exists(json_path))
     {
         output_console << "[error] Missing JSON: " << json_path << " (expected in " << cwd << ")\n";
@@ -123,6 +121,7 @@ std::optional<powerflow::PowerflowInput> GetPowerflowInput(int argc, char **argv
         return pf_input;
     }
 
+    const std::filesystem::path xml_path = "118.xml";
     if (!std::filesystem::exists(xml_path))
     {
         output_console << "[error] Missing XML: " << xml_path << " (expected in " << cwd << ")\n";
@@ -139,7 +138,7 @@ helics::ValueFederate GetGridpackFederate(const powerflow::PowerflowInput &pf_in
 {
     // Create a FederateInfo object
     helics::FederateInfo fi;
-    fi.loadInfoFromJson(pf_input.fed_info_json_file);
+    fi.loadInfoFromJson(pf_input.fed_info_json);
 
     helics::ValueFederate gpk_118(pf_input.gridpack_name, fi);
     output_console << "HELICS GridPACK Federate created successfully." << std::endl;
@@ -215,7 +214,6 @@ double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInp
      * bus_id).
      * 5. Publish individual calculated V for each ID at the same granted time.
      */
-
     const double total_interval = pf_input.total_time;
     double granted_time = 0.0;
     while (granted_time + period <= total_interval)
@@ -291,8 +289,8 @@ int main(int argc, char **argv)
 
     output_console << "pf_input.value():\n"
                    << json_templates::GetPrettyJsonString(json_templates::ToJsonString(pf_input.value())) << std::endl;
-    output_console << "pf_input.value().fed_info_json_file:\n"
-                   << json_templates::GetPrettyJsonFileAsString(pf_input.value().fed_info_json_file) << std::endl;
+    output_console << "pf_input.value().fed_info_json:\n"
+                   << json_templates::GetPrettyJsonString(pf_input.value().fed_info_json) << std::endl;
 
     // Create a FederateInfo object
     helics::ValueFederate gpk_118 = GetGridpackFederate(pf_input.value(), output_console);

@@ -16,7 +16,7 @@ struct GridlabDInputs
 struct PowerflowInput
 {
     std::string gridpack_name{};
-    std::string fed_info_json_file{};
+    std::string fed_info_json{};
     std::vector<powerflow::GridlabDInputs> gridlabd_infos{};
     double total_time{};
     double ln_magnitude{};

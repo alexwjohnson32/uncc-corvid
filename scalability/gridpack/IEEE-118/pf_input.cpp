@@ -26,7 +26,7 @@ void powerflow::tag_invoke(boost::json::value_from_tag, boost::json::value &json
                            const powerflow::PowerflowInput &data)
 {
     json_value = { { "gridpack_name", data.gridpack_name },
-                   { "fed_info_json_file", data.fed_info_json_file },
+                   { "fed_info_json", boost::json::parse(data.fed_info_json) },
                    { "gridlabd_infos", data.gridlabd_infos },
                    { "total_time", data.total_time },
                    { "ln_magnitude", data.ln_magnitude } };
@@ -39,7 +39,17 @@ powerflow::PowerflowInput powerflow::tag_invoke(boost::json::value_to_tag<powerf
     const boost::json::object &obj = json_value.as_object();
 
     json_templates::extract(obj, "gridpack_name", data.gridpack_name);
-    json_templates::extract(obj, "fed_info_json_file", data.fed_info_json_file);
+    // manually parse because we want to convert the generic json value to a string
+    const boost::json::value *found_fed_info_json = obj.if_contains("fed_info_json");
+    if (found_fed_info_json)
+    {
+        data.fed_info_json = boost::json::serialize(*found_fed_info_json);
+    }
+    else
+    {
+        data.fed_info_json = "";
+    }
+    json_templates::extract(obj, "fed_info_json", data.fed_info_json);
     json_templates::extract(obj, "gridlabd_infos", data.gridlabd_infos);
     json_templates::extract(obj, "total_time", data.total_time);
     json_templates::extract(obj, "ln_magnitude", data.ln_magnitude);

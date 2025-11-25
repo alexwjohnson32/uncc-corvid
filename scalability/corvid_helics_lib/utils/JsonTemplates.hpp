@@ -299,6 +299,12 @@ template <typename T> T FromJsonFile(const std::string &input_file)
     return FromJsonString<T>(json_content);
 }
 
+/**
+ * Takes a raw json string and adds newlines and indentions to make it "pretty"
+ *
+ * @param raw_json is the json string to convert
+ * @return a pretty string that should be identical in meaning to the input string.
+ */
 inline std::string GetPrettyJsonString(const std::string &raw_json)
 {
     std::stringstream ss;
@@ -320,6 +326,15 @@ inline std::string GetPrettyJsonString(const std::string &raw_json)
     return ss.str();
 }
 
+/**
+ * Takes a json file path, converts it to a string, and adds newlines
+ * and indentions to make it "pretty"
+ *
+ * This does NOT modify the file in any way.
+ *
+ * @param json_file is the json file path to convert
+ * @return a pretty string that should be identical in meaning to the input json file.
+ */
 inline std::string GetPrettyJsonFileAsString(const std::string &json_file)
 {
     std::stringstream ss;
