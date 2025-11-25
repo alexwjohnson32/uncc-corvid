@@ -49,7 +49,6 @@ powerflow::PowerflowInput powerflow::tag_invoke(boost::json::value_to_tag<powerf
     {
         data.fed_info_json = "";
     }
-    json_templates::extract(obj, "fed_info_json", data.fed_info_json);
     json_templates::extract(obj, "gridlabd_infos", data.gridlabd_infos);
     json_templates::extract(obj, "total_time", data.total_time);
     json_templates::extract(obj, "ln_magnitude", data.ln_magnitude);
