@@ -22,43 +22,40 @@
 
 #include "stopwatch.hpp"
 
-#include "persistent-websocket-client.hpp"
+#include "websocket-client-manager.hpp"
 
 namespace pt = boost::property_tree;
 
 namespace
 {
 
-struct ClientDetails
-{
-    std::string address = "127.0.0.1";
-    std::string port = "23333";
-    std::string websocket_path = "/";
-};
-
 class WriteHelper
 {
   private:
-    connections::PersistentWebSocketClient &m_client;
+    connections::WebSocketClientManager m_client_mgr;
     std::ofstream &m_output_console;
 
   public:
-    WriteHelper(connections::PersistentWebSocketClient &&client, std::ofstream &&output_console)
-        : m_client(client), m_output_console(output_console)
+    WriteHelper(const connections::ClientDetails &details, std::ofstream &&output_console)
+        : m_client_mgr(details), m_output_console(output_console)
     {
-        m_client.Run();
+    }
+    ~WriteHelper()
+    {
+        m_client_mgr.Close();
+        m_output_console.close();
     }
 
     void Write(const std::string &message)
     {
         m_output_console << message;
-        m_client.SendMessage(message);
+        m_client_mgr.SendMessage(message);
     }
 };
 
-ClientDetails GetClientDetails(const pt::ptree &config)
+connections::ClientDetails GetClientDetails(const pt::ptree &config)
 {
-    ClientDetails details;
+    connections::ClientDetails details;
 
     boost::optional<const pt::ptree &> details_tree = config.get_child_optional("client_details");
     if (details_tree)
@@ -232,13 +229,8 @@ int main(int argc, char **argv)
             return EXIT_FAILURE;
         }
 
-        // Get client to write to
-        ClientDetails client_details = GetClientDetails(config);
-        connections::PersistentWebSocketClient client(client_details.address, client_details.port,
-                                                      client_details.websocket_path);
-
         // Connect to a helper class
-        WriteHelper helper(std::move(client), std::move(output_console));
+        WriteHelper helper(GetClientDetails(config), std::move(output_console));
 
         // Configure and launch the federate
         const double granted_time = ExecuteFederate(config, helper);

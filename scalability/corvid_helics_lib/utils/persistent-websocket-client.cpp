@@ -1,133 +1,97 @@
 #include "persistent-websocket-client.hpp"
+#include <boost/asio/bind_executor.hpp>
 #include <boost/asio/connect.hpp>
-#include <boost/beast/core/buffers_to_string.hpp>
+#include <boost/asio/dispatch.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/steady_timer.hpp>
+#include <boost/asio/strand.hpp>
+#include <boost/beast/websocket/rfc6455.hpp>
 #include <boost/system/error_code.hpp>
-#include <iostream>
 #include <chrono>
-#include <thread>
+#include <cstddef>
+#include <iostream>
+#include <queue>
 
-void connections::PersistentWebSocketClient::Run()
+connections::PersistentWebSocketClient::PersistentWebSocketClient(boost::asio::io_context &io_context,
+                                                                  const std::string &host, const std::string &port,
+                                                                  const std::string &target)
+    : m_io_context(io_context), m_resolver(io_context), m_websocket(io_context), m_strand(io_context.get_executor()),
+      m_host(host), m_port(port), m_target(target), m_write_in_progress(false), m_manual_close(false)
 {
-    Connect();
-    m_io_context.run();
 }
 
-void connections::PersistentWebSocketClient::Connect()
+void connections::PersistentWebSocketClient::Start()
 {
-    std::cout << "Resolving host: " << m_host << ":" << m_port << std::endl;
-
-    m_resolver.async_resolve(m_host, m_port,
-                             std::bind(&connections::PersistentWebSocketClient::OnResolve, this, std::placeholders::_1,
-                                       std::placeholders::_2));
+    boost::asio::dispatch(m_strand, std::bind(&PersistentWebSocketClient::StartResolve, shared_from_this()));
 }
 
-void connections::PersistentWebSocketClient::PerformHandshake()
+void connections::PersistentWebSocketClient::SetMessageCallback(
+    connections::PersistentWebSocketClient::MessageCallback callback)
 {
-    std::cout << "Performing WebSocket handshake..." << std::endl;
-
-    m_ws.async_handshake(m_host, m_path,
-                         [this](boost::system::error_code ec)
-                         {
-                             if (ec)
-                             {
-                                 std::cerr << "Handshake failed: " << ec.message() << std::endl;
-                                 ScheduleReconnect();
-                                 return;
-                             }
-
-                             std::cout << "Connected successfully to " << m_host << std::endl;
-
-                             ReadMessage();
-                         });
+    m_message_callback = callback;
 }
 
-void connections::PersistentWebSocketClient::SendMessage(const std::string &message)
+void connections::PersistentWebSocketClient::SendMessage(const std::string &msg)
 {
-    // Post into the io_context to ensure thread safety
-    boost::asio::post(m_io_context,
-                      [this, message]()
-                      {
-                          m_send_queue.push_back(message);
-
-                          if (!m_write_in_progress)
-                          {
-                              m_write_in_progress = true;
-                              DoWrite();
-                          }
-                      });
-}
-
-void connections::PersistentWebSocketClient::DoWrite()
-{
-    if (m_send_queue.empty())
+    auto msg_lambda = [self = shared_from_this(), msg]()
     {
-        m_write_in_progress = false;
-        return;
-    }
+        if (self->m_manual_close) return;
 
-    const std::string &msg = m_send_queue.front();
+        self->m_write_queue.push(msg);
 
-    m_ws.async_write(boost::asio::buffer(msg),
-                     [this](boost::system::error_code ec, std::size_t bytes_transferred)
-                     {
-                         if (ec)
-                         {
-                             std::cerr << "Send failed: " << ec.message() << std::endl;
-                             ScheduleReconnect();
-                             return;
-                         }
-
-                         std::cout << "Sent " << bytes_transferred << " bytes" << std::endl;
-
-                         m_send_queue.pop_front();
-                         DoWrite(); // Continue sending queued messages
-                     });
-}
-
-void connections::PersistentWebSocketClient::ReadMessage()
-{
-    m_ws.async_read(m_buffer,
-                    [this](boost::system::error_code ec, std::size_t bytes_transferred)
-                    {
-                        if (ec)
-                        {
-                            std::cerr << "Read failed: " << ec.message() << std::endl;
-                            ScheduleReconnect();
-                            return;
-                        }
-
-                        std::string message(boost::beast::buffers_to_string(m_buffer.data()));
-                        m_buffer.consume(m_buffer.size());
-
-                        std::cout << "Received: " << message << std::endl;
-
-                        // Continue reading messages
-                        ReadMessage();
-                    });
-}
-
-void connections::PersistentWebSocketClient::ScheduleReconnect()
-{
-    std::cout << "Reconnecting in 5 seconds..." << std::endl;
-
-    boost::system::error_code ignored_ec;
-    if (m_ws.next_layer().is_open()) m_ws.next_layer().close(ignored_ec);
-
-    m_reconnect_timer.expires_after(std::chrono::seconds(5));
-    m_reconnect_timer.async_wait(
-        [this](const boost::system::error_code &)
+        if (!self->m_write_in_progress)
         {
-            std::cout << "Attempting reconnect..." << std::endl;
+            self->m_write_in_progress = true;
+            self->StartWrite();
+        }
+    };
 
-            // Recreate the websocket stream
-            m_ws = boost::beast::websocket::stream<boost::asio::ip::tcp::socket>(m_io_context);
+    boost::asio::post(m_strand, msg_lambda);
+}
 
-            // Reset write state
-            m_write_in_progress = false;
-            m_send_queue.clear();
+void connections::PersistentWebSocketClient::Close()
+{
+    auto close_lambda = [self = shared_from_this()]()
+    {
+        if (self->m_manual_close) return;
 
-            Connect();
-        });
+        self->m_manual_close = true;
+
+        // Clear the queue
+        self->m_write_queue = std::queue<std::string>();
+
+        if (self->m_websocket.next_layer().is_open())
+        {
+            // If handshake not yet done, next_layer() close is safer
+            if (!self->m_websocket.is_open())
+            {
+                boost::system::error_code ignored;
+                self->m_websocket.next_layer().close(ignored);
+            }
+            else
+            {
+                self->m_websocket.async_close(
+                    boost::beast::websocket::close_code::normal,
+                    boost::asio::bind_executor(self->m_strand,
+                                               [self](const boost::system::error_code &)
+                                               {
+                                                   boost::system::error_code ignored;
+                                                   if (self->m_websocket.next_layer().is_open())
+                                                       self->m_websocket.next_layer().close(ignored);
+                                               }));
+            }
+        }
+    };
+
+    boost::asio::dispatch(m_strand, close_lambda);
+}
+
+void connections::PersistentWebSocketClient::StartResolve()
+{
+    m_resolver.async_resolve(
+        m_host, m_port,
+        boost::asio::bind_executor(m_strand, std::bind(&PersistentWebSocketClient::OnResolve, shared_from_this(),
+                                                       std::placeholders::_1, std::placeholders::_2)));
 }
 
 void connections::PersistentWebSocketClient::OnResolve(const boost::system::error_code &ec,
@@ -135,24 +99,122 @@ void connections::PersistentWebSocketClient::OnResolve(const boost::system::erro
 {
     if (ec)
     {
-        std::cerr << "Resolve failed: " << ec.message() << std::endl;
         ScheduleReconnect();
         return;
     }
 
-    std::cout << "Connecting..." << std::endl;
-    boost::asio::async_connect(m_ws.next_layer(), results,
-                               std::bind(&connections::PersistentWebSocketClient::OnConnect, this,
-                                         std::placeholders::_1, std::placeholders::_2));
+    StartConnect(results);
 }
-void connections::PersistentWebSocketClient::OnConnect(const boost::system::error_code &ec,
-                                                       const boost::asio::ip::tcp::endpoint &)
+
+void connections::PersistentWebSocketClient::StartConnect(boost::asio::ip::tcp::resolver::results_type results)
+{
+    boost::asio::async_connect(
+        m_websocket.next_layer(), results,
+        boost::asio::bind_executor(
+            m_strand, std::bind(&PersistentWebSocketClient::OnConnect, shared_from_this(), std::placeholders::_1)));
+}
+
+void connections::PersistentWebSocketClient::OnConnect(const boost::system::error_code &ec)
 {
     if (ec)
     {
-        std::cerr << "Connect failed: " << ec.message() << std::endl;
         ScheduleReconnect();
         return;
     }
-    PerformHandshake();
+
+    StartHandshake();
+}
+
+void connections::PersistentWebSocketClient::StartHandshake()
+{
+    m_websocket.async_handshake(
+        m_host, m_target,
+        boost::asio::bind_executor(
+            m_strand, std::bind(&PersistentWebSocketClient::OnHandshake, shared_from_this(), std::placeholders::_1)));
+}
+
+void connections::PersistentWebSocketClient::OnHandshake(const boost::system::error_code &ec)
+{
+    if (ec)
+    {
+        ScheduleReconnect();
+        return;
+    }
+
+    // Ensure buffer is empty before starting reads for safety
+    m_buffer.consume(m_buffer.size());
+
+    StartRead();
+}
+
+void connections::PersistentWebSocketClient::StartRead()
+{
+    m_websocket.async_read(
+        m_buffer, boost::asio::bind_executor(m_strand, std::bind(&PersistentWebSocketClient::OnRead, shared_from_this(),
+                                                                 std::placeholders::_1, std::placeholders::_2)));
+}
+
+void connections::PersistentWebSocketClient::OnRead(const boost::system::error_code &ec, std::size_t)
+{
+    if (ec)
+    {
+        ScheduleReconnect();
+        return;
+    }
+
+    std::string msg(static_cast<const char *>(m_buffer.data().data()), m_buffer.data().size());
+    m_buffer.consume(m_buffer.size());
+
+    if (m_message_callback) m_message_callback(msg);
+
+    StartRead();
+}
+
+void connections::PersistentWebSocketClient::StartWrite()
+{
+    if (m_write_queue.empty())
+    {
+        m_write_in_progress = false;
+        return;
+    }
+
+    const std::string &msg = m_write_queue.front();
+
+    m_websocket.async_write(
+        boost::asio::buffer(msg),
+        boost::asio::bind_executor(m_strand, std::bind(&PersistentWebSocketClient::OnWrite, shared_from_this(),
+                                                       std::placeholders::_1, std::placeholders::_2)));
+}
+
+void connections::PersistentWebSocketClient::OnWrite(const boost::system::error_code &ec, std::size_t)
+{
+    if (ec)
+    {
+        ScheduleReconnect();
+        return;
+    }
+
+    m_write_queue.pop();
+    StartWrite();
+}
+
+void connections::PersistentWebSocketClient::ScheduleReconnect()
+{
+    if (m_manual_close) return;
+
+    // Close only if open
+    if (m_websocket.next_layer().is_open())
+    {
+        boost::system::error_code ignored;
+        m_websocket.next_layer().close(ignored);
+    }
+
+    auto timer = std::make_shared<boost::asio::steady_timer>(m_io_context);
+    timer->expires_after(std::chrono::seconds(3));
+
+    timer->async_wait(boost::asio::bind_executor(m_strand,
+                                                 [self = shared_from_this(), timer](const boost::system::error_code &)
+                                                 {
+                                                     if (!self->m_manual_close) self->StartResolve();
+                                                 }));
 }
