@@ -34,7 +34,7 @@ class WebSocketSession : public std::enable_shared_from_this<WebSocketSession>
     {
         if (ec)
         {
-            std::cerr << "WebSocket accept error: " << ec.message() << std::endl;
+            std::cout << "WebSocket accept error: " << ec.message() << std::endl;
             return;
         }
         startRead();
@@ -53,7 +53,7 @@ class WebSocketSession : public std::enable_shared_from_this<WebSocketSession>
         {
             if (ec != boost::beast::websocket::error::closed)
             {
-                std::cerr << "WebSocket read error: " << ec.message() << std::endl;
+                std::cout << "WebSocket read error: " << ec.message() << std::endl;
             }
             return;
         }
@@ -73,7 +73,7 @@ class WebSocketSession : public std::enable_shared_from_this<WebSocketSession>
     {
         if (ec)
         {
-            std::cerr << "WebSocket write error: " << ec.message() << std::endl;
+            std::cout << "WebSocket write error: " << ec.message() << std::endl;
             return;
         }
         startRead();
@@ -118,7 +118,7 @@ class WebSocketServer
         }
         else
         {
-            std::cerr << "Accept error: " << ec.message() << std::endl;
+            std::cout << "Accept error: " << ec.message() << std::endl;
         }
 
         // Accept next connection
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
 {
     if (argc != 4)
     {
-        std::cerr << "Usage: websocket_server <host> <port> <path>\n";
+        std::cout << "Usage: testing-server <host> <port> <path>\n";
         return 1;
     }
 
@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
     }
     catch (const std::exception &ex)
     {
-        std::cerr << "Fatal error: " << ex.what() << std::endl;
+        std::cout << "Fatal error: " << ex.what() << std::endl;
         return 1;
     }
 

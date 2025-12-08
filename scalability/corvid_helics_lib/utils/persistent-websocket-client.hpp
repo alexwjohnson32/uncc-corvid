@@ -1,65 +1,70 @@
 #pragma once
 
 #include <boost/asio.hpp>
-#include <boost/asio/io_context.hpp>
 #include <boost/asio/steady_timer.hpp>
-#include <boost/beast.hpp>
+#include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
-#include <boost/system/error_code.hpp>
-#include <string>
-#include <queue>
-#include <functional>
+
+#include <deque>
 #include <memory>
-#include <chrono>
+#include <string>
+#include <functional>
 
 namespace connections
 {
+
 class PersistentWebSocketClient : public std::enable_shared_from_this<PersistentWebSocketClient>
 {
   public:
-    using MessageCallback = std::function<void(const std::string &)>;
+    using OnMessageCallback = std::function<void(const std::string &)>;
+    using OnConnectCallback = std::function<void()>;
+    using OnErrorCallback = std::function<void(const boost::system::error_code &)>;
 
-    PersistentWebSocketClient(boost::asio::io_context &io_context, const std::string &host, const std::string &port,
-                              const std::string &target);
+  public:
+    PersistentWebSocketClient(boost::asio::io_context &ioc, const std::string &host, const std::string &port,
+                              const std::string &target, unsigned int timeout_seconds);
 
     void Start();
-    void SendMessage(const std::string &msg);
-    void SetMessageCallback(MessageCallback callback);
-    void Close();
+    void Stop();
+    void Send(const std::string &msg);
+
+    void SetOnMessage(OnMessageCallback cb) { m_on_message = std::move(cb); }
+    void SetOnConnect(OnConnectCallback cb) { m_on_connect = std::move(cb); }
+    void SetOnError(OnErrorCallback cb) { m_on_error = std::move(cb); }
+
+  private:
+    void Resolve();
+    void Connect(boost::asio::ip::tcp::resolver::results_type results);
+    void Handshake();
+    void Read();
+    void Reconnect();
+    void Fail(const boost::system::error_code &ec);
+
+    void StartWrite();
+    void FinishWrite(const boost::system::error_code &ec, std::size_t bytes);
 
   private:
     boost::asio::io_context &m_io_context;
-    boost::asio::ip::tcp::resolver m_resolver;
-    boost::beast::websocket::stream<boost::asio::ip::tcp::socket> m_websocket;
-    boost::asio::strand<boost::asio::io_context::executor_type> m_strand;
 
     std::string m_host;
     std::string m_port;
     std::string m_target;
+    unsigned int m_timeout_seconds;
+
+    boost::asio::ip::tcp::resolver m_resolver;
+    boost::beast::websocket::stream<boost::asio::ip::tcp::socket> m_ws;
 
     boost::beast::flat_buffer m_buffer;
+    boost::asio::steady_timer m_reconnect_timer;
 
-    std::queue<std::string> m_write_queue;
-    bool m_write_in_progress;
-    bool m_manual_close;
+    bool m_stopping = false;
+    bool m_write_in_progress = false;
 
-    MessageCallback m_message_callback;
+    std::deque<std::string> m_write_queue;
 
-    void StartResolve();
-    void OnResolve(const boost::system::error_code &ec, boost::asio::ip::tcp::resolver::results_type results);
-
-    void StartConnect(boost::asio::ip::tcp::resolver::results_type results);
-    void OnConnect(const boost::system::error_code &ec);
-
-    void StartHandshake();
-    void OnHandshake(const boost::system::error_code &ec);
-
-    void StartRead();
-    void OnRead(const boost::system::error_code &ec, std::size_t bytes);
-
-    void StartWrite();
-    void OnWrite(const boost::system::error_code &ec, std::size_t bytes);
-
-    void ScheduleReconnect();
+    OnMessageCallback m_on_message;
+    OnConnectCallback m_on_connect;
+    OnErrorCallback m_on_error;
 };
+
 } // namespace connections
