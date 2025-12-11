@@ -55,6 +55,30 @@ template <class T> void extract(boost::json::object const &obj, const std::strin
 }
 
 /**
+ * @brief Attempts to extract the given key from the json object. The value of the key is expected to be a json string.
+ * ONLY USE THIS IF you want to keep the value as a json string and not as a serialized json object. In many cases it
+ * will be better to have the underlying object have a serialization definition, but for cases where you are holding a
+ * json structure that is not defined or maintained by you, keeping it as a string to access through boost:: ptree may
+ * be the cleanest solution.
+ *
+ * @param obj is the boost::json::object we expect to retrieve data from.
+ * @param key is a std::string that maps the internal value to t.
+ * @param t is a public member of some class/struct that is expected to represent a json string.
+ */
+inline void extract_json_string(const boost::json::object &obj, const std::string &key, std::string &input_field)
+{
+    const boost::json::value *found_value = obj.if_contains(key);
+    if (found_value)
+    {
+        input_field = boost::json::serialize(*found_value);
+    }
+    else
+    {
+        input_field = "";
+    }
+}
+
+/**
  * @brief Given a boost::json::object instance and a std::string key, set argument t to the
  *        expected enum value of the underlying type value if the key exists within obj.
  *        If it does not exist, set t to the default_enum value.

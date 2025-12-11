@@ -7,6 +7,7 @@
   "uninterruptible" : true,
   "logfile": "IEEE_8500node.log",
   "log_level": "debug",
+  "brokerAddress": "tcp://localhost:23500",
   "publications": [
     {
       "global": true,

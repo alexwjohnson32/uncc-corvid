@@ -1,47 +1,15 @@
-# Step 1: Loop through the list to find each library
-set(LIBRARIES_NAMES
-   "mpi"
-   "mpi_cxx"
-   "helicscpp"
-   )
+# 1. Find required packages and libs
+find_package(MPI REQUIRED)
 
-# Variable to hold the paths of found libraries
-set(LIBRARIES_FOUND)
+find_library(HELICS_LIB NAMES helicscpp HINTS /usr/local/helics/lib64)
+set(HELICS_INCLUDE_DIR /usr/local/helics/include)
 
-foreach(LIBRARY_NAME IN LISTS LIBRARIES_NAMES)
+add_executable(query-federate-exe query-federate.cpp query_federate_input.cpp)
 
-  find_library(LIBRARY_PATH NAMES ${LIBRARY_NAME}
-    PATHS
-    /usr/lib64/openmpi/lib
-    /usr/local/helics/lib64
-    NO_CACHE
-    NO_DEFAULT_PATH
-    )
+#2. Link libraries
+target_link_libraries(query-federate-exe PRIVATE MPI::MPI_CXX ${HELICS_LIB} corvid_helics_lib)
+target_include_directories(query-federate-exe PRIVATE ${HELICS_INCLUDE_DIR})
 
-  # Check if the library was found
-  if(NOT LIBRARY_PATH)
-    message(FATAL_ERROR "'${LIBRARY_NAME}' could not be found.")
-  else()
-    # message(STATUS "'${LIBRARY_NAME}' found at '${LIBRARY_PATH}`.")
-  endif()
-
-  # Append the found library path to the LIBRARIES_FOUND list
-  list(INSERT LIBRARIES_FOUND 0  ${LIBRARY_PATH})
-
-  unset(LIBRARY_PATH)
-endforeach()
-
-# Step 2: Add executables
-add_executable(query-federate-exe query-federate.cpp)
-target_include_directories(query-federate-exe
-  PRIVATE
-  /usr/include/openmpi-x86_64
-  /usr/local/helics/include
-  )
-
-# Step 3: Link all found libraries to the executables
-target_link_libraries(query-federate-exe ${LIBRARIES_FOUND} corvid_helics_lib)
-
-# Step 4: Install built objects
+#3. Install
 install(TARGETS query-federate-exe DESTINATION ${CMAKE_INSTALL_PREFIX}/corvid_helics_lib/data_federates)
 install(FILES query_config.json DESTINATION ${CMAKE_INSTALL_PREFIX}/corvid_helics_lib/data_federates)

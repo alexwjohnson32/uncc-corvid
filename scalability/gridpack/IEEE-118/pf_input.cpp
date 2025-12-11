@@ -2,8 +2,6 @@
 
 #include "JsonTemplates.hpp"
 
-#include <boost/json.hpp>
-
 void powerflow::tag_invoke(boost::json::value_from_tag, boost::json::value &json_value,
                            const powerflow::GridlabDInputs &data)
 {
@@ -39,16 +37,7 @@ powerflow::PowerflowInput powerflow::tag_invoke(boost::json::value_to_tag<powerf
     const boost::json::object &obj = json_value.as_object();
 
     json_templates::extract(obj, "gridpack_name", data.gridpack_name);
-    // manually parse because we want to convert the generic json value to a string
-    const boost::json::value *found_fed_info_json = obj.if_contains("fed_info_json");
-    if (found_fed_info_json)
-    {
-        data.fed_info_json = boost::json::serialize(*found_fed_info_json);
-    }
-    else
-    {
-        data.fed_info_json = "";
-    }
+    json_templates::extract_json_string(obj, "fed_info_json", data.fed_info_json);
     json_templates::extract(obj, "gridlabd_infos", data.gridlabd_infos);
     json_templates::extract(obj, "total_time", data.total_time);
     json_templates::extract(obj, "ln_magnitude", data.ln_magnitude);

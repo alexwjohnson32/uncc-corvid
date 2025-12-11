@@ -27,7 +27,6 @@ int main(int argc, char **argv)
 
     try
     {
-        const uint timeout_seconds = 15;
         std::cout << "Attempting to run client at '" << address << ":" << port << path << std::endl;
 
         connections::SynchronousWebSocketClient client;
