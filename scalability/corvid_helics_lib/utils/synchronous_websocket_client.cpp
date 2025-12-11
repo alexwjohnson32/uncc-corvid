@@ -7,7 +7,7 @@
 #include <cstdlib>
 #include <string>
 
-connections::SynchronousWebSocketClient::SynchronousWebSocketClient() : m_resolver(m_ioc), m_ws(m_ioc)
+utils::SynchronousWebSocketClient::SynchronousWebSocketClient() : m_resolver(m_ioc), m_ws(m_ioc)
 {
     m_ws.set_option(boost::beast::websocket::stream_base::decorator(
         [](boost::beast::websocket::request_type &req)
@@ -17,7 +17,7 @@ connections::SynchronousWebSocketClient::SynchronousWebSocketClient() : m_resolv
         }));
 }
 
-void connections::SynchronousWebSocketClient::Connect(const std::string &host, const std::string &port,
+void utils::SynchronousWebSocketClient::Connect(const std::string &host, const std::string &port,
                                                       const std::string &target)
 {
     // Resolve DNS
@@ -30,12 +30,12 @@ void connections::SynchronousWebSocketClient::Connect(const std::string &host, c
     m_ws.handshake(host, target);
 }
 
-void connections::SynchronousWebSocketClient::Send(const std::string &message)
+void utils::SynchronousWebSocketClient::Send(const std::string &message)
 {
     m_ws.write(boost::asio::buffer(message));
 }
 
-std::string connections::SynchronousWebSocketClient::Receive()
+std::string utils::SynchronousWebSocketClient::Receive()
 {
     boost::beast::flat_buffer buffer;
     m_ws.read(buffer);
@@ -43,7 +43,7 @@ std::string connections::SynchronousWebSocketClient::Receive()
     return boost::beast::buffers_to_string(buffer.data());
 }
 
-void connections::SynchronousWebSocketClient::Close()
+void utils::SynchronousWebSocketClient::Close()
 {
     boost::beast::websocket::close_reason reason;
     reason.code = boost::beast::websocket::close_code::normal;

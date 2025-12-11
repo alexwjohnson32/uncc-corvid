@@ -16,7 +16,7 @@
 
 #include "three_phase_pf_app.hpp"
 #include "pf_input.hpp"
-#include "JsonTemplates.hpp"
+#include "json_templates.hpp"
 
 // GridPACK includes
 #include "mpi.h"
@@ -85,7 +85,7 @@ gridpack::powerflow::ThreePhaseValues LimitPower(ThreePhaseSubscriptions &sub, d
 std::string FederateToString(helics::ValueFederate &fed)
 {
     std::string json_result = fed.query(fed.getName(), "federate");
-    return json_templates::GetPrettyJsonString(json_result);
+    return utils::GetPrettyJsonString(json_result);
 }
 
 std::vector<int> GetBusIds(const powerflow::PowerflowInput &input)
@@ -129,7 +129,7 @@ std::optional<powerflow::PowerflowInput> GetPowerflowInput(int argc, char **argv
         return pf_input;
     }
 
-    pf_input = json_templates::FromJsonFile<powerflow::PowerflowInput>(json_file);
+    pf_input = utils::FromJsonFile<powerflow::PowerflowInput>(json_file);
 
     return pf_input;
 }
@@ -288,9 +288,9 @@ int main(int argc, char **argv)
     }
 
     output_console << "pf_input.value():\n"
-                   << json_templates::GetPrettyJsonString(json_templates::ToJsonString(pf_input.value())) << std::endl;
+                   << utils::GetPrettyJsonString(utils::ToJsonString(pf_input.value())) << std::endl;
     output_console << "pf_input.value().fed_info_json:\n"
-                   << json_templates::GetPrettyJsonString(pf_input.value().fed_info_json) << std::endl;
+                   << utils::GetPrettyJsonString(pf_input.value().fed_info_json) << std::endl;
 
     // Create a FederateInfo object
     helics::ValueFederate gpk_118 = GetGridpackFederate(pf_input.value(), output_console);

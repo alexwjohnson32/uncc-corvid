@@ -1,6 +1,6 @@
 #include "pf_input.hpp"
 
-#include "JsonTemplates.hpp"
+#include "json_templates.hpp"
 
 void powerflow::tag_invoke(boost::json::value_from_tag, boost::json::value &json_value,
                            const powerflow::GridlabDInputs &data)
@@ -14,8 +14,8 @@ powerflow::GridlabDInputs powerflow::tag_invoke(boost::json::value_to_tag<powerf
     powerflow::GridlabDInputs data;
     const boost::json::object &obj = json_value.as_object();
 
-    json_templates::extract(obj, "bus_id", data.bus_id);
-    json_templates::extract(obj, "names", data.names);
+    utils::extract(obj, "bus_id", data.bus_id);
+    utils::extract(obj, "names", data.names);
 
     return data;
 }
@@ -36,11 +36,11 @@ powerflow::PowerflowInput powerflow::tag_invoke(boost::json::value_to_tag<powerf
     powerflow::PowerflowInput data;
     const boost::json::object &obj = json_value.as_object();
 
-    json_templates::extract(obj, "gridpack_name", data.gridpack_name);
-    json_templates::extract_json_string(obj, "fed_info_json", data.fed_info_json);
-    json_templates::extract(obj, "gridlabd_infos", data.gridlabd_infos);
-    json_templates::extract(obj, "total_time", data.total_time);
-    json_templates::extract(obj, "ln_magnitude", data.ln_magnitude);
+    utils::extract(obj, "gridpack_name", data.gridpack_name);
+    utils::extract_json_string(obj, "fed_info_json", data.fed_info_json);
+    utils::extract(obj, "gridlabd_infos", data.gridlabd_infos);
+    utils::extract(obj, "total_time", data.total_time);
+    utils::extract(obj, "ln_magnitude", data.ln_magnitude);
 
     return data;
 }

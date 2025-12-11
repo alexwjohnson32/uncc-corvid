@@ -20,7 +20,7 @@
 
 #include "query_federate_input.hpp"
 #include "synchronous_websocket_client.hpp"
-#include "JsonTemplates.hpp"
+#include "json_templates.hpp"
 
 namespace
 {
@@ -28,7 +28,7 @@ namespace
 class WriteHelper
 {
   private:
-    connections::SynchronousWebSocketClient m_client;
+    utils::SynchronousWebSocketClient m_client;
     std::ofstream &m_output_console;
     const data::ClientDetails &m_details;
 
@@ -77,7 +77,7 @@ std::optional<data::QueryFederateInput> GetQueryFederateInput(int argc, char **a
         return query_input;
     }
 
-    query_input = json_templates::FromJsonFile<data::QueryFederateInput>(json_file);
+    query_input = utils::FromJsonFile<data::QueryFederateInput>(json_file);
     return query_input;
 }
 

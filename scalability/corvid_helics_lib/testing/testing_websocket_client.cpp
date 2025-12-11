@@ -29,7 +29,7 @@ int main(int argc, char **argv)
     {
         std::cout << "Attempting to run client at '" << address << ":" << port << path << std::endl;
 
-        connections::SynchronousWebSocketClient client;
+        utils::SynchronousWebSocketClient client;
 
         client.Connect(address, port, path);
 

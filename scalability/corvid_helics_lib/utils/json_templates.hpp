@@ -12,7 +12,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-namespace json_templates
+namespace utils
 {
 /**
  * @brief Get the underlying type of an enum value, whether that is scoped or non-scoped.
@@ -377,4 +377,4 @@ inline std::string GetPrettyJsonFileAsString(const std::string &json_file)
 
     return ss.str();
 }
-} // namespace json_templates
+} // namespace utils

@@ -1,6 +1,6 @@
 #include "query_federate_input.hpp"
 
-#include "JsonTemplates.hpp"
+#include "json_templates.hpp"
 
 void data::tag_invoke(boost::json::value_from_tag, boost::json::value &json_value, const data::ClientDetails &data)
 {
@@ -13,9 +13,9 @@ data::ClientDetails data::tag_invoke(boost::json::value_to_tag<data::ClientDetai
     data::ClientDetails data;
     const boost::json::object &obj = json_value.as_object();
 
-    json_templates::extract(obj, "host", data.host);
-    json_templates::extract(obj, "port", data.port);
-    json_templates::extract(obj, "target", data.target);
+    utils::extract(obj, "host", data.host);
+    utils::extract(obj, "port", data.port);
+    utils::extract(obj, "target", data.target);
 
     return data;
 }
@@ -35,11 +35,11 @@ data::QueryFederateInput data::tag_invoke(boost::json::value_to_tag<data::QueryF
     data::QueryFederateInput data;
     const boost::json::object &obj = json_value.as_object();
 
-    json_templates::extract(obj, "federate_name", data.federate_name);
-    json_templates::extract_json_string(obj, "fed_info_json", data.fed_info_json);
-    json_templates::extract(obj, "client_details", data.client_details);
-    json_templates::extract(obj, "total_time", data.total_time);
-    json_templates::extract(obj, "local_log_file", data.local_log_file);
+    utils::extract(obj, "federate_name", data.federate_name);
+    utils::extract_json_string(obj, "fed_info_json", data.fed_info_json);
+    utils::extract(obj, "client_details", data.client_details);
+    utils::extract(obj, "total_time", data.total_time);
+    utils::extract(obj, "local_log_file", data.local_log_file);
 
     return data;
 }

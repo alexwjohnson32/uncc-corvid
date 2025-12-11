@@ -6,7 +6,7 @@
 #include <boost/beast/websocket.hpp>
 #include <string>
 
-namespace connections
+namespace utils
 {
 class SynchronousWebSocketClient
 {
@@ -30,4 +30,4 @@ class SynchronousWebSocketClient
     // Close connection cleanly
     void Close();
 };
-} // namespace connections
+} // namespace utils
