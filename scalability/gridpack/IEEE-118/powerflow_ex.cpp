@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 #include <cmath>
-#include <fstream>
 #include <complex>
 #include <unordered_map>
 
@@ -17,6 +16,7 @@
 #include "three_phase_pf_app.hpp"
 #include "pf_input.hpp"
 #include "json_templates.hpp"
+#include "local_log_helper.hpp"
 
 // GridPACK includes
 #include "mpi.h"
@@ -98,34 +98,31 @@ std::vector<int> GetBusIds(const powerflow::PowerflowInput &input)
     return bus_ids;
 }
 
-std::optional<powerflow::PowerflowInput> GetPowerflowInput(int argc, char **argv, std::ofstream &output_console)
+std::optional<powerflow::PowerflowInput> GetPowerflowInput(int argc, char **argv, utils::LocalLogHelper &log)
 {
     std::optional<powerflow::PowerflowInput> pf_input{};
 
     if (argc < 2)
     {
-        output_console << "[error] Missing JSON: No json file provided in execution call.\n";
-        std::cerr << "[error] Missing JSON: No json file provided in execution call.\n";
+        log << "[error] Missing JSON: No json file provided in execution call.\n";
         return pf_input;
     }
 
     const std::filesystem::path cwd = std::filesystem::current_path();
-    output_console << "[preflight] CWD: " << cwd << "\n";
+    log << "[preflight] CWD: " << cwd << "\n";
 
     const std::string json_file = std::string(argv[1]);
     const std::filesystem::path json_path = json_file;
     if (!std::filesystem::exists(json_path))
     {
-        output_console << "[error] Missing JSON: " << json_path << " (expected in " << cwd << ")\n";
-        std::cerr << "[error] Missing JSON: " << json_path << " (expected in " << cwd << ")\n";
+        log << "[error] Missing JSON: " << json_path << " (expected in " << cwd << ")\n";
         return pf_input;
     }
 
     const std::filesystem::path xml_path = "118.xml";
     if (!std::filesystem::exists(xml_path))
     {
-        output_console << "[error] Missing XML: " << xml_path << " (expected in " << cwd << ")\n";
-        std::cerr << "[error] Missing XML: " << xml_path << " (expected in " << cwd << ")\n";
+        log << "[error] Missing XML: " << xml_path << " (expected in " << cwd << ")\n";
         return pf_input;
     }
 
@@ -134,20 +131,20 @@ std::optional<powerflow::PowerflowInput> GetPowerflowInput(int argc, char **argv
     return pf_input;
 }
 
-helics::ValueFederate GetGridpackFederate(const powerflow::PowerflowInput &pf_input, std::ofstream &output_console)
+helics::ValueFederate GetGridpackFederate(const powerflow::PowerflowInput &pf_input, utils::LocalLogHelper &log)
 {
     // Create a FederateInfo object
     helics::FederateInfo fi;
     fi.loadInfoFromJson(pf_input.fed_info_json);
 
     helics::ValueFederate gpk_118(pf_input.gridpack_name, fi);
-    output_console << "HELICS GridPACK Federate created successfully." << std::endl;
+    log << "HELICS GridPACK Federate created successfully." << std::endl;
 
     return gpk_118;
 }
 
 double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInput &pf_input,
-                   std::ofstream &output_console)
+                   utils::LocalLogHelper &log)
 {
     // Publications
     VoltagePublisher pub(gpk_118, pf_input.ln_magnitude);
@@ -161,8 +158,8 @@ double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInp
                                 gpk_118.registerSubscription(gridlabd_name + "/Sc", "VA") };
     }
 
-    output_console << "Registered Pubs/Subs" << std::endl;
-    output_console << "\n" << FederateToString(gpk_118) << std::endl;
+    log << "Registered Pubs/Subs" << std::endl;
+    log << "\n" << FederateToString(gpk_118) << std::endl;
 
     // initialize constant values
     const std::string xml_file = "118.xml";
@@ -177,13 +174,13 @@ double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInp
     gridpack::powerflow::ThreePhasePFApp executor;
     if (!executor.Initialize(xml_file, bus_ids, r120))
     {
-        output_console << "Failed to initialize the executor.\n" << "xml_file: " << xml_file << "\n";
-        output_console << "bus_ids: ";
+        log << "Failed to initialize the executor.\n" << "xml_file: " << xml_file << "\n";
+        log << "bus_ids: ";
         for (int bus_id : bus_ids)
         {
-            output_console << bus_id << " ";
+            log << bus_id << " ";
         }
-        output_console << "\nr120: " << r120 << "\n";
+        log << "\nr120: " << r120 << "\n";
         return -1.0;
     }
 
@@ -195,12 +192,12 @@ double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInp
 
     // Enter execution mode
     gpk_118.enterExecutingMode();
-    output_console << "GridPACK Federate has entered execution mode." << std::endl;
+    log << "GridPACK Federate has entered execution mode." << std::endl;
 
     // Initial voltage publish
-    output_console << "Publish initial voltage." << std::endl;
+    log << "Publish initial voltage." << std::endl;
     pub.Publish(initial_phased_voltage);
-    output_console << "Published." << std::endl;
+    log << "Published." << std::endl;
 
     // Perform Simulation
 
@@ -218,22 +215,22 @@ double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInp
     double granted_time = 0.0;
     while (granted_time + period <= total_interval)
     {
-        output_console << "\n##########################################\n"
-                       << "New Loop Iteration Information:\n\tGranted Time + Period: " << granted_time + period
-                       << "\n\tTotal Interval: " << total_interval
-                       << "\nRequesting New Granted Time: " << granted_time + period << "\n";
+        log << "\n##########################################\n"
+            << "New Loop Iteration Information:\n\tGranted Time + Period: " << granted_time + period
+            << "\n\tTotal Interval: " << total_interval << "\nRequesting New Granted Time: " << granted_time + period
+            << "\n";
 
         granted_time = gpk_118.requestTime(granted_time + period);
-        output_console << "\n[Time " << granted_time << "]\n";
+        log << "\n[Time " << granted_time << "]\n";
 
         for (const powerflow::GridlabDInputs &gridlabd_info : pf_input.gridlabd_infos)
         {
-            output_console << "\nBus Id: " << gridlabd_info.bus_id << "\nGridlabd Names:\n\t";
+            log << "\nBus Id: " << gridlabd_info.bus_id << "\nGridlabd Names:\n\t";
 
             gridpack::powerflow::ThreePhaseValues s_total;
             for (const std::string &gridlabd_name : gridlabd_info.names)
             {
-                output_console << "\"" << gridlabd_name << "\" ";
+                log << "\"" << gridlabd_name << "\" ";
                 ThreePhaseSubscriptions &current_subs = subs.at(gridlabd_name);
                 if (current_subs.a.isUpdated() || current_subs.a.isValid())
                 {
@@ -254,18 +251,17 @@ double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInp
                 s_total.c += limited_power.c;
             }
 
-            output_console << "\n";
-            output_console << "Total S received from Gridlab-D: [" << s_total.a << ", " << s_total.b << ", "
-                           << s_total.c << "]\n";
+            log << "\nTotal S received from Gridlab-D: [" << s_total.a << ", " << s_total.b << ", " << s_total.c
+                << "]\n";
 
             gridpack::powerflow::ThreePhaseValues v = executor.ComputeVoltage(s_total, gridlabd_info.bus_id);
 
-            output_console << "Updated V by GridPACK: [" << v.a << ", " << v.b << ", " << v.c << "]\n";
+            log << "Updated V by GridPACK: [" << v.a << ", " << v.b << ", " << v.c << "]\n";
 
             pub.Publish(v);
         }
 
-        output_console << "##########################################\n";
+        log << "##########################################\n";
     }
 
     return granted_time;
@@ -278,37 +274,36 @@ int main(int argc, char **argv)
     gridpack::Environment env(argc, argv);
 
     // Use this instead of std::cout.
-    std::ofstream output_console("gpk_118_console.txt");
+    utils::LocalLogHelper log("gpk_118_console.txt");
+    log.SetOnWriteCallback([](const std::string &msg) { std::cout << msg; });
 
     // Read PowerFlowInput and print json string
-    const std::optional<powerflow::PowerflowInput> pf_input = GetPowerflowInput(argc, argv, output_console);
+    const std::optional<powerflow::PowerflowInput> pf_input = GetPowerflowInput(argc, argv, log);
     if (!pf_input)
     {
         return 1;
     }
 
-    output_console << "pf_input.value():\n"
-                   << utils::GetPrettyJsonString(utils::ToJsonString(pf_input.value())) << std::endl;
-    output_console << "pf_input.value().fed_info_json:\n"
-                   << utils::GetPrettyJsonString(pf_input.value().fed_info_json) << std::endl;
+    log << "pf_input.value():\n" << utils::GetPrettyJsonString(utils::ToJsonString(pf_input.value())) << std::endl;
+    log << "pf_input.value().fed_info_json:\n"
+        << utils::GetPrettyJsonString(pf_input.value().fed_info_json) << std::endl;
 
     // Create a FederateInfo object
-    helics::ValueFederate gpk_118 = GetGridpackFederate(pf_input.value(), output_console);
+    helics::ValueFederate gpk_118 = GetGridpackFederate(pf_input.value(), log);
 
     // Perform Simulation
-    const double granted_time = PerformLoop(gpk_118, pf_input.value(), output_console);
+    const double granted_time = PerformLoop(gpk_118, pf_input.value(), log);
 
     gridpack::math::Finalize();
     gpk_118.finalize();
 
     if (granted_time < 0.0)
     {
-        output_console << "Could not perform simulation! Federate finalized.\nGranted time: " << granted_time
-                       << std::endl;
+        log << "Could not perform simulation! Federate finalized.\nGranted time: " << granted_time << std::endl;
     }
     else
     {
-        output_console << "Federate finalized.\nGranted time: " << granted_time << std::endl;
+        log << "Federate finalized.\nGranted time: " << granted_time << std::endl;
     }
 
     return 0;

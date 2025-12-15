@@ -1,4 +1,4 @@
 target_include_directories(corvid_helics_lib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_sources(corvid_helics_lib PUBLIC synchronous_websocket_client.hpp)
-target_sources(corvid_helics_lib PRIVATE synchronous_websocket_client.cpp)
+target_sources(corvid_helics_lib PUBLIC synchronous_websocket_client.hpp websocket_client.hpp)
+target_sources(corvid_helics_lib PRIVATE synchronous_websocket_client.cpp websocket_client.cpp)

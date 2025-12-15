@@ -1,7 +1,9 @@
+#include <boost/system/error_code.hpp>
 #include <cstdlib>
 #include <iostream>
 #include <string>
 #include <exception>
+#include <memory>
 
 #include <boost/asio/io_context.hpp>
 #include <boost/beast/websocket.hpp>
@@ -10,6 +12,83 @@
 #include <boost/beast/core.hpp>
 
 #include "synchronous_websocket_client.hpp"
+#include "websocket_client.hpp"
+
+#include <atomic>
+
+namespace
+{
+void DoSyncClient(const std::string address, const std::string port, const std::string path)
+{
+    utils::SynchronousWebSocketClient client;
+
+    client.Connect(address, port, path);
+
+    std::cout << "Type message to send:" << std::endl;
+
+    std::string msg;
+    while (std::getline(std::cin, msg))
+    {
+        if (msg == "end" || msg == "quit")
+        {
+            break;
+        }
+        client.Send(msg);
+        std::cout << "Type message to send:" << std::endl;
+    }
+
+    std::cout << "\n\nClosing...";
+    client.Close();
+    std::cout << "Complete.\n";
+}
+
+void DoAsyncClient(const std::string &address, const std::string &port, const std::string &path)
+{
+    auto client = std::make_shared<utils::WebSocketClient>();
+    client->SetOnMessage([](const std::string &msg) { std::cout << "Received: " << msg << std::endl; });
+    client->SetOnError([](const boost::system::error_code &ec, const std::string &what)
+                       { std::cerr << what << ": " << ec.message() << std::endl; });
+
+    client->AsyncRun();
+
+    std::atomic<bool> is_connecting = true;
+    client->Connect(address, port, path,
+                    [client, &is_connecting](const boost::system::error_code &ec)
+                    {
+                        if (!ec)
+                        {
+                            std::cout << "Connected!" << std::endl;
+                        }
+                        else
+                        {
+                            std::cout << "Connect failed: " << ec.message() << std::endl;
+                        }
+
+                        is_connecting = false;
+                    });
+
+    while (is_connecting);
+
+    std::cout << "Type message to send:" << std::endl;
+
+    std::string msg;
+    while (std::getline(std::cin, msg))
+    {
+        if (msg == "end" || msg == "quit")
+        {
+            break;
+        }
+        client->Send(msg);
+        std::cout << "Type message to send:" << std::endl;
+    }
+
+    std::cout << "\n\nClosing...";
+    client->CloseConnection();
+    std::cout << "Shutting Down...";
+    client->StopRun();
+    std::cout << "Complete.\n";
+}
+} // namespace
 
 int main(int argc, char **argv)
 {
@@ -28,27 +107,7 @@ int main(int argc, char **argv)
     try
     {
         std::cout << "Attempting to run client at '" << address << ":" << port << path << std::endl;
-
-        utils::SynchronousWebSocketClient client;
-
-        client.Connect(address, port, path);
-
-        std::cout << "Type message to send:" << std::endl;
-
-        std::string msg;
-        while (std::getline(std::cin, msg))
-        {
-            if (msg == "end" || msg == "quit")
-            {
-                break;
-            }
-            client.Send(msg);
-            std::cout << "Type message to send:" << std::endl;
-        }
-
-        std::cout << "\n\nClosing...";
-        client.Close();
-        std::cout << "Complete.\n";
+        DoAsyncClient(address, port, path);
     }
     catch (const std::exception &e)
     {
