@@ -11,36 +11,12 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
 
-#include "synchronous_websocket_client.hpp"
 #include "websocket_client.hpp"
 
 #include <atomic>
 
 namespace
 {
-void DoSyncClient(const std::string address, const std::string port, const std::string path)
-{
-    utils::SynchronousWebSocketClient client;
-
-    client.Connect(address, port, path);
-
-    std::cout << "Type message to send:" << std::endl;
-
-    std::string msg;
-    while (std::getline(std::cin, msg))
-    {
-        if (msg == "end" || msg == "quit")
-        {
-            break;
-        }
-        client.Send(msg);
-        std::cout << "Type message to send:" << std::endl;
-    }
-
-    std::cout << "\n\nClosing...";
-    client.Close();
-    std::cout << "Complete.\n";
-}
 
 void DoAsyncClient(const std::string &address, const std::string &port, const std::string &path)
 {

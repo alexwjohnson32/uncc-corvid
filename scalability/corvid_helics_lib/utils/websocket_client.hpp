@@ -94,6 +94,9 @@ class WebSocketClient : public std::enable_shared_from_this<WebSocketClient>
     std::function<void(const std::string &)> m_on_message;
     std::function<void(const boost::system::error_code &, const std::string &)> m_on_error;
 
+    // Error suppression state
+    boost::system::error_code m_last_error;
+
     // Thread management
     std::thread m_io_thread;
 
@@ -109,5 +112,9 @@ class WebSocketClient : public std::enable_shared_from_this<WebSocketClient>
     // Write Logic
     void DoWrite();
     void OnWrite(boost::beast::error_code ec, std::size_t bytes_transferred);
+
+    // Helper functions to filter duplicates
+    void ReportError(boost::beast::error_code ec, const std::string &context);
+    void ClearErrorState();
 };
 } // namespace utils

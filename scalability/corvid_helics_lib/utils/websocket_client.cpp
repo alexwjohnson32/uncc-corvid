@@ -7,13 +7,16 @@
 #include <boost/beast/core/error.hpp>
 #include <boost/beast/websocket/rfc6455.hpp>
 #include <boost/beast/websocket/stream.hpp>
+#include <boost/system/error_code.hpp>
 #include <cstddef>
 #include <functional>
-#include <iostream>
 
 utils::WebSocketClient::WebSocketClient()
     : m_ioc(), m_work_guard(boost::asio::make_work_guard(m_ioc)), m_resolver(m_ioc), m_ws(m_ioc)
 {
+    // Initialize last error to success (0)
+    m_last_error = boost::system::error_code();
+
     // Set User-Agent
     m_ws.set_option(boost::beast::websocket::stream_base::decorator(
         [](boost::beast::websocket::request_type &req)
@@ -43,7 +46,7 @@ void utils::WebSocketClient::StopRun()
         m_io_thread.join();
     }
 
-    m_ioc.restart();                                    // Reset for potential reuse
+    m_ioc.restart();                                           // Reset for potential reuse
     m_work_guard.emplace(boost::asio::make_work_guard(m_ioc)); // Re-acquire work guard
 }
 
@@ -55,6 +58,8 @@ void utils::WebSocketClient::Connect(const std::string &host, const std::string 
     m_host = host;
     m_target = target;
     m_on_connect = on_connect;
+
+    ClearErrorState(); // Reset on new connection attempt
 
     // Start resolution
     m_resolver.async_resolve(
@@ -100,6 +105,8 @@ void utils::WebSocketClient::OnHandshake(boost::beast::error_code ec)
     }
 
     // Connection successful!
+    ClearErrorState();
+
     if (m_on_connect) m_on_connect(ec); // ec is success (0) here
 
     // Start the Read Loop immediately
@@ -133,9 +140,12 @@ void utils::WebSocketClient::OnRead(boost::beast::error_code ec, std::size_t byt
 
     if (ec)
     {
-        if (m_on_error) m_on_error(ec, "Read Error");
+        ReportError(ec, "Read Error");
         return;
     }
+
+    // Success - clear error state so if a new error happens later, we hear about it
+    ClearErrorState();
 
     // Process Message
     if (m_on_message)
@@ -184,7 +194,7 @@ void utils::WebSocketClient::OnWrite(boost::beast::error_code ec, std::size_t)
 {
     if (ec)
     {
-        if (m_on_error) m_on_error(ec, "Write Error");
+        ReportError(ec, "Write Error");
 
         // Even on error, we usually pop the failed message and try the next,
         // or clear the queue depending on desired robustness.
@@ -197,6 +207,9 @@ void utils::WebSocketClient::OnWrite(boost::beast::error_code ec, std::size_t)
 
         return;
     }
+
+    // Success - clear error state
+    ClearErrorState();
 
     // Success, remove the sent message
     m_write_queue.pop();
@@ -222,4 +235,19 @@ void utils::WebSocketClient::CloseConnection()
                                                });
                           }
                       });
+}
+
+void utils::WebSocketClient::ReportError(boost::system::error_code ec, const std::string &context)
+{
+    // If this is the same error as before, suppress it
+    if (m_last_error == ec) return;
+
+    m_last_error = ec;
+    if (m_on_error) m_on_error(ec, context);
+}
+
+void utils::WebSocketClient::ClearErrorState()
+{
+    // Reset to default (success) state
+    m_last_error = boost::system::error_code();
 }

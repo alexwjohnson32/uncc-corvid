@@ -6,6 +6,7 @@
 
 #include "pf_app.hpp"
 #include "pf_state.hpp"
+#include "local_log_helper.hpp"
 
 namespace gridpack
 {
@@ -31,8 +32,14 @@ class ThreePhasePFApp
     std::vector<int> m_bus_ids;
     std::complex<double> m_r;
 
+    utils::LocalLogHelper m_log;
+
   public:
-    ThreePhasePFApp() : m_state(), m_app_A(), m_app_B(), m_app_C(), m_config_file(""), m_bus_ids(), m_r(0.0, 0.0) {}
+    ThreePhasePFApp()
+        : m_state(), m_app_A(), m_app_B(), m_app_C(), m_config_file(""), m_bus_ids(), m_r(0.0, 0.0),
+          m_log("three_phase_timimng.log")
+    {
+    }
 
     bool Initialize(const std::string &config_file, const std::vector<int> &bus_ids, const std::complex<double> &r);
 
