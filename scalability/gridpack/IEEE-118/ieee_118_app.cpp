@@ -6,8 +6,13 @@
 
 #include "stopwatch.hpp"
 
-bool gridpack::powerflow::ThreePhasePFApp::Initialize(const std::string &config_file, const std::vector<int> &bus_ids,
-                                                      const std::complex<double> &r)
+namespace
+{
+constexpr double PI = 3.14159265358979323846;
+} // namespace
+
+bool ieee_118::IEEE118App::Initialize(const std::string &config_file, const std::vector<int> &bus_ids,
+                                      const std::complex<double> &r)
 {
     m_config_file = config_file;
     m_bus_ids = bus_ids;
@@ -39,10 +44,10 @@ bool gridpack::powerflow::ThreePhasePFApp::Initialize(const std::string &config_
     return success;
 }
 
-gridpack::powerflow::ThreePhaseValues
-gridpack::powerflow::ThreePhasePFApp::ComputeVoltage(const gridpack::powerflow::ThreePhaseValues &power_s, int bus_id)
+powerflow::tools::ThreePhaseValues
+ieee_118::IEEE118App::ComputeVoltage(const powerflow::tools::ThreePhaseValues &power_s, int bus_id)
 {
-    gridpack::powerflow::ThreePhaseValues phased_voltage;
+    powerflow::tools::ThreePhaseValues phased_voltage;
 
     std::stringstream out;
     out << "####################################\n";
@@ -52,17 +57,17 @@ gridpack::powerflow::ThreePhasePFApp::ComputeVoltage(const gridpack::powerflow::
     out << "Power C: " << power_s.c << "\n";
 
     utils::Stopwatch watch;
-    phased_voltage.a = m_app_A.ComputeVoltageCurrent(m_config_file, bus_id, "A", power_s.a, m_state);
+    phased_voltage.a = m_state.ComputeVoltageCurrent(m_config_file, bus_id, "A", power_s.a);
     long long time_a = watch.ElapsedMilliseconds();
     out << "Time A: " << time_a << " ms\n";
 
     watch.Start();
-    phased_voltage.b = m_app_B.ComputeVoltageCurrent(m_config_file, bus_id, "B", power_s.b, m_state) * m_r;
+    phased_voltage.b = m_state.ComputeVoltageCurrent(m_config_file, bus_id, "B", power_s.b) * m_r;
     long long time_b = watch.ElapsedMilliseconds();
     out << "Time B: " << time_b << " ms\n";
 
     watch.Start();
-    phased_voltage.c = m_app_C.ComputeVoltageCurrent(m_config_file, bus_id, "C", power_s.c, m_state) * m_r * m_r;
+    phased_voltage.c = m_state.ComputeVoltageCurrent(m_config_file, bus_id, "C", power_s.c) * m_r * m_r;
     long long time_c = watch.ElapsedMilliseconds();
     out << "Time C: " << time_c << " ms\n";
 

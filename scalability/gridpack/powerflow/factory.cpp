@@ -5,48 +5,34 @@
  */
 // -------------------------------------------------------------
 /**
- * @file   pf_factory.cpp
+ * @file   factory.cpp
  * @author Bruce Palmer
  * @date   2014-01-28 11:31:23 d3g096
  *
  * @brief
  *
+ * This has been modified by me in various ways, this header may not be necessary
  *
  */
 // -------------------------------------------------------------
 
 #include "gridpack/include/gridpack.hpp"
-#include "pf_factory.hpp"
 
-namespace gridpack
-{
-namespace powerflow
-{
+#include "factory.hpp"
 
-// Powerflow factory class implementations
-
-/**
- * Basic constructor
- * @param network: network associated with factory
- */
-PFFactory::PFFactory(PFFactory::NetworkPtr network) : gridpack::factory::BaseFactory<PFNetwork>(network)
+powerflow::PowerflowFactory::PowerflowFactory(powerflow::PowerflowFactory::NetworkPtr network)
+    : gridpack::factory::BaseFactory<powerflow::Network>(network)
 {
     p_network = network;
 }
 
-/**
- * Basic destructor
- */
-gridpack::powerflow::PFFactory::~PFFactory() {}
+powerflow::PowerflowFactory::~PowerflowFactory() {}
 
 // <latex> The $\overline{\overline{Y}}$-matrix relates the vector
 // of currents $\overline{I}$ to the voltages $\overline{V}$ via
 // $\overline{I} = \overline{\overline{Y}}\cdot\overline{V}$ </latex>.
 
-/**
- * Create the admittance (Y-Bus) matrix.
- */
-void gridpack::powerflow::PFFactory::setYBus(void)
+void powerflow::PowerflowFactory::setYBus(void)
 {
     int numBus = p_network->numBuses();
     int numBranch = p_network->numBranches();
@@ -65,10 +51,7 @@ void gridpack::powerflow::PFFactory::setYBus(void)
     }
 }
 
-/**
- * Make SBus vector
- */
-void gridpack::powerflow::PFFactory::setSBus(void)
+void powerflow::PowerflowFactory::setSBus(void)
 {
     int numBus = p_network->numBuses();
     int i;
@@ -79,6 +62,3 @@ void gridpack::powerflow::PFFactory::setSBus(void)
         dynamic_cast<PFBus *>(p_network->getBus(i).get())->setSBus();
     }
 }
-
-} // namespace powerflow
-} // namespace gridpack

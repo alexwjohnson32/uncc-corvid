@@ -64,18 +64,13 @@ helics::MessageFederate GetFederate(const data::QueryFederateInput &config, util
 std::string DebugTimeQueryLoop(double granted_time, helics::MessageFederate &msg_fed)
 {
     utils::Stopwatch loop_watch;
-    std::stringstream ss;
-
-    ss << "\n##########################################\n";
-    ss << "Granted Time: " << granted_time << "\n";
-
     loop_watch.Start();
 
-    ss << msg_fed.query("root", "global_time_debugging");
-
-    double loop_execution_ms = loop_watch.ElapsedMilliseconds();
-
-    ss << "\nQuery Execution Time: " << loop_execution_ms << " ms\n";
+    std::stringstream ss;
+    ss << "\n##########################################\n";
+    ss << "Granted Time: " << granted_time << "\n";
+    ss << msg_fed.query("root", "global_time_debugging") << "\n";
+    ss << "Query Execution Time: " << loop_watch.ElapsedMilliseconds() << " ms\n";
     ss << "##########################################\n";
 
     return ss.str();
@@ -84,21 +79,16 @@ std::string DebugTimeQueryLoop(double granted_time, helics::MessageFederate &msg
 std::string DiscreteQueriesLoop(double granted_time, helics::MessageFederate &msg_fed)
 {
     utils::Stopwatch loop_watch;
-    std::stringstream ss;
-
-    ss << "\n##########################################\n";
-    ss << "Granted Time: " << granted_time << "\n";
-
     loop_watch.Start();
 
+    std::stringstream ss;
+    ss << "\n##########################################\n";
+    ss << "Granted Time: " << granted_time << "\n";
     ss << "Name: " << msg_fed.query("root", "name") << "\n";
     ss << "Address: " << msg_fed.query("root", "address") << "\n";
     ss << "IsInit: " << msg_fed.query("root", "isinit") << "\n";
-    ss << "IsConnected: " << msg_fed.query("root", "isconnected");
-
-    double loop_execution_ms = loop_watch.ElapsedMilliseconds();
-
-    ss << "\nQuery Execution Time: " << loop_execution_ms << " ms\n";
+    ss << "IsConnected: " << msg_fed.query("root", "isconnected") << "\n";
+    ss << "Query Execution Time: " << loop_watch.ElapsedMilliseconds() << " ms\n";
     ss << "##########################################\n";
 
     return ss.str();

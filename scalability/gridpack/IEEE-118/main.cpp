@@ -13,10 +13,12 @@
 #include <helics/application_api/Publications.hpp>
 #include <helics/application_api/Inputs.hpp>
 
-#include "three_phase_pf_app.hpp"
-#include "pf_input.hpp"
+#include "ieee_118_app.hpp"
 #include "json_templates.hpp"
 #include "local_log_helper.hpp"
+
+#include "powerflow/tools.hpp"
+#include "powerflow/input.hpp"
 
 // GridPACK includes
 #include "mpi.h"
@@ -27,80 +29,25 @@
 namespace
 {
 
-struct ThreePhaseSubscriptions
-{
-    helics::Input a{};
-    helics::Input b{};
-    helics::Input c{};
-};
-
-class VoltagePublisher
-{
-  private:
-    helics::Publication m_a;
-    helics::Publication m_b;
-    helics::Publication m_c;
-    const double m_ln_magnitude{};
-
-  public:
-    VoltagePublisher(helics::ValueFederate &fed, double ln_magnitude) : m_ln_magnitude(ln_magnitude)
-    {
-        m_a = fed.registerPublication("Va", "complex", "V");
-        m_b = fed.registerPublication("Vb", "complex", "V");
-        m_c = fed.registerPublication("Vc", "complex", "V");
-    }
-
-    void Publish(const gridpack::powerflow::ThreePhaseValues &v)
-    {
-        m_a.publish(v.a * m_ln_magnitude);
-        m_b.publish(v.b * m_ln_magnitude);
-        m_c.publish(v.c * m_ln_magnitude);
-    }
-};
-
-std::complex<double> LimitPower(const std::complex<double> &s, double max_v)
-{
-    const double abs_s = std::abs(s);
-    if (abs_s > max_v)
-    {
-        return s * (max_v / abs_s);
-    }
-    else
-    {
-        return s;
-    }
-}
-
-gridpack::powerflow::ThreePhaseValues LimitPower(ThreePhaseSubscriptions &sub, double max_v)
-{
-    gridpack::powerflow::ThreePhaseValues limited_power;
-
-    limited_power.a = LimitPower(sub.a.getValue<std::complex<double>>() / 1e8, max_v);
-    limited_power.b = LimitPower(sub.b.getValue<std::complex<double>>() / 1e8, max_v);
-    limited_power.c = LimitPower(sub.c.getValue<std::complex<double>>() / 1e8, max_v);
-
-    return limited_power;
-}
-
 std::string FederateToString(helics::ValueFederate &fed)
 {
     std::string json_result = fed.query(fed.getName(), "federate");
     return utils::GetPrettyJsonString(json_result);
 }
 
-std::vector<int> GetBusIds(const powerflow::PowerflowInput &input)
+std::vector<int> GetBusIds(const powerflow::input::PowerflowInput &input)
 {
     std::vector<int> bus_ids;
-    for (const powerflow::GridlabDInputs &gridlabd_info : input.gridlabd_infos)
+    for (const powerflow::input::GridlabDInputs &gridlabd_info : input.gridlabd_infos)
     {
         bus_ids.push_back(gridlabd_info.bus_id);
     }
     return bus_ids;
 }
 
-std::optional<powerflow::PowerflowInput> GetPowerflowInput(int argc, char **argv, utils::LocalLogHelper &log)
+std::optional<powerflow::input::PowerflowInput> GetPowerflowInput(int argc, char **argv, utils::LocalLogHelper &log)
 {
-    std::optional<powerflow::PowerflowInput> pf_input{};
+    std::optional<powerflow::input::PowerflowInput> pf_input{};
 
     if (argc < 2)
     {
@@ -126,12 +73,12 @@ std::optional<powerflow::PowerflowInput> GetPowerflowInput(int argc, char **argv
         return pf_input;
     }
 
-    pf_input = utils::FromJsonFile<powerflow::PowerflowInput>(json_file);
+    pf_input = utils::FromJsonFile<powerflow::input::PowerflowInput>(json_file);
 
     return pf_input;
 }
 
-helics::ValueFederate GetGridpackFederate(const powerflow::PowerflowInput &pf_input, utils::LocalLogHelper &log)
+helics::ValueFederate GetGridpackFederate(const powerflow::input::PowerflowInput &pf_input, utils::LocalLogHelper &log)
 {
     // Create a FederateInfo object
     helics::FederateInfo fi;
@@ -143,14 +90,14 @@ helics::ValueFederate GetGridpackFederate(const powerflow::PowerflowInput &pf_in
     return gpk_118;
 }
 
-double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInput &pf_input,
+double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::input::PowerflowInput &pf_input,
                    utils::LocalLogHelper &log)
 {
     // Publications
-    VoltagePublisher pub(gpk_118, pf_input.ln_magnitude);
+    powerflow::tools::VoltagePublisher pub(gpk_118, pf_input.ln_magnitude);
 
     // Subscriptions
-    std::unordered_map<std::string, ThreePhaseSubscriptions> subs;
+    std::unordered_map<std::string, powerflow::tools::ThreePhaseSubscriptions> subs;
     for (const std::string &gridlabd_name : pf_input.GetGridalabDNames())
     {
         subs[gridlabd_name] = { gpk_118.registerSubscription(gridlabd_name + "/Sa", "VA"),
@@ -165,13 +112,13 @@ double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInp
     const std::string xml_file = "118.xml";
     const std::complex<double> r120({ -0.5, -0.866025 });
     const std::vector<int> bus_ids = GetBusIds(pf_input);
-    const gridpack::powerflow::ThreePhaseValues initial_phased_voltage = { { 1.0, 0.0 },
-                                                                           { -0.5, -0.866025 },
-                                                                           { -0.5, 0.866025 } };
+    const powerflow::tools::ThreePhaseValues initial_phased_voltage = { { 1.0, 0.0 },
+                                                                        { -0.5, -0.866025 },
+                                                                        { -0.5, 0.866025 } };
     const double period = gpk_118.getTimeProperty(HELICS_PROPERTY_TIME_PERIOD);
 
     // Initialize variables
-    gridpack::powerflow::ThreePhasePFApp executor;
+    ieee_118::IEEE118App executor;
     if (!executor.Initialize(xml_file, bus_ids, r120))
     {
         log << "Failed to initialize the executor.\n" << "xml_file: " << xml_file << "\n";
@@ -184,10 +131,10 @@ double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInp
         return -1.0;
     }
 
-    std::unordered_map<std::string, gridpack::powerflow::ThreePhaseValues> last_known_values;
+    std::unordered_map<std::string, powerflow::tools::ThreePhaseValues> last_known_values;
     for (const std::string &gridlabd_name : pf_input.GetGridalabDNames())
     {
-        last_known_values[gridlabd_name] = gridpack::powerflow::ThreePhaseValues();
+        last_known_values[gridlabd_name] = powerflow::tools::ThreePhaseValues();
     }
 
     // Enter execution mode
@@ -223,15 +170,15 @@ double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInp
         granted_time = gpk_118.requestTime(granted_time + period);
         log << "\n[Time " << granted_time << "]\n";
 
-        for (const powerflow::GridlabDInputs &gridlabd_info : pf_input.gridlabd_infos)
+        for (const powerflow::input::GridlabDInputs &gridlabd_info : pf_input.gridlabd_infos)
         {
             log << "\nBus Id: " << gridlabd_info.bus_id << "\nGridlabd Names:\n\t";
 
-            gridpack::powerflow::ThreePhaseValues s_total;
+            powerflow::tools::ThreePhaseValues s_total;
             for (const std::string &gridlabd_name : gridlabd_info.names)
             {
                 log << "\"" << gridlabd_name << "\" ";
-                ThreePhaseSubscriptions &current_subs = subs.at(gridlabd_name);
+                powerflow::tools::ThreePhaseSubscriptions &current_subs = subs.at(gridlabd_name);
                 if (current_subs.a.isUpdated() || current_subs.a.isValid())
                 {
                     last_known_values.at(gridlabd_name).a = current_subs.a.getValue<std::complex<double>>();
@@ -245,7 +192,8 @@ double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInp
                     last_known_values.at(gridlabd_name).c = current_subs.c.getValue<std::complex<double>>();
                 }
 
-                gridpack::powerflow::ThreePhaseValues limited_power = LimitPower(subs.at(gridlabd_name), 1.0);
+                powerflow::tools::ThreePhaseValues limited_power =
+                    powerflow::tools::LimitPower(subs.at(gridlabd_name), 1.0);
                 s_total.a += limited_power.a;
                 s_total.b += limited_power.b;
                 s_total.c += limited_power.c;
@@ -254,7 +202,7 @@ double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInp
             log << "\nTotal S received from Gridlab-D: [" << s_total.a << ", " << s_total.b << ", " << s_total.c
                 << "]\n";
 
-            gridpack::powerflow::ThreePhaseValues v = executor.ComputeVoltage(s_total, gridlabd_info.bus_id);
+            powerflow::tools::ThreePhaseValues v = executor.ComputeVoltage(s_total, gridlabd_info.bus_id);
 
             log << "Updated V by GridPACK: [" << v.a << ", " << v.b << ", " << v.c << "]\n";
 
@@ -266,6 +214,7 @@ double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::PowerflowInp
 
     return granted_time;
 }
+
 } // namespace
 
 int main(int argc, char **argv)
@@ -278,7 +227,7 @@ int main(int argc, char **argv)
     log.SetOnWriteCallback([](const std::string &msg) { std::cout << msg; });
 
     // Read PowerFlowInput and print json string
-    const std::optional<powerflow::PowerflowInput> pf_input = GetPowerflowInput(argc, argv, log);
+    const std::optional<powerflow::input::PowerflowInput> pf_input = GetPowerflowInput(argc, argv, log);
     if (!pf_input)
     {
         return 1;

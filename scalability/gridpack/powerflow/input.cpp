@@ -2,16 +2,17 @@
 
 #include "json_templates.hpp"
 
-void powerflow::tag_invoke(boost::json::value_from_tag, boost::json::value &json_value,
-                           const powerflow::GridlabDInputs &data)
+void powerflow::input::tag_invoke(boost::json::value_from_tag, boost::json::value &json_value,
+                                  const powerflow::input::GridlabDInputs &data)
 {
     json_value = { { "bus_id", data.bus_id }, { "names", data.names } };
 }
 
-powerflow::GridlabDInputs powerflow::tag_invoke(boost::json::value_to_tag<powerflow::GridlabDInputs>,
-                                                const boost::json::value &json_value)
+powerflow::input::GridlabDInputs
+powerflow::input::tag_invoke(boost::json::value_to_tag<powerflow::input::GridlabDInputs>,
+                             const boost::json::value &json_value)
 {
-    powerflow::GridlabDInputs data;
+    powerflow::input::GridlabDInputs data;
     const boost::json::object &obj = json_value.as_object();
 
     utils::extract(obj, "bus_id", data.bus_id);
@@ -20,8 +21,8 @@ powerflow::GridlabDInputs powerflow::tag_invoke(boost::json::value_to_tag<powerf
     return data;
 }
 
-void powerflow::tag_invoke(boost::json::value_from_tag, boost::json::value &json_value,
-                           const powerflow::PowerflowInput &data)
+void powerflow::input::tag_invoke(boost::json::value_from_tag, boost::json::value &json_value,
+                                  const powerflow::input::PowerflowInput &data)
 {
     json_value = { { "gridpack_name", data.gridpack_name },
                    { "fed_info_json", boost::json::parse(data.fed_info_json) },
@@ -30,10 +31,11 @@ void powerflow::tag_invoke(boost::json::value_from_tag, boost::json::value &json
                    { "ln_magnitude", data.ln_magnitude } };
 }
 
-powerflow::PowerflowInput powerflow::tag_invoke(boost::json::value_to_tag<powerflow::PowerflowInput>,
-                                                const boost::json::value &json_value)
+powerflow::input::PowerflowInput
+powerflow::input::tag_invoke(boost::json::value_to_tag<powerflow::input::PowerflowInput>,
+                             const boost::json::value &json_value)
 {
-    powerflow::PowerflowInput data;
+    powerflow::input::PowerflowInput data;
     const boost::json::object &obj = json_value.as_object();
 
     utils::extract(obj, "gridpack_name", data.gridpack_name);
@@ -45,11 +47,11 @@ powerflow::PowerflowInput powerflow::tag_invoke(boost::json::value_to_tag<powerf
     return data;
 }
 
-std::vector<std::string> powerflow::PowerflowInput::GetGridalabDNames() const
+std::vector<std::string> powerflow::input::PowerflowInput::GetGridalabDNames() const
 {
     std::vector<std::string> names;
 
-    for (const powerflow::GridlabDInputs &info : gridlabd_infos)
+    for (const powerflow::input::GridlabDInputs &info : gridlabd_infos)
     {
         for (const std::string &name : info.names)
         {

@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  *     Copyright (c) 2013 Battelle Memorial Institute
  *     Licensed under modified BSD License. A copy of this license can be found
@@ -5,55 +7,49 @@
  */
 // -------------------------------------------------------------
 /**
- * @file   pf_factory.hpp
+ * @file   factory.hpp
  * @author Bruce Palmer
  * @date   2014-01-28 11:33:42 d3g096
  *
  * @brief
  *
+ * This has been modified by me in various ways, this header may not be necessary
  *
  */
 // -------------------------------------------------------------
 
-#pragma once
-
 #include "gridpack/include/gridpack.hpp"
 #include "gridpack/applications/components/pf_matrix/pf_components.hpp"
 
-namespace gridpack {
-namespace powerflow {
+namespace powerflow
+{
+typedef network::BaseNetwork<PFBus, PFBranch> Network;
 
-// Define the type of network used in the powerflow application
-typedef network::BaseNetwork<PFBus, PFBranch > PFNetwork;
+class PowerflowFactory : gridpack::factory::BaseFactory<Network>
+{
+  private:
+    NetworkPtr p_network;
 
-class PFFactory
-  : public gridpack::factory::BaseFactory<PFNetwork> {
   public:
     /**
      * Basic constructor
      * @param network: network associated with factory
      */
-    PFFactory(NetworkPtr network);
+    PowerflowFactory(NetworkPtr network);
 
     /**
      * Basic destructor
      */
-    ~PFFactory();
+    ~PowerflowFactory();
 
     /**
      * Create the admittance (Y-Bus) matrix.
      */
-    void setYBus(void);
+    void setYBus();
 
     /**
      * Make SBus vector
      */
-    void setSBus(void);
-
-  private:
-
-    NetworkPtr p_network;
+    void setSBus();
 };
-
-} // powerflow
-} // gridpack
+} // namespace powerflow
