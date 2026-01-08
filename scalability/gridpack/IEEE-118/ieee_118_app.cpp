@@ -1,15 +1,10 @@
-#include "three_phase_pf_app.hpp"
+#include "ieee_118_app.hpp"
 
 #include <iostream>
 #include <fstream>
 #include <sstream>
 
 #include "stopwatch.hpp"
-
-namespace
-{
-constexpr double PI = 3.14159265358979323846;
-} // namespace
 
 bool ieee_118::IEEE118App::Initialize(const std::string &config_file, const std::vector<int> &bus_ids,
                                       const std::complex<double> &r)

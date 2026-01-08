@@ -13,5 +13,7 @@ set(GRIDPACK_LIBS
     gridpack_math gridpack_configuration
 )
 
+set(POWERFLOW_LIB_NAME powerflow_lib)
+
 add_subdirectory(powerflow)
 add_subdirectory(IEEE-118)

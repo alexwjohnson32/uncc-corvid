@@ -17,8 +17,8 @@
 #include "json_templates.hpp"
 #include "local_log_helper.hpp"
 
-#include "powerflow/tools.hpp"
-#include "powerflow/input.hpp"
+#include "tools.hpp"
+#include "input.hpp"
 
 // GridPACK includes
 #include "mpi.h"

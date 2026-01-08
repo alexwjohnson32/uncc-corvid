@@ -1,10 +1,10 @@
+#pragma once
+
 #include <complex>
 
 #include <helics/application_api/ValueFederate.hpp>
 #include <helics/application_api/Publications.hpp>
 #include <helics/application_api/Inputs.hpp>
-
-#include "three_phase_pf_app.hpp"
 
 namespace powerflow
 {
@@ -36,11 +36,11 @@ class VoltagePublisher
   public:
     VoltagePublisher(helics::ValueFederate &fed, double ln_magnitude);
 
-    void Publish(const gridpack::powerflow::ThreePhaseValues &v);
+    void Publish(const ThreePhaseValues &v);
 };
 
 std::complex<double> LimitPower(const std::complex<double> &s, double max_v);
-gridpack::powerflow::ThreePhaseValues LimitPower(ThreePhaseSubscriptions &sub, double max_v);
+ThreePhaseValues LimitPower(ThreePhaseSubscriptions &sub, double max_v);
 
 } // namespace tools
 } // namespace powerflow

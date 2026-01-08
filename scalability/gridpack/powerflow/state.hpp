@@ -10,7 +10,7 @@
 
 #include "gridpack/include/gridpack.hpp"
 
-#include "factory.hpp"
+#include "/usr/local/GridPACK/include/gridpack/applications/modules/powerflow/pf_factory_module.hpp"
 
 namespace powerflow
 {
@@ -22,14 +22,14 @@ class State
     gridpack::parallel::Communicator m_world;
 
   public:
-    boost::shared_ptr<powerflow::Network> network;
+    boost::shared_ptr<gridpack::powerflow::PFNetwork> network;
     gridpack::utility::Configuration::CursorPtr cursor;
 
     double base_MVA = 100.0;
 
-    std::unique_ptr<powerflow::PowerflowFactory> pf_factory;
-    std::unique_ptr<gridpack::mapper::BusVectorMap<powerflow::Network>> v_map;
-    std::unique_ptr<gridpack::mapper::FullMatrixMap<powerflow::Network>> j_map;
+    std::unique_ptr<gridpack::powerflow::PFFactoryModule> pf_factory;
+    std::unique_ptr<gridpack::mapper::BusVectorMap<gridpack::powerflow::PFNetwork>> v_map;
+    std::unique_ptr<gridpack::mapper::FullMatrixMap<gridpack::powerflow::PFNetwork>> j_map;
     boost::shared_ptr<gridpack::math::Vector> PQ;
     boost::shared_ptr<gridpack::math::Vector> X;
     boost::shared_ptr<gridpack::math::Matrix> J;

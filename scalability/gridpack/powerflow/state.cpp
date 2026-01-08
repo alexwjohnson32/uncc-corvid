@@ -10,12 +10,14 @@ enum class Parser
     PTI23,
     PTI33
 };
-}
+
+constexpr double PI = 3.14159265358979323846;
+} // namespace
 
 bool powerflow::State::InitializeConfig(const std::string &config_file)
 {
     bool is_initialized = false;
-    network.reset(new powerflow::Network(m_world));
+    network.reset(new gridpack::powerflow::PFNetwork(m_world));
 
     gridpack::utility::Configuration *config = gridpack::utility::Configuration::configuration();
     config->enableLogging(&std::cout);
@@ -65,7 +67,7 @@ bool powerflow::State::InitializeConfig(const std::string &config_file)
         {
             std::cout << "Using V23 parser\n";
         }
-        gridpack::parser::PTI23_parser<powerflow::Network> parser(network);
+        gridpack::parser::PTI23_parser<gridpack::powerflow::PFNetwork> parser(network);
         parser.parse(filename.c_str());
         if (phase_shift_sign == -1.0)
         {
@@ -78,7 +80,7 @@ bool powerflow::State::InitializeConfig(const std::string &config_file)
         {
             std::cout << "Using V33 parser\n";
         }
-        gridpack::parser::PTI33_parser<powerflow::Network> parser(network);
+        gridpack::parser::PTI33_parser<gridpack::powerflow::PFNetwork> parser(network);
         parser.parse(filename.c_str());
         if (phase_shift_sign == -1.0)
         {
@@ -129,7 +131,7 @@ void powerflow::State::InitializeFactoryAndFields()
     // One time build
     network->partition();
 
-    pf_factory = std::make_unique<powerflow::PowerflowFactory>(network);
+    pf_factory = std::make_unique<gridpack::powerflow::PFFactoryModule>(network);
     pf_factory->load();
     pf_factory->setComponents();
     pf_factory->setExchange();
@@ -140,12 +142,12 @@ void powerflow::State::InitializeFactoryAndFields()
     pf_factory->setSBus();
 
     // Solver / maps
-    pf_factory->setMode(RHS);
-    v_map = std::make_unique<gridpack::mapper::BusVectorMap<powerflow::Network>>(network);
+    pf_factory->setMode(gridpack::powerflow::RHS);
+    v_map = std::make_unique<gridpack::mapper::BusVectorMap<gridpack::powerflow::PFNetwork>>(network);
     PQ = v_map->mapToVector();
 
-    pf_factory->setMode(Jacobian);
-    j_map = std::make_unique<gridpack::mapper::FullMatrixMap<powerflow::Network>>(network);
+    pf_factory->setMode(gridpack::powerflow::Jacobian);
+    j_map = std::make_unique<gridpack::mapper::FullMatrixMap<gridpack::powerflow::PFNetwork>>(network);
     J = j_map->mapToMatrix();
 
     X.reset(PQ->clone());
@@ -181,10 +183,10 @@ std::complex<double> powerflow::State::ComputeVoltageCurrent(const std::string &
     const double tolerance = this->cursor->get("tolerance", 1.0e-6);
     const int max_iteration = this->cursor->get("maxIteration", 50);
 
-    this->pf_factory->setMode(RHS);
+    this->pf_factory->setMode(gridpack::powerflow::RHS);
     this->v_map->mapToVector(*this->PQ);
 
-    this->pf_factory->setMode(Jacobian);
+    this->pf_factory->setMode(gridpack::powerflow::Jacobian);
     this->j_map->mapToMatrix(*this->J);
 
     this->X->zero();
@@ -194,12 +196,12 @@ std::complex<double> powerflow::State::ComputeVoltageCurrent(const std::string &
     int iterator = 0;
     while (std::real(tol) > tolerance && iterator < max_iteration)
     {
-        this->pf_factory->setMode(RHS);
+        this->pf_factory->setMode(gridpack::powerflow::RHS);
         this->v_map->mapToBus(*this->X);
         this->network->updateBuses();
         this->v_map->mapToVector(*this->PQ);
 
-        this->pf_factory->setMode(Jacobian);
+        this->pf_factory->setMode(gridpack::powerflow::Jacobian);
         this->j_map->mapToMatrix(*this->J);
 
         this->X->zero();
@@ -209,7 +211,7 @@ std::complex<double> powerflow::State::ComputeVoltageCurrent(const std::string &
     }
 
     // Push solution and return bus id voltage
-    this->pf_factory->setMode(RHS);
+    this->pf_factory->setMode(gridpack::powerflow::RHS);
     this->v_map->mapToBus(*this->X);
     this->network->updateBuses();
 

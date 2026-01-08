@@ -9,7 +9,7 @@ powerflow::tools::VoltagePublisher::VoltagePublisher(helics::ValueFederate &fed,
     m_c = fed.registerPublication("Vc", "complex", "V");
 }
 
-void powerflow::tools::VoltagePublisher::Publish(const gridpack::powerflow::ThreePhaseValues &v)
+void powerflow::tools::VoltagePublisher::Publish(const powerflow::tools::ThreePhaseValues &v)
 {
     m_a.publish(v.a * m_ln_magnitude);
     m_b.publish(v.b * m_ln_magnitude);
@@ -29,10 +29,10 @@ std::complex<double> powerflow::tools::LimitPower(const std::complex<double> &s,
     }
 }
 
-gridpack::powerflow::ThreePhaseValues powerflow::tools::LimitPower(powerflow::tools::ThreePhaseSubscriptions &sub,
+powerflow::tools::ThreePhaseValues powerflow::tools::LimitPower(powerflow::tools::ThreePhaseSubscriptions &sub,
                                                                    double max_v)
 {
-    gridpack::powerflow::ThreePhaseValues limited_power;
+    powerflow::tools::ThreePhaseValues limited_power;
 
     limited_power.a = LimitPower(sub.a.getValue<std::complex<double>>() / 1e8, max_v);
     limited_power.b = LimitPower(sub.b.getValue<std::complex<double>>() / 1e8, max_v);
