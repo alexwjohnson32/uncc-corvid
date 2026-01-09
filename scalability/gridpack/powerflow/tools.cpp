@@ -1,5 +1,4 @@
 #include "tools.hpp"
-#include <complex>
 
 powerflow::tools::VoltagePublisher::VoltagePublisher(helics::ValueFederate &fed, double ln_magnitude)
     : m_ln_magnitude(ln_magnitude)
@@ -30,7 +29,7 @@ std::complex<double> powerflow::tools::LimitPower(const std::complex<double> &s,
 }
 
 powerflow::tools::ThreePhaseValues powerflow::tools::LimitPower(powerflow::tools::ThreePhaseSubscriptions &sub,
-                                                                   double max_v)
+                                                                double max_v)
 {
     powerflow::tools::ThreePhaseValues limited_power;
 
