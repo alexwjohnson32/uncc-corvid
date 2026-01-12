@@ -32,4 +32,5 @@ class IEEE118App
     std::complex<double> ComputeVoltageCurrent(const std::string &config_file, int target_bus_id,
                                                const std::string &phase_name, const std::complex<double> &Sa);
 };
+
 } // namespace ieee_118
