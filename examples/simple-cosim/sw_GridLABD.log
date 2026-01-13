@@ -1,219 +1,0 @@
-
-WARNING  [INIT] : The external solver solver_KLU could not be found, defaulting to superLU
-WARNING  [2009-01-01 00:00:30 PST] : Line:feeder_backbone is at 339557.77% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:00:30 PST] : Line:feeder_backbone is at 339601.69% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:00:30 PST] : Line:feeder_backbone is at 339622.63% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:00:30 PST] : transformer:substation_transformer is at 75108449233530.19% of its rated power value
-WARNING  [2009-01-01 00:01:00 PST] : Line:feeder_backbone is at 8014593601.72% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:01:00 PST] : Line:feeder_backbone is at 8014535905.50% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:01:00 PST] : Line:feeder_backbone is at 8015203749.98% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:01:00 PST] : transformer:substation_transformer is at 41833596863369927720960.00% of its rated power value
-WARNING  [2009-01-01 00:02:00 PST] : Line:feeder_backbone is at 189153984239038.16% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:02:00 PST] : Line:feeder_backbone is at 189139753572171.78% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:02:00 PST] : Line:feeder_backbone is at 189157504331838.31% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:02:00 PST] : transformer:substation_transformer is at 23300305881860486784575728517120.00% of its rated power value
-WARNING  [2009-01-01 00:03:00 PST] : Line:feeder_backbone is at 4464309471506447872.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:03:00 PST] : Line:feeder_backbone is at 4463667659408657408.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:03:00 PST] : Line:feeder_backbone is at 4464136835729779200.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:03:00 PST] : transformer:substation_transformer is at 12977709272162976682604581396285413654528.00% of its rated power value
-WARNING  [2009-01-01 00:04:00 PST] : Line:feeder_backbone is at 105363409407002114260992.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:04:00 PST] : Line:feeder_backbone is at 105341095148622788427776.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:04:00 PST] : Line:feeder_backbone is at 105353276043547922923520.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:04:00 PST] : transformer:substation_transformer is at 7228271597483363123735841065981796930852237606912.00% of its rated power value
-Processing 2009-01-01 00:04:00 PST...WARNING  [2009-01-01 00:05:00 PST] : Line:feeder_backbone is at 2486721169890031044799758336.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:05:00 PST] : Line:feeder_backbone is at 2486024135261405712926900224.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:05:00 PST] : Line:feeder_backbone is at 2486339600121535412903608320.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:05:00 PST] : transformer:substation_transformer is at 4025973271559458067476574274800916569417871083220647280640.00% of its rated power value
-WARNING  [2009-01-01 00:06:00 PST] : Line:feeder_backbone is at 58689872421133713039714204778496.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:06:00 PST] : Line:feeder_backbone is at 58669430328960870034092836519936.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:06:00 PST] : Line:feeder_backbone is at 58677492680492439215645717954560.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:06:00 PST] : transformer:substation_transformer is at 2242370210231150960378195221117237897650456522631131588376372707328.00% of its rated power value
-WARNING  [2009-01-01 00:07:00 PST] : Line:feeder_backbone is at 1385159850933633612534967805654597632.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:07:00 PST] : Line:feeder_backbone is at 1384582498328482612385326493836771328.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:07:00 PST] : Line:feeder_backbone is at 1384788364842688461895964996589846528.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:07:00 PST] : transformer:substation_transformer is at 1248946243916242686958584522316959134802413824649865867148085978979333308416.00% of its rated power value
-WARNING  [2009-01-01 00:08:00 PST] : Line:feeder_backbone is at 32691599273031119914846076034105837879296.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:08:00 PST] : Line:feeder_backbone is at 32675750281317645048049221309447217872896.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:08:00 PST] : Line:feeder_backbone is at 32680952632330314764630535896904155267072.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:08:00 PST] : transformer:substation_transformer is at 695633006693040179117123713956140214994083986777252796935179444052678171015153451008.00% of its rated power value
-WARNING  [2009-01-01 00:09:00 PST] : Line:feeder_backbone is at 771565321999169270775158908295473759233507328.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:09:00 PST] : Line:feeder_backbone is at 771138417995176768224484120790658887813431296.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:09:00 PST] : Line:feeder_backbone is at 771269880622041823994350654630523441711677440.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:09:00 PST] : transformer:substation_transformer is at 387450849726742897000107712358780658229705701320721210953969092278935649640401002439817297920.00% of its rated power value
-                                      Processing 2009-01-01 00:09:00 PST...WARNING  [2009-01-01 00:10:00 PST] : Line:feeder_backbone is at 18209962144522768152593124841673665612209652236288.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:10:00 PST] : Line:feeder_backbone is at 18198648797820963579301227017819126729282456387584.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:10:00 PST] : Line:feeder_backbone is at 18201942881058115539210535153853579495115210096640.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:10:00 PST] : transformer:substation_transformer is at 215800803857816620774266362540664434518411581560658541051578786825082456216584205190320533707627167744.00% of its rated power value
-WARNING  [2009-01-01 00:11:00 PST] : Line:feeder_backbone is at 429779311503386333560311121634289436357660242442452992.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:11:00 PST] : Line:feeder_backbone is at 429482870448145242675079575595231259632038108949643264.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:11:00 PST] : Line:feeder_backbone is at 429565449913102939781450647171213085883591835571453952.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:11:00 PST] : transformer:substation_transformer is at 120195857907417408637347146027736965034411556273548038116342693092138247046121012310556295657305082574797799424.00% of its rated power value
-WARNING  [2009-01-01 00:12:00 PST] : Line:feeder_backbone is at 10143360815526497243115618086371178747181458741086209966080.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:12:00 PST] : Line:feeder_backbone is at 10135675043638068355144316787034248981304325966876161081344.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:12:00 PST] : Line:feeder_backbone is at 10137730628128103229197322688143897574725993282273439383552.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:12:00 PST] : transformer:substation_transformer is at 66946202718745193697549687333530827016808031020510803257662396147008103360062784734669445504380802627505755843599532032.00% of its rated power value
-WARNING  [2009-01-01 00:13:00 PST] : Line:feeder_backbone is at 239396784006188384597094038858631281850991395369181580198150144.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:13:00 PST] : Line:feeder_backbone is at 239198999063212812995989466501090926006104937757118898334859264.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:13:00 PST] : Line:feeder_backbone is at 239250206424875716363572779320306437252590947267893060423385088.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:13:00 PST] : transformer:substation_transformer is at 37287425445966147393025416640071200714462264891310766014741037890558421592952252546480922724279522566052612899981320006817284096.00% of its rated power value
-                                      Processing 2009-01-01 00:13:00 PST...WARNING  [2009-01-01 00:14:00 PST] : Line:feeder_backbone is at 5650081204097786487401543204332808671050101993683552035343228207104.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:14:00 PST] : Line:feeder_backbone is at 5645029299291551509698568113589027951191254177693132173479723925504.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:14:00 PST] : Line:feeder_backbone is at 5646297234203167093668755843746219684271621398061646716344953995264.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:14:00 PST] : transformer:substation_transformer is at 20768199687402765803522028228153884557206719398748242417310096609094877056147756852411511801334333913935159179625477300867213923486531584.00% of its rated power value
-WARNING  [2009-01-01 00:15:00 PST] : Line:feeder_backbone is at 133349416050621169804636397163489352239461208047129601434325503493275648.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:15:00 PST] : Line:feeder_backbone is at 133221056307133750760364915487323964736664290429905243450368400124018688.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:15:00 PST] : Line:feeder_backbone is at 133252481103705515320431720339417954459033673956179445665414094736326656.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:15:00 PST] : transformer:substation_transformer is at 11567388099189534392976895069926355783600383522789968692279439149853967686889726973599708702077409999223040578477413835429284398485656089942556672.00% of its rated power value
-WARNING  [2009-01-01 00:16:00 PST] : Line:feeder_backbone is at 3147222875857681285894915787582904068585752275771422815360582791413805088768.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:16:00 PST] : Line:feeder_backbone is at 3143979607411684975949863364093828792213915214852109220368239870499885154304.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:16:00 PST] : Line:feeder_backbone is at 3144754343723862575357280805583325458151559195565832833993201371011734306816.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:16:00 PST] : transformer:substation_transformer is at inf% of its rated power value
-WARNING  [2009-01-01 00:17:00 PST] : Line:feeder_backbone is at 74278636788933591543108764690865037454552017245709994249328850791476802281799680.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:17:00 PST] : Line:feeder_backbone is at 74197007807532874528670338542486481834486743547424031742233778447615602861277184.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:17:00 PST] : Line:feeder_backbone is at 74216127993753882581355009577517004893507888744117023182989846654000885875605504.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:17:00 PST] : transformer:substation_transformer is at inf% of its rated power value
-WARNING  [2009-01-01 00:18:00 PST] : Line:feeder_backbone is at 1753074235247037773814722927259259269254987875954225436456775187370071429840738713600.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:18:00 PST] : Line:feeder_backbone is at 1751028610723956846119276048788757930137403769268157965231843058730775897887150702592.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:18:00 PST] : Line:feeder_backbone is at 1751498291343168892744910462618568610927888320448520497794703846131782558300076244992.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:18:00 PST] : transformer:substation_transformer is at inf% of its rated power value
-                                      Processing 2009-01-01 00:18:00 PST...WARNING  [2009-01-01 00:19:00 PST] : Line:feeder_backbone is at 41374878484465656795518485725404542589216735353582191186384476164152490958502108667576320.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:19:00 PST] : Line:feeder_backbone is at 41323767944927687284795736504568019849906167193817262528697540750903009578740914086477824.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:19:00 PST] : Line:feeder_backbone is at 41335318318211579751325661735887683959608772406258146276023996233837302192629960721563648.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:19:00 PST] : transformer:substation_transformer is at inf% of its rated power value
-WARNING  [2009-01-01 00:20:00 PST] : Line:feeder_backbone is at 976501948285991465263276904229145980903830993559441042152133215905041738347331113819125579776.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:20:00 PST] : Line:feeder_backbone is at 975229359017193455937804946650623546807043227164384329653219068556353203488342092802940731392.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:20:00 PST] : Line:feeder_backbone is at 975512222005335340937298136322631266891107281185504644804180149037189131240563462830521581568.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:20:00 PST] : transformer:substation_transformer is at inf% of its rated power value
-WARNING  [2009-01-01 00:21:00 PST] : Line:feeder_backbone is at 23046741891882072276164051255973447834871569363216276278651260625674940519777515975996587957551104.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:21:00 PST] : Line:feeder_backbone is at 23015130430267600025124260598877241306436470156094701372540105352270495720398852479413448903491584.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:21:00 PST] : Line:feeder_backbone is at 23022065526084478228409114906845589894801938799418285097548080041194932252829193423811186203295744.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:21:00 PST] : transformer:substation_transformer is at inf% of its rated power value
-WARNING  [2009-01-01 00:22:00 PST] : Line:feeder_backbone is at 543933642709094587977708802540671360373374920652730255840842415593004559915010422320286343676563554304.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:22:00 PST] : Line:feeder_backbone is at 543150639947154392797421462790142660486318731992678318571466905454508915991787251117552508563343015936.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:22:00 PST] : Line:feeder_backbone is at 543320031341813488068170002512622171724145405585888562082232665394763181267270682336242757178790772736.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:22:00 PST] : transformer:substation_transformer is at inf% of its rated power value
-WARNING  [2009-01-01 00:23:00 PST] : Line:feeder_backbone is at 12837555817814177379119753866097271609452365911687655920441080501778370871921867743652112949908337028235264.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:23:00 PST] : Line:feeder_backbone is at 12818197849179749144878844864746062788087341049178839666812849513195468609870494631570944180845568136839168.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:23:00 PST] : Line:feeder_backbone is at 12822340053397461417712102431673987632543363465076785953931904616922245582582116494584570534797895037616128.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:23:00 PST] : transformer:substation_transformer is at inf% of its rated power value
-                                      Processing 2009-01-01 00:23:00 PST...WARNING  [2009-01-01 00:24:00 PST] : Line:feeder_backbone is at 302983325550570675223095280844632275186104517955843262909004570371666711794805566867551065141044462706325716992.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:24:00 PST] : Line:feeder_backbone is at 302505884878925610271266464005041406458169748459590113984136705248746021664300101370879590421742655715567206400.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:24:00 PST] : Line:feeder_backbone is at 302606828915519489846123841621817298399680590346104327755254707138533522024571662610193108290611960872205025280.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:24:00 PST] : transformer:substation_transformer is at inf% of its rated power value
-WARNING  [2009-01-01 00:25:00 PST] : Line:feeder_backbone is at 7150808569847067226411727327145990371697172791443724093074688098682917421767919348222298276478126396336948354482176.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:25:00 PST] : Line:feeder_backbone is at 7139051331771957983293714833514980867268987918150920247456850236935629718099312439504237049094623531484066506342400.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:25:00 PST] : Line:feeder_backbone is at 7141514140303999839182759374288775543878431027881522960019343036862749240636598548686731604161809812875273679405056.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:25:00 PST] : transformer:substation_transformer is at inf% of its rated power value
-WARNING  [2009-01-01 00:26:00 PST] : Line:feeder_backbone is at 168768556263697211041308332846616965346909885578817687533454687987385064086988829126882903408524861609797735878238404608.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:26:00 PST] : Line:feeder_backbone is at 168479615884530949950323627578534261252171018784576468873072077998924925071347357765651710049272749414714695734916022272.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:26:00 PST] : Line:feeder_backbone is at 168539514020502137697865432607709143697481063491673585147299552625713789248398732707091372643313632475311923216378757120.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:26:00 PST] : transformer:substation_transformer is at inf% of its rated power value
-WARNING  [2009-01-01 00:27:00 PST] : Line:feeder_backbone is at 3983161899693655721045785987710046504319471633916226096615515368855061529077815343267892109445719481678139328123038089609216.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:27:00 PST] : Line:feeder_backbone is at 3976070190730426702552610837697103825198308608396354497207422660997424798175365617967102919920762526234803207088020398276608.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:27:00 PST] : Line:feeder_backbone is at 3977528644482132498949217546657089073977622070460244814367461651520776404196179549393744295600754207039490090635939758997504.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:27:00 PST] : transformer:substation_transformer is at inf% of its rated power value
-WARNING  [2009-01-01 00:28:00 PST] : Line:feeder_backbone is at 94007898090508525518016955140547483740761287482843263866102239475438014992774575458542672814254701982963335344735971185879154688.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:28:00 PST] : Line:feeder_backbone is at 93834145505683780315312684061260173150667551317316739662715629242488017102440642016015418218135071273230786401518861467586134016.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:28:00 PST] : Line:feeder_backbone is at 93869554237164618188444744740568929463802303148860887366943999183745743679417241263873231161539876261190618732854129197911638016.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:28:00 PST] : transformer:substation_transformer is at inf% of its rated power value
-                                      Processing 2009-01-01 00:28:00 PST...WARNING  [2009-01-01 00:29:00 PST] : Line:feeder_backbone is at 2218711152619234413135340463094391144004061338910109175442139410188372111819064782939123631969658096732228939570056933002783129337856.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:29:00 PST] : Line:feeder_backbone is at 2214458695745910678533565554042529189463371104525381461550634614010513598279499327420703291636207283527937215574574667029511036469248.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:29:00 PST] : Line:feeder_backbone is at 2215319329209080599758134098221509005224097758687652002031581166356380128993308686191157114015333872845226884775883998634075851063296.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:29:00 PST] : transformer:substation_transformer is at inf% of its rated power value
-WARNING  [2009-01-01 00:30:00 PST] : Line:feeder_backbone is at 52364522762619881349654450696666647540323857803531412938593797181926440958694373478397524537882506805849929296393867747244007885042089984.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:30:00 PST] : Line:feeder_backbone is at 52260606685932658742075050045046568905173188446425911375674510439140461612916182418314385158183236323855666174395580067987398417977442304.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:30:00 PST] : Line:feeder_backbone is at 52281468672900315653125729207314430694519078678704366054452770554004686936666749872317308280165042455282947804909055977690390838449799168.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:30:00 PST] : transformer:substation_transformer is at inf% of its rated power value
-WARNING  [2009-01-01 00:31:00 PST] : Line:feeder_backbone is at 1235872230220955584096427073719755629683044793440868827095497445337563101969605042746678783843578635449758422908415070253715621117147985477632.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:31:00 PST] : Line:feeder_backbone is at 1233335208681020970772333717189130227167853445472425433804214643443972728474536796434182668659132352976065827313953213423892557100384195182592.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:31:00 PST] : Line:feeder_backbone is at 1233841470467377604820198387895827678448473247755035100153256607492383086131703668199528685119297815698055183228260245846288525050338537897984.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:31:00 PST] : transformer:substation_transformer is at inf% of its rated power value
-WARNING  [2009-01-01 00:32:00 PST] : Line:feeder_backbone is at 29168222039909735998267791879408111870248831162402117712876650573022376016651160208605444108655261650533367313089742374411125251452328368828055552.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:32:00 PST] : Line:feeder_backbone is at 29106366563509322848804921661454116943258230643879936552647258732944228072357675656116156214966407104641159689028661680150065244227447187633602560.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:32:00 PST] : Line:feeder_backbone is at 29118621291720301247690685959868606985860943200728333831769101670787206858498005368344966218969808104069665685628729048947120221423930769017929728.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:32:00 PST] : transformer:substation_transformer is at inf% of its rated power value
-WARNING  [2009-01-01 00:33:00 PST] : Line:feeder_backbone is at 688408749425763520932355319747350305014348107599652973533136083999501500416725951498644911929320726616105252484267017444395583837118448640856304910336.00% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:33:00 PST] : Line:feeder_backbone is at 686901838951855316944510004132423691074142696581063432978824569635492929200031504422029586862159035445959440683937467196069165617691059089899415142400.00% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:33:00 PST] : Line:feeder_backbone is at 687198803869492046967599008365008917518767662304484480095835452638022177012279842341350372123026106220829290079775297328418390420153836555577784795136.00% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:33:00 PST] : transformer:substation_transformer is at inf% of its rated power value
-                                      Processing 2009-01-01 00:33:00 PST...WARNING  [2009-01-01 00:34:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:34:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:34:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:35:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:35:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:35:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:36:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:36:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:36:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:37:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:37:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:37:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-                                      Processing 2009-01-01 00:37:00 PST...WARNING  [2009-01-01 00:38:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:38:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:38:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:39:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:39:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:39:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:40:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:40:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:40:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:41:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:41:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:41:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:42:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:42:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:42:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-                                      Processing 2009-01-01 00:42:00 PST...WARNING  [2009-01-01 00:43:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:43:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:43:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:44:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:44:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:44:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:45:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:45:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:45:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:46:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:46:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:46:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-                                      Processing 2009-01-01 00:46:00 PST...WARNING  [2009-01-01 00:47:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:47:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:47:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:48:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:48:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:48:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:49:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:49:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:49:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:50:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:50:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:50:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:51:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:51:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:51:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-                                      Processing 2009-01-01 00:51:00 PST...WARNING  [2009-01-01 00:52:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:52:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:52:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:53:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:53:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:53:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:54:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:54:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:54:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:55:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:55:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:55:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:56:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:56:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:56:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-                                      Processing 2009-01-01 00:56:00 PST...WARNING  [2009-01-01 00:57:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:57:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:57:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:58:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:58:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:58:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 00:59:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 00:59:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 00:59:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!
-WARNING  [2009-01-01 01:00:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase A!
-WARNING  [2009-01-01 01:00:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase B!
-WARNING  [2009-01-01 01:00:00 PST] : Line:feeder_backbone is at inf% of its emergency rating on phase C!

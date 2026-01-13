@@ -1,4 +1,0 @@
-/root/roi-uncc/examples/GridPACK/resistor_grid/build/CMakeFiles/resistor_grid.x.dir
-/root/roi-uncc/examples/GridPACK/resistor_grid/build/CMakeFiles/resistor_grid.x.input.dir
-/root/roi-uncc/examples/GridPACK/resistor_grid/build/CMakeFiles/edit_cache.dir
-/root/roi-uncc/examples/GridPACK/resistor_grid/build/CMakeFiles/rebuild_cache.dir

@@ -1,1 +1,0 @@
-target_include_directories(corvid_helics_lib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
