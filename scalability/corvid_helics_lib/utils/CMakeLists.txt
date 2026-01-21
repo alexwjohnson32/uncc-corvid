@@ -1,4 +1,0 @@
-target_include_directories(corvid_helics_lib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
-
-target_sources(corvid_helics_lib PUBLIC websocket_client.hpp local_log_helper.hpp)
-target_sources(corvid_helics_lib PRIVATE websocket_client.cpp local_log_helper.cpp)

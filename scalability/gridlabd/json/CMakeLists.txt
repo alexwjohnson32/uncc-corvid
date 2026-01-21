@@ -1,1 +1,0 @@
-install(FILES IEEE_8500node.json DESTINATION ${CMAKE_INSTALL_PREFIX}/gridlabd/json)
