@@ -1,5 +1,5 @@
 # Create library using the variable from parent CMakeLists.txt file.
-add_library(${CORVID_GRIDPACK_LIB} STATIC)
+add_library(${CORVID_GRIDPACK_LIB})
 
 # link against libs as PUBLIC
 target_include_directories(${CORVID_GRIDPACK_LIB} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${GA_ROOT}/include ${GP_ROOT}/include)

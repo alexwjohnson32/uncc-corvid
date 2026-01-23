@@ -1,4 +1,4 @@
-add_library(${CORVID_HELICS_LIB} STATIC)
+add_library(${CORVID_HELICS_LIB})
 
 target_sources(${CORVID_HELICS_LIB}
                PRIVATE
