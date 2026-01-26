@@ -18,3 +18,10 @@ set(WEBSOCKET_CLIENT_TEST websocket_client_test)
 add_executable(${WEBSOCKET_CLIENT_TEST} websocket_client_tests.cpp)
 target_link_libraries(${WEBSOCKET_CLIENT_TEST} PRIVATE ${CORVID_UTILS_LIB} ${CORVID_TESTING_LIB})
 add_test(NAME WebSocketClientTest COMMAND ${WEBSOCKET_CLIENT_TEST})
+
+# Local Log Helper Testing
+set(LOCAL_LOG_HELPER_TEST local_log_helper_test)
+
+add_executable(${LOCAL_LOG_HELPER_TEST} local_log_helper_tests.cpp)
+target_link_libraries(${LOCAL_LOG_HELPER_TEST} PRIVATE ${CORVID_UTILS_LIB} ${CORVID_TESTING_LIB})
+add_test(NAME LocalLogHelperTests COMMAND ${LOCAL_LOG_HELPER_TEST})
