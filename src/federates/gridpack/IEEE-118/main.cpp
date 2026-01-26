@@ -32,7 +32,7 @@ namespace
 std::string FederateToString(helics::ValueFederate &fed)
 {
     std::string json_result = fed.query(fed.getName(), "federate");
-    return utils::GetPrettyJsonString(json_result);
+    return utils::ToJsonString(json_result, true);
 }
 
 std::vector<int> GetBusIds(const powerflow::input::PowerflowInput &input)
@@ -233,9 +233,9 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    log << "pf_input.value():\n" << utils::GetPrettyJsonString(utils::ToJsonString(pf_input.value())) << std::endl;
+    log << "pf_input.value():\n" << utils::ToJsonString(pf_input.value(), true) << std::endl;
     log << "pf_input.value().fed_info_json:\n"
-        << utils::GetPrettyJsonString(pf_input.value().fed_info_json) << std::endl;
+        << utils::FormatPretty(pf_input.value().fed_info_json) << std::endl;
 
     // Create a FederateInfo object
     helics::ValueFederate gpk_118 = GetGridpackFederate(pf_input.value(), log);

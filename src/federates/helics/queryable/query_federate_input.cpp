@@ -36,7 +36,7 @@ data::QueryFederateInput data::tag_invoke(boost::json::value_to_tag<data::QueryF
     const boost::json::object &obj = json_value.as_object();
 
     utils::extract(obj, "federate_name", data.federate_name);
-    utils::extract_json_string(obj, "fed_info_json", data.fed_info_json);
+    utils::extract(obj, "fed_info_json", utils::raw_json(data.fed_info_json));
     utils::extract(obj, "client_details", data.client_details);
     utils::extract(obj, "total_time", data.total_time);
     utils::extract(obj, "local_log_file", data.local_log_file);

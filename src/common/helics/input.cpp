@@ -38,7 +38,7 @@ powerflow::input::tag_invoke(boost::json::value_to_tag<powerflow::input::Powerfl
     const boost::json::object &obj = json_value.as_object();
 
     utils::extract(obj, "gridpack_name", data.gridpack_name);
-    utils::extract_json_string(obj, "fed_info_json", data.fed_info_json);
+    utils::extract(obj, "fed_info_json", utils::raw_json(data.fed_info_json));
     utils::extract(obj, "gridlabd_infos", data.gridlabd_infos);
     utils::extract(obj, "total_time", data.total_time);
     utils::extract(obj, "ln_magnitude", data.ln_magnitude);
