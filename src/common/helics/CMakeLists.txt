@@ -10,3 +10,8 @@ target_sources(${CORVID_HELICS_LIB}
 target_include_directories(${CORVID_HELICS_LIB} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${HELICS_ROOT}/include)
 target_link_directories(${CORVID_HELICS_LIB} PUBLIC ${HELICS_ROOT}/lib64)
 target_link_libraries(${CORVID_HELICS_LIB} PUBLIC helicscpp MPI::MPI_CXX ${CORVID_UTILS_LIB})
+
+if (ENABLE_TESTING)
+    # Add tests to compile and link against the libs
+    add_subdirectory(tests)
+endif()

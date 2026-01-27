@@ -13,7 +13,6 @@ target_sources(${CORVID_UTILS_LIB} PUBLIC websocket_client.hpp local_log_helper.
 target_sources(${CORVID_UTILS_LIB} PRIVATE websocket_client.cpp local_log_helper.cpp)
 
 if (ENABLE_TESTING)
-    message("Building ON: attempting to build stopwatch")
     # Add tests to compile and link against the libs
     add_subdirectory(tests)
 endif()
