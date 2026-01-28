@@ -2,6 +2,8 @@
 
 // --- LocalLogHelper Implementation ---
 
+utils::LocalLogHelper::LocalLogHelper() {}
+
 utils::LocalLogHelper::LocalLogHelper(const std::string &output_file) : m_output_stream(output_file) {}
 
 utils::LocalLogHelper::~LocalLogHelper()

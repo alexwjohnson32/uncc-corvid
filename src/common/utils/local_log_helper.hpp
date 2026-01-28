@@ -31,6 +31,7 @@ class LocalLogHelper
     void FlushToCallback();
 
   public:
+    LocalLogHelper();
     LocalLogHelper(const std::string &output_file);
     ~LocalLogHelper();
 
