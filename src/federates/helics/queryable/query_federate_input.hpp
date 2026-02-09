@@ -2,9 +2,11 @@
 
 #include <string>
 
+#include "helics_input.hpp"
+
 #include <boost/json.hpp>
 
-namespace data
+namespace queryable
 {
 
 struct ClientDetails
@@ -14,20 +16,17 @@ struct ClientDetails
     std::string target{};
 };
 
-struct QueryFederateInput
+struct QueryFederateInput : public common::helics::HelicsInput
 {
-    std::string federate_name{};
-    std::string fed_info_json{};
     ClientDetails client_details{};
-    double total_time{};
-    std::string local_log_file{};
 };
 
-void tag_invoke(boost::json::value_from_tag, boost::json::value &json_value, const data::ClientDetails &data);
-data::ClientDetails tag_invoke(boost::json::value_to_tag<data::ClientDetails>, const boost::json::value &json_value);
-
-void tag_invoke(boost::json::value_from_tag, boost::json::value &json_value, const data::QueryFederateInput &data);
-data::QueryFederateInput tag_invoke(boost::json::value_to_tag<data::QueryFederateInput>,
+void tag_invoke(boost::json::value_from_tag, boost::json::value &json_value, const queryable::ClientDetails &data);
+queryable::ClientDetails tag_invoke(boost::json::value_to_tag<queryable::ClientDetails>,
                                     const boost::json::value &json_value);
 
-} // namespace data
+void tag_invoke(boost::json::value_from_tag, boost::json::value &json_value, const queryable::QueryFederateInput &data);
+queryable::QueryFederateInput tag_invoke(boost::json::value_to_tag<queryable::QueryFederateInput>,
+                                         const boost::json::value &json_value);
+
+} // namespace queryable

@@ -2,44 +2,44 @@
 
 #include "json_templates.hpp"
 
-void data::tag_invoke(boost::json::value_from_tag, boost::json::value &json_value, const data::ClientDetails &data)
+void queryable::tag_invoke(boost::json::value_from_tag, boost::json::value &json_value,
+                           const queryable::ClientDetails &data)
 {
     json_value = { { "host", data.host }, { "port", data.port }, { "target", data.target } };
 }
 
-data::ClientDetails data::tag_invoke(boost::json::value_to_tag<data::ClientDetails>,
-                                     const boost::json::value &json_value)
+queryable::ClientDetails queryable::tag_invoke(boost::json::value_to_tag<queryable::ClientDetails>,
+                                               const boost::json::value &json_value)
 {
-    data::ClientDetails data;
+    queryable::ClientDetails data;
     const boost::json::object &obj = json_value.as_object();
 
-    utils::extract(obj, "host", data.host);
-    utils::extract(obj, "port", data.port);
-    utils::extract(obj, "target", data.target);
+    common::utils::extract(obj, "host", data.host);
+    common::utils::extract(obj, "port", data.port);
+    common::utils::extract(obj, "target", data.target);
 
     return data;
 }
 
-void data::tag_invoke(boost::json::value_from_tag, boost::json::value &json_value, const data::QueryFederateInput &data)
+void queryable::tag_invoke(boost::json::value_from_tag, boost::json::value &json_value,
+                           const queryable::QueryFederateInput &data)
 {
-    json_value = { { "federate_name", data.federate_name },
-                   { "fed_info_json", boost::json::parse(data.fed_info_json) },
-                   { "client_details", data.client_details },
-                   { "total_time", data.total_time },
-                   { "local_log_file", data.local_log_file } };
+    common::helics::tag_invoke(boost::json::value_from_tag(), json_value,
+                               static_cast<const common::helics::HelicsInput &>(data));
+
+    boost::json::object &obj = json_value.as_object();
+    obj["client_details"] = boost::json::value_from(data.client_details);
 }
 
-data::QueryFederateInput data::tag_invoke(boost::json::value_to_tag<data::QueryFederateInput>,
-                                          const boost::json::value &json_value)
+queryable::QueryFederateInput queryable::tag_invoke(boost::json::value_to_tag<queryable::QueryFederateInput>,
+                                                    const boost::json::value &json_value)
 {
-    data::QueryFederateInput data;
-    const boost::json::object &obj = json_value.as_object();
+    common::helics::HelicsInput base_data = boost::json::value_to<common::helics::HelicsInput>(json_value);
 
-    utils::extract(obj, "federate_name", data.federate_name);
-    utils::extract(obj, "fed_info_json", utils::raw_json(data.fed_info_json));
-    utils::extract(obj, "client_details", data.client_details);
-    utils::extract(obj, "total_time", data.total_time);
-    utils::extract(obj, "local_log_file", data.local_log_file);
+    const boost::json::object &obj = json_value.as_object();
+    queryable::QueryFederateInput data{ base_data };
+
+    common::utils::extract(obj, "client_details", data.client_details);
 
     return data;
 }

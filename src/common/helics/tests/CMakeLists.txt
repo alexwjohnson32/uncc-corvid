@@ -1,11 +1,11 @@
 # Inputs testing
-set(INPUT_TEST input_test)
+set(HELICS_INPUT_TEST helics_input_test)
 
-add_executable(${INPUT_TEST} input_tests.cpp)
-target_link_libraries(${INPUT_TEST} PRIVATE ${CORVID_HELICS_LIB} ${CORVID_UTILS_LIB} ${CORVID_TESTING_LIB})
-add_test(NAME InputTest COMMAND ${INPUT_TEST})
+add_executable(${HELICS_INPUT_TEST} helics_input_tests.cpp)
+target_link_libraries(${HELICS_INPUT_TEST} PRIVATE ${CORVID_HELICS_LIB} ${CORVID_UTILS_LIB} ${CORVID_TESTING_LIB})
+add_test(NAME HelicsInputTest COMMAND ${HELICS_INPUT_TEST})
 
-# Inputs testing
+# Tools testing
 set(TOOLS_TEST tools_test)
 
 add_executable(${TOOLS_TEST} tools_tests.cpp)

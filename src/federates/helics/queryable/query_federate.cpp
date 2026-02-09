@@ -8,10 +8,12 @@
 
 #include <boost/system/error_code.hpp>
 
+#include <helics/application_api/MessageFederate.hpp>
+
 namespace
 {
 
-helics::MessageFederate GetFederate(const data::QueryFederateInput &config, utils::LocalLogHelper &log)
+helics::MessageFederate GetFederate(const queryable::QueryFederateInput &config, utils::LocalLogHelper &log)
 {
     helics::FederateInfo fi;
     fi.loadInfoFromJson(config.fed_info_json);
@@ -86,10 +88,10 @@ double PerformLoop(helics::MessageFederate &msg_fed, const double total_time, co
 
 } // namespace
 
-data::QueryFederate::QueryFederate() {}
-data::QueryFederate::~QueryFederate() { Close(); }
+queryable::QueryFederate::QueryFederate() {}
+queryable::QueryFederate::~QueryFederate() { Close(); }
 
-void data::QueryFederate::Initialize(const data::QueryFederateInput &input)
+void queryable::QueryFederate::Initialize(const queryable::QueryFederateInput &input)
 {
     m_query_fed_input = input;
     m_log.SetOutputFile(m_query_fed_input.local_log_file);
@@ -129,7 +131,7 @@ void data::QueryFederate::Initialize(const data::QueryFederateInput &input)
     m_log.SetOnWriteCallback([&client = this->m_client](const std::string &msg) { client->Send(msg); });
 }
 
-void data::QueryFederate::Run()
+void queryable::QueryFederate::Run()
 {
     helics::MessageFederate msg_fed = GetFederate(m_query_fed_input, m_log);
     const double period = msg_fed.getTimeProperty(HELICS_PROPERTY_TIME_PERIOD);
@@ -157,7 +159,7 @@ void data::QueryFederate::Run()
     }
 }
 
-void data::QueryFederate::Close()
+void queryable::QueryFederate::Close()
 {
     if (m_client)
     {

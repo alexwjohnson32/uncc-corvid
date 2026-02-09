@@ -1,5 +1,5 @@
-#include "query_federate.hpp"
-#include "query_federate_input.hpp"
+#include "helics_input.hpp"
+#include "dummy_federate.hpp"
 #include "json_templates.hpp"
 
 #include <cstdlib>
@@ -27,13 +27,13 @@ int main(int argc, char **argv)
         return ret_val;
     }
 
-    queryable::QueryFederateInput query_input = common::utils::FromJsonFile<queryable::QueryFederateInput>(json_file);
-    queryable::QueryFederate query_fed;
+    common::helics::HelicsInput helics_input = common::utils::FromJsonFile<common::helics::HelicsInput>(json_file);
+    dummy::DummyFederate dummy_fed;
 
     try
     {
-        query_fed.Initialize(query_input);
-        query_fed.Run();
+        dummy_fed.Initialize(helics_input);
+        dummy_fed.Run();
 
         ret_val = EXIT_SUCCESS;
     }
@@ -46,7 +46,7 @@ int main(int argc, char **argv)
         std::cerr << "Unknown Exception: An object that does not inherit std::exception was thrown!" << std::endl;
     }
 
-    query_fed.Close();
+    dummy_fed.Close();
 
     return ret_val;
 }

@@ -81,13 +81,13 @@ if [ "$RUN_TESTS" = true ]; then
     # Pass the captured CTest arguments here
     ctest --preset "test-coverage" $CTEST_ARGS
 
-    if command -v lcov &> /dev/null; then
-        echo "--- Generating HTML Report ---"
-        # --no-external ignores /usr/include headers
-        lcov --capture --directory . --output-file coverage.info --no-external
-        genhtml coverage.info --output-directory coverage_report
-        echo "Done! View report: $PROJECT_ROOT/coverage_report/index.html"
-    else
-        echo "Warning: lcov not found. Tests passed, but no report generated."
-    fi
+    # if command -v lcov &> /dev/null; then
+    #     echo "--- Generating HTML Report ---"
+    #     # --no-external ignores /usr/include headers
+    #     lcov --capture --directory . --output-file coverage.info --no-external
+    #     genhtml coverage.info --output-directory coverage_report
+    #     echo "Done! View report: $PROJECT_ROOT/coverage_report/index.html"
+    # else
+    #     echo "Warning: lcov not found. Tests passed, but no report generated."
+    # fi
 fi

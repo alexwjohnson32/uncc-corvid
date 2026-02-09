@@ -14,11 +14,11 @@
 #include <helics/application_api/Inputs.hpp>
 
 #include "ieee_118_app.hpp"
+#include "ieee_118_inputs.hpp"
 #include "json_templates.hpp"
 #include "local_log_helper.hpp"
 
 #include "tools.hpp"
-#include "input.hpp"
 
 // GridPACK includes
 #include "mpi.h"
@@ -32,22 +32,22 @@ namespace
 std::string FederateToString(helics::ValueFederate &fed)
 {
     std::string json_result = fed.query(fed.getName(), "federate");
-    return utils::ToJsonString(json_result, true);
+    return common::utils::ToJsonString(json_result, true);
 }
 
-std::vector<int> GetBusIds(const powerflow::input::PowerflowInput &input)
+std::vector<int> GetBusIds(const ieee_118::IEEE118Input &input)
 {
     std::vector<int> bus_ids;
-    for (const powerflow::input::GridlabDInputs &gridlabd_info : input.gridlabd_infos)
+    for (const ieee_118::GridlabDInputs &gridlabd_info : input.gridlabd_infos)
     {
         bus_ids.push_back(gridlabd_info.bus_id);
     }
     return bus_ids;
 }
 
-std::optional<powerflow::input::PowerflowInput> GetPowerflowInput(int argc, char **argv, utils::LocalLogHelper &log)
+std::optional<ieee_118::IEEE118Input> GetPowerflowInput(int argc, char **argv, utils::LocalLogHelper &log)
 {
-    std::optional<powerflow::input::PowerflowInput> pf_input{};
+    std::optional<ieee_118::IEEE118Input> pf_input{};
 
     if (argc < 2)
     {
@@ -73,25 +73,24 @@ std::optional<powerflow::input::PowerflowInput> GetPowerflowInput(int argc, char
         return pf_input;
     }
 
-    pf_input = utils::FromJsonFile<powerflow::input::PowerflowInput>(json_file);
+    pf_input = common::utils::FromJsonFile<ieee_118::IEEE118Input>(json_file);
 
     return pf_input;
 }
 
-helics::ValueFederate GetGridpackFederate(const powerflow::input::PowerflowInput &pf_input, utils::LocalLogHelper &log)
+helics::ValueFederate GetGridpackFederate(const ieee_118::IEEE118Input &pf_input, utils::LocalLogHelper &log)
 {
     // Create a FederateInfo object
     helics::FederateInfo fi;
     fi.loadInfoFromJson(pf_input.fed_info_json);
 
-    helics::ValueFederate gpk_118(pf_input.gridpack_name, fi);
+    helics::ValueFederate gpk_118(pf_input.federate_name, fi);
     log << "HELICS GridPACK Federate created successfully." << std::endl;
 
     return gpk_118;
 }
 
-double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::input::PowerflowInput &pf_input,
-                   utils::LocalLogHelper &log)
+double PerformLoop(helics::ValueFederate &gpk_118, const ieee_118::IEEE118Input &pf_input, utils::LocalLogHelper &log)
 {
     // Publications
     powerflow::tools::VoltagePublisher pub(gpk_118, pf_input.ln_magnitude);
@@ -170,7 +169,7 @@ double PerformLoop(helics::ValueFederate &gpk_118, const powerflow::input::Power
         granted_time = gpk_118.requestTime(granted_time + period);
         log << "\n[Time " << granted_time << "]\n";
 
-        for (const powerflow::input::GridlabDInputs &gridlabd_info : pf_input.gridlabd_infos)
+        for (const ieee_118::GridlabDInputs &gridlabd_info : pf_input.gridlabd_infos)
         {
             log << "\nBus Id: " << gridlabd_info.bus_id << "\nGridlabd Names:\n\t";
 
@@ -227,15 +226,15 @@ int main(int argc, char **argv)
     log.SetOnWriteCallback([](const std::string &msg) { std::cout << msg; });
 
     // Read PowerFlowInput and print json string
-    const std::optional<powerflow::input::PowerflowInput> pf_input = GetPowerflowInput(argc, argv, log);
+    const std::optional<ieee_118::IEEE118Input> pf_input = GetPowerflowInput(argc, argv, log);
     if (!pf_input)
     {
         return 1;
     }
 
-    log << "pf_input.value():\n" << utils::ToJsonString(pf_input.value(), true) << std::endl;
+    log << "pf_input.value():\n" << common::utils::ToJsonString(pf_input.value(), true) << std::endl;
     log << "pf_input.value().fed_info_json:\n"
-        << utils::FormatPretty(pf_input.value().fed_info_json) << std::endl;
+        << common::utils::FormatPretty(pf_input.value().fed_info_json) << std::endl;
 
     // Create a FederateInfo object
     helics::ValueFederate gpk_118 = GetGridpackFederate(pf_input.value(), log);

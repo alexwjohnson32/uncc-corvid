@@ -13,6 +13,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
+namespace common
+{
 namespace utils
 {
 
@@ -274,3 +276,4 @@ template <typename T> bool ToJsonFile(const T &input, const std::filesystem::pat
 }
 
 } // namespace utils
+} // namespace common

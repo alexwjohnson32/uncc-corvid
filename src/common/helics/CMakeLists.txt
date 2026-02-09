@@ -2,10 +2,10 @@ add_library(${CORVID_HELICS_LIB})
 
 target_sources(${CORVID_HELICS_LIB}
                PRIVATE
-               input.cpp tools.cpp
+               tools.cpp helics_input.cpp
                PUBLIC
                FILE_SET HEADERS BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
-               FILES input.hpp tools.hpp)
+               FILES tools.hpp helics_input.hpp)
 
 target_include_directories(${CORVID_HELICS_LIB} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${HELICS_ROOT}/include)
 target_link_directories(${CORVID_HELICS_LIB} PUBLIC ${HELICS_ROOT}/lib64)
