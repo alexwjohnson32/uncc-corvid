@@ -17,3 +17,6 @@ include(cmake_deps/lib_names.cmake)
 add_subdirectory(common)
 add_subdirectory(federates)
 add_subdirectory(debug_tools)
+
+set(CORVID_INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
+install(FILES README.md DESTINATION ${CORVID_INSTALL_DIR})

@@ -103,32 +103,39 @@ void queryable::QueryFederate::Initialize(const queryable::QueryFederateInput &i
         throw std::runtime_error(err_str.str());
     }
 
-    m_client = std::make_shared<utils::WebSocketClient>();
+    if (m_query_fed_input.client_details.host == "" || m_query_fed_input.client_details.port == "")
+    {
+        m_client = std::make_shared<utils::WebSocketClient>();
 
-    // Configure the client
-    m_client->SetOnMessage([&log = this->m_log](const std::string &msg) { log << "Received: " << msg << std::endl; });
-    m_client->SetOnError([&log = this->m_log](const boost::system::error_code &ec, const std::string &what)
-                         { log << what << ": " << ec.message() << std::endl; });
+        // Configure the client
+        m_client->SetOnMessage([&log = this->m_log](const std::string &msg) { log << "Received: " << msg << std::endl; });
+        m_client->SetOnError([&log = this->m_log](const boost::system::error_code &ec, const std::string &what)
+                            { log << what << ": " << ec.message() << std::endl; });
 
-    m_client->AsyncRun();
-    m_client->Connect(m_query_fed_input.client_details.host, m_query_fed_input.client_details.port,
-                      m_query_fed_input.client_details.target,
-                      [&log = this->m_log](const boost::system::error_code &ec)
-                      {
-                          if (ec)
-                          {
-                              std::stringstream err_str;
-                              err_str << "Error Connecting: " << ec.message() << "\n";
-                              log << err_str.str();
-                              throw std::runtime_error(err_str.str());
-                          }
-                          else
-                          {
-                              log << "Connected!\n";
-                          }
-                      });
+        m_client->AsyncRun();
+        m_client->Connect(m_query_fed_input.client_details.host, m_query_fed_input.client_details.port,
+                        m_query_fed_input.client_details.target,
+                        [&log = this->m_log](const boost::system::error_code &ec)
+                        {
+                            if (ec)
+                            {
+                                std::stringstream err_str;
+                                err_str << "Error Connecting: " << ec.message() << "\n";
+                                log << err_str.str();
+                                throw std::runtime_error(err_str.str());
+                            }
+                            else
+                            {
+                                log << "Connected!\n";
+                            }
+                        });
 
-    m_log.SetOnWriteCallback([&client = this->m_client](const std::string &msg) { client->Send(msg); });
+        m_log.SetOnWriteCallback([&client = this->m_client](const std::string &msg) { client->Send(msg); });
+    }
+    else
+    {
+        m_log << "No Client Details set, only writing to local log file.\n";
+    }
 }
 
 void queryable::QueryFederate::Run()

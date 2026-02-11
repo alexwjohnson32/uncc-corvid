@@ -5,4 +5,4 @@ add_executable(${DUMMY_FEDERATE_NAME} main.cpp dummy_federate.cpp)
 target_link_libraries(${DUMMY_FEDERATE_NAME} PRIVATE ${CORVID_UTILS_LIB} ${CORVID_HELICS_LIB})
 
 install(TARGETS ${DUMMY_FEDERATE_NAME} DESTINATION ${CORVID_INSTALL_DIR})
-install(FILES helics.json DESTINATION ${CORVID_INSTALL_DIR})
+install(FILES helics.json README.md DESTINATION ${CORVID_INSTALL_DIR})

@@ -1,4 +1,4 @@
 set(CORVID_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/federate/gridlabd/IEEE-8500)
 
-install(FILES IEEE_8500node.glm baseline_IEEE_8500.glm IEEE_8500node.json
+install(FILES IEEE_8500node.glm baseline_IEEE_8500.glm IEEE_8500node.json README.md
         DESTINATION ${CORVID_INSTALL_DIR})

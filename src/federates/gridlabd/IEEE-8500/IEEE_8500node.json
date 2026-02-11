@@ -1,13 +1,12 @@
 {
-  "coreInit": "--federates=1",
-  "coreType": "zmq",
+  "coreInit": "--brokername=mainbroker --shared_file=/tmp/cosim_socketfile",
+  "coreType": "ipc",
   "name": "IEEE_8500node_fed",
   "offset": 0.0,
   "period": 1.0,
   "uninterruptible" : true,
   "logfile": "IEEE_8500node.log",
   "log_level": "debug",
-  "brokerAddress": "tcp://localhost:23500",
   "publications": [
     {
       "global": true,

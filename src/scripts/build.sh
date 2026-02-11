@@ -6,7 +6,6 @@
 # finding the project. Symlinks are allowed.
 
 # 1. Get the absolute path to the directory where this script lives
-# This works even if you call the script via a symlink
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 
 # 2. Define the Project Root relative to the script location
@@ -14,6 +13,30 @@ PROJECT_ROOT=$(cd -- "$SCRIPT_DIR/.." &> /dev/null && pwd)
 
 # 3. Move to the project root
 cd "$PROJECT_ROOT" || { echo "Failed to locate project root"; exit 1; }
+
+# Function to display help information
+show_help() {
+    echo "Usage: $(basename "$0") [mode] [options] [-- ctest_args]"
+    echo ""
+    echo "Modes:"
+    echo "  debug            Build in debug mode (default)."
+    echo "  release          Build in release mode."
+    echo "  test             Build for test coverage, wipes old coverage data, and runs tests."
+    echo ""
+    echo "Options:"
+    echo "  --fresh          Force a fresh CMake configuration (removes CMakeCache.txt)."
+    echo "  -h, --help       Show this help message and exit."
+    echo "  --               Everything after '--' is passed directly to CTest (when in test mode)."
+    echo ""
+    echo "Additional Arguments:"
+    echo "  Any arguments not recognized above (e.g., -DVARIABLE=VALUE) are passed directly to CMake."
+    echo ""
+    echo "Examples:"
+    echo "  ./build.sh debug"
+    echo "  ./build.sh release"
+    echo "  ./build.sh test --fresh"
+    echo "  ./build.sh test -- --output-on-failure -R MyTest"
+}
 
 # 4. Set Default Vars
 PRESET_CONFIG_NAME="debug"
@@ -25,6 +48,15 @@ CTEST_ARGS=""
 # 5. Argument Parsing
 while [[ $# -gt 0 ]]; do
     case $1 in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        debug)
+            PRESET_CONFIG_NAME="debug"
+            PRESET_BUILD_NAME="build-debug"
+            shift
+            ;;
         release)
             PRESET_CONFIG_NAME="release"
             PRESET_BUILD_NAME="build-release"
@@ -47,8 +79,13 @@ while [[ $# -gt 0 ]]; do
             set -- # Clear the remaining positional parameters so they don't go to CMake
             break
             ;;
+        -*)
+            # If it looks like a flag but wasn't caught above, it's likely for CMake
+            # We break here to let the remaining args be passed to CMake
+            break
+            ;;
         *)
-            # Pass everything else (like -D flags) to CMake
+            # Positional arguments or unknown flags
             break
             ;;
     esac
@@ -59,8 +96,6 @@ if [ "$RUN_TESTS" = true ]; then
     echo "--- Cleaning old coverage data ---"
     rm -rf "$PROJECT_ROOT/coverage_report"
     rm -f "$PROJECT_ROOT/coverage.info"
-    # Note: --fresh handles the CMakeCache, but manual rm ensures
-    # the HTML folder is wiped before the new one is generated.
 fi
 
 # 7. Configure
@@ -78,16 +113,5 @@ cmake --build --preset "$PRESET_BUILD_NAME"
 if [ "$RUN_TESTS" = true ]; then
     echo "--- Running Tests ---"
     echo "--- CTest Arguments: $CTEST_ARGS ---"
-    # Pass the captured CTest arguments here
     ctest --preset "test-coverage" $CTEST_ARGS
-
-    # if command -v lcov &> /dev/null; then
-    #     echo "--- Generating HTML Report ---"
-    #     # --no-external ignores /usr/include headers
-    #     lcov --capture --directory . --output-file coverage.info --no-external
-    #     genhtml coverage.info --output-directory coverage_report
-    #     echo "Done! View report: $PROJECT_ROOT/coverage_report/index.html"
-    # else
-    #     echo "Warning: lcov not found. Tests passed, but no report generated."
-    # fi
 fi
