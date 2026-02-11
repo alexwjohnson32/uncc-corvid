@@ -14,6 +14,8 @@
 #include <thread>
 #include <optional>
 
+namespace common
+{
 namespace utils
 {
 class WebSocketClient : public std::enable_shared_from_this<WebSocketClient>
@@ -118,3 +120,4 @@ class WebSocketClient : public std::enable_shared_from_this<WebSocketClient>
     void ClearErrorState();
 };
 } // namespace utils
+} // namespace common

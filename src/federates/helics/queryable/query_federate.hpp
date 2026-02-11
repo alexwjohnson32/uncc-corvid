@@ -19,8 +19,8 @@ class QueryFederate
 
   private:
     queryable::QueryFederateInput m_query_fed_input;
-    utils::LocalLogHelper m_log;
-    std::shared_ptr<utils::WebSocketClient> m_client;
+    common::utils::LocalLogHelper m_log;
+    std::shared_ptr<common::utils::WebSocketClient> m_client;
 };
 
 } // namespace queryable

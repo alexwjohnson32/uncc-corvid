@@ -2,23 +2,23 @@
 
 // --- LocalLogHelper Implementation ---
 
-utils::LocalLogHelper::LocalLogHelper() {}
+common::utils::LocalLogHelper::LocalLogHelper() {}
 
-utils::LocalLogHelper::LocalLogHelper(const std::string &output_file) : m_output_stream(output_file) {}
+common::utils::LocalLogHelper::LocalLogHelper(const std::string &output_file) : m_output_stream(output_file) {}
 
-utils::LocalLogHelper::~LocalLogHelper()
+common::utils::LocalLogHelper::~LocalLogHelper()
 {
     if (IsOpen()) m_output_stream.close();
 }
 
-bool utils::LocalLogHelper::IsOpen() const { return m_output_stream.is_open(); }
+bool common::utils::LocalLogHelper::IsOpen() const { return m_output_stream.is_open(); }
 
-void utils::LocalLogHelper::SetOnWriteCallback(std::function<void(const std::string &)> on_write)
+void common::utils::LocalLogHelper::SetOnWriteCallback(std::function<void(const std::string &)> on_write)
 {
     m_on_write = on_write;
 }
 
-void utils::LocalLogHelper::SetOutputFile(const std::string &output_file)
+void common::utils::LocalLogHelper::SetOutputFile(const std::string &output_file)
 {
     if (IsOpen())
     {
@@ -31,13 +31,13 @@ void utils::LocalLogHelper::SetOutputFile(const std::string &output_file)
     }
 }
 
-void utils::LocalLogHelper::AppendManip(std::ostream &(*manip)(std::ostream &))
+void common::utils::LocalLogHelper::AppendManip(std::ostream &(*manip)(std::ostream &))
 {
     if (m_output_stream.is_open()) m_output_stream << manip;
     m_formatting_stream << manip;
 }
 
-void utils::LocalLogHelper::FlushToCallback()
+void common::utils::LocalLogHelper::FlushToCallback()
 {
     if (m_on_write) m_on_write(m_formatting_stream.str());
 
@@ -46,7 +46,7 @@ void utils::LocalLogHelper::FlushToCallback()
 }
 
 // Note: The return type LogStream must be qualified as it is nested inside the class and namespace
-utils::LocalLogHelper::LogStream utils::LocalLogHelper::operator<<(StreamManipulator manip)
+common::utils::LocalLogHelper::LogStream common::utils::LocalLogHelper::operator<<(StreamManipulator manip)
 {
     LogStream proxy(*this);
     proxy << manip;
@@ -55,20 +55,20 @@ utils::LocalLogHelper::LogStream utils::LocalLogHelper::operator<<(StreamManipul
 
 // --- LogStream Proxy Implementation ---
 
-utils::LocalLogHelper::LogStream::LogStream(LocalLogHelper &parent) : m_parent(parent), m_should_flush(true) {}
+common::utils::LocalLogHelper::LogStream::LogStream(LocalLogHelper &parent) : m_parent(parent), m_should_flush(true) {}
 
-utils::LocalLogHelper::LogStream::LogStream(LogStream &&other) noexcept
+common::utils::LocalLogHelper::LogStream::LogStream(LogStream &&other) noexcept
     : m_parent(other.m_parent), m_should_flush(other.m_should_flush)
 {
     other.m_should_flush = false;
 }
 
-utils::LocalLogHelper::LogStream::~LogStream()
+common::utils::LocalLogHelper::LogStream::~LogStream()
 {
     if (m_should_flush) m_parent.FlushToCallback();
 }
 
-utils::LocalLogHelper::LogStream &utils::LocalLogHelper::LogStream::operator<<(StreamManipulator manip)
+common::utils::LocalLogHelper::LogStream &common::utils::LocalLogHelper::LogStream::operator<<(StreamManipulator manip)
 {
     m_parent.AppendManip(manip);
     return *this;

@@ -18,7 +18,7 @@ class IEEE118App
     ~IEEE118App(); // This is required in order to use the forward declared inner class.
 
     bool Initialize(const std::string &config_file, const std::vector<int> &bus_ids, const std::complex<double> &r);
-    powerflow::tools::ThreePhaseValues ComputeVoltage(const powerflow::tools::ThreePhaseValues &power_s, int bus_id);
+    common::helics::ThreePhaseValues ComputeVoltage(const common::helics::ThreePhaseValues &power_s, int bus_id);
 
   private:
     class State; // forward declare, implement in source file
@@ -27,7 +27,7 @@ class IEEE118App
     std::vector<int> m_bus_ids;
     std::complex<double> m_r;
 
-    utils::LocalLogHelper m_log;
+    common::utils::LocalLogHelper m_log;
 
     std::complex<double> ComputeVoltageCurrent(const std::string &config_file, int target_bus_id,
                                                const std::string &phase_name, const std::complex<double> &Sa);

@@ -20,7 +20,7 @@ namespace
 
 void DoAsyncClient(const std::string &address, const std::string &port, const std::string &path)
 {
-    auto client = std::make_shared<utils::WebSocketClient>();
+    auto client = std::make_shared<common::utils::WebSocketClient>();
     client->SetOnMessage([](const std::string &msg) { std::cout << "Received: " << msg << std::endl; });
     client->SetOnError([](const boost::system::error_code &ec, const std::string &what)
                        { std::cerr << what << ": " << ec.message() << std::endl; });

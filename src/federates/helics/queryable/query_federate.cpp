@@ -13,7 +13,7 @@
 namespace
 {
 
-helics::MessageFederate GetFederate(const queryable::QueryFederateInput &config, utils::LocalLogHelper &log)
+helics::MessageFederate GetFederate(const queryable::QueryFederateInput &config, common::utils::LocalLogHelper &log)
 {
     helics::FederateInfo fi;
     fi.loadInfoFromJson(config.fed_info_json);
@@ -26,7 +26,7 @@ helics::MessageFederate GetFederate(const queryable::QueryFederateInput &config,
 
 std::string DebugTimeQueryLoop(double granted_time, helics::MessageFederate &msg_fed)
 {
-    utils::Stopwatch loop_watch;
+    common::utils::Stopwatch loop_watch;
     loop_watch.Start();
 
     std::stringstream ss;
@@ -41,7 +41,7 @@ std::string DebugTimeQueryLoop(double granted_time, helics::MessageFederate &msg
 
 std::string DiscreteQueriesLoop(double granted_time, helics::MessageFederate &msg_fed)
 {
-    utils::Stopwatch loop_watch;
+    common::utils::Stopwatch loop_watch;
     loop_watch.Start();
 
     std::stringstream ss;
@@ -58,9 +58,9 @@ std::string DiscreteQueriesLoop(double granted_time, helics::MessageFederate &ms
 }
 
 double PerformLoop(helics::MessageFederate &msg_fed, const double total_time, const double period,
-                   utils::LocalLogHelper &log)
+                   common::utils::LocalLogHelper &log)
 {
-    utils::Stopwatch main_watch;
+    common::utils::Stopwatch main_watch;
 
     double granted_time = 0.0;
 
@@ -105,7 +105,7 @@ void queryable::QueryFederate::Initialize(const queryable::QueryFederateInput &i
 
     if (m_query_fed_input.client_details.host == "" || m_query_fed_input.client_details.port == "")
     {
-        m_client = std::make_shared<utils::WebSocketClient>();
+        m_client = std::make_shared<common::utils::WebSocketClient>();
 
         // Configure the client
         m_client->SetOnMessage([&log = this->m_log](const std::string &msg) { log << "Received: " << msg << std::endl; });

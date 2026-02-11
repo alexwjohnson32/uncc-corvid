@@ -318,10 +318,10 @@ bool ieee_118::IEEE118App::Initialize(const std::string &config_file, const std:
     return success;
 }
 
-powerflow::tools::ThreePhaseValues
-ieee_118::IEEE118App::ComputeVoltage(const powerflow::tools::ThreePhaseValues &power_s, int bus_id)
+common::helics::ThreePhaseValues ieee_118::IEEE118App::ComputeVoltage(const common::helics::ThreePhaseValues &power_s,
+                                                                      int bus_id)
 {
-    powerflow::tools::ThreePhaseValues phased_voltage;
+    common::helics::ThreePhaseValues phased_voltage;
 
     std::stringstream out;
     out << "####################################\n";
@@ -330,7 +330,7 @@ ieee_118::IEEE118App::ComputeVoltage(const powerflow::tools::ThreePhaseValues &p
     out << "Power B: " << power_s.b << "\n";
     out << "Power C: " << power_s.c << "\n";
 
-    utils::Stopwatch watch;
+    common::utils::Stopwatch watch;
     watch.Start();
     phased_voltage.a = m_state->ComputeVoltageCurrent(m_config_file, bus_id, "A", power_s.a);
     long long time_a = watch.ElapsedMilliseconds();

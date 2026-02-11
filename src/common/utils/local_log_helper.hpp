@@ -8,6 +8,8 @@
 #include <sstream>
 #include <type_traits>
 
+namespace common
+{
 namespace utils
 {
 class LocalLogHelper
@@ -85,3 +87,4 @@ class LocalLogHelper
     LogStream operator<<(StreamManipulator manip);
 };
 } // namespace utils
+} // namespace common

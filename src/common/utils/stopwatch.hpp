@@ -3,6 +3,8 @@
 #include <chrono>
 #include <ratio>
 
+namespace common
+{
 namespace utils
 {
 class Stopwatch
@@ -21,3 +23,4 @@ class Stopwatch
     }
 };
 } // namespace utils
+} // namespace common

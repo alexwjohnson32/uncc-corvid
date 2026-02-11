@@ -11,7 +11,7 @@
 #include <cstddef>
 #include <functional>
 
-utils::WebSocketClient::WebSocketClient()
+common::utils::WebSocketClient::WebSocketClient()
     : m_ioc(), m_work_guard(boost::asio::make_work_guard(m_ioc)), m_resolver(m_ioc), m_ws(m_ioc)
 {
     // Initialize last error to success (0)
@@ -26,9 +26,9 @@ utils::WebSocketClient::WebSocketClient()
         }));
 }
 
-utils::WebSocketClient::~WebSocketClient() { StopRun(); }
+common::utils::WebSocketClient::~WebSocketClient() { StopRun(); }
 
-void utils::WebSocketClient::AsyncRun()
+void common::utils::WebSocketClient::AsyncRun()
 {
     if (!m_io_thread.joinable())
     {
@@ -36,7 +36,7 @@ void utils::WebSocketClient::AsyncRun()
     }
 }
 
-void utils::WebSocketClient::StopRun()
+void common::utils::WebSocketClient::StopRun()
 {
     m_work_guard.reset(); // Allow run() to exit if out of work
     m_ioc.stop();         // Force stop
@@ -50,10 +50,11 @@ void utils::WebSocketClient::StopRun()
     m_work_guard.emplace(boost::asio::make_work_guard(m_ioc)); // Re-acquire work guard
 }
 
-void utils::WebSocketClient::BlockingRun() { m_ioc.run(); }
+void common::utils::WebSocketClient::BlockingRun() { m_ioc.run(); }
 
-void utils::WebSocketClient::Connect(const std::string &host, const std::string &port, const std::string &target,
-                                     std::function<void(const boost::system::error_code &)> on_connect)
+void common::utils::WebSocketClient::Connect(const std::string &host, const std::string &port,
+                                             const std::string &target,
+                                             std::function<void(const boost::system::error_code &)> on_connect)
 {
     m_host = host;
     m_target = target;
@@ -67,8 +68,8 @@ void utils::WebSocketClient::Connect(const std::string &host, const std::string 
         std::bind(&WebSocketClient::OnResolve, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 }
 
-void utils::WebSocketClient::OnResolve(boost::beast::error_code ec,
-                                       boost::asio::ip::tcp::resolver::results_type results)
+void common::utils::WebSocketClient::OnResolve(boost::beast::error_code ec,
+                                               boost::asio::ip::tcp::resolver::results_type results)
 {
     if (ec)
     {
@@ -82,8 +83,8 @@ void utils::WebSocketClient::OnResolve(boost::beast::error_code ec,
         std::bind(&WebSocketClient::OnConnect, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 }
 
-void utils::WebSocketClient::OnConnect(boost::beast::error_code ec,
-                                       boost::asio::ip::tcp::resolver::results_type::endpoint_type)
+void common::utils::WebSocketClient::OnConnect(boost::beast::error_code ec,
+                                               boost::asio::ip::tcp::resolver::results_type::endpoint_type)
 {
     if (ec)
     {
@@ -96,7 +97,7 @@ void utils::WebSocketClient::OnConnect(boost::beast::error_code ec,
                          std::bind(&WebSocketClient::OnHandshake, shared_from_this(), std::placeholders::_1));
 }
 
-void utils::WebSocketClient::OnHandshake(boost::beast::error_code ec)
+void common::utils::WebSocketClient::OnHandshake(boost::beast::error_code ec)
 {
     if (ec)
     {
@@ -113,24 +114,24 @@ void utils::WebSocketClient::OnHandshake(boost::beast::error_code ec)
     DoRead();
 }
 
-void utils::WebSocketClient::SetOnMessage(std::function<void(const std::string &)> callback)
+void common::utils::WebSocketClient::SetOnMessage(std::function<void(const std::string &)> callback)
 {
     m_on_message = callback;
 }
 
-void utils::WebSocketClient::SetOnError(
+void common::utils::WebSocketClient::SetOnError(
     std::function<void(const boost::system::error_code &, const std::string &)> callback)
 {
     m_on_error = callback;
 }
 
-void utils::WebSocketClient::DoRead()
+void common::utils::WebSocketClient::DoRead()
 {
     m_ws.async_read(m_buffer, std::bind(&WebSocketClient::OnRead, shared_from_this(), std::placeholders::_1,
                                         std::placeholders::_2));
 }
 
-void utils::WebSocketClient::OnRead(boost::beast::error_code ec, std::size_t bytes_transferred)
+void common::utils::WebSocketClient::OnRead(boost::beast::error_code ec, std::size_t bytes_transferred)
 {
     if (ec == boost::beast::websocket::error::closed)
     {
@@ -158,7 +159,7 @@ void utils::WebSocketClient::OnRead(boost::beast::error_code ec, std::size_t byt
     DoRead();
 }
 
-void utils::WebSocketClient::Send(const std::string &message)
+void common::utils::WebSocketClient::Send(const std::string &message)
 {
     // Post to the IO context to ensure thread safety
     boost::asio::post(m_ioc,
@@ -175,7 +176,7 @@ void utils::WebSocketClient::Send(const std::string &message)
                       });
 }
 
-void utils::WebSocketClient::DoWrite()
+void common::utils::WebSocketClient::DoWrite()
 {
     // Note: We are already in the io_context strand here because DoWrite
     // is called from Send's post() or OnWrite
@@ -190,7 +191,7 @@ void utils::WebSocketClient::DoWrite()
         std::bind(&WebSocketClient::OnWrite, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 }
 
-void utils::WebSocketClient::OnWrite(boost::beast::error_code ec, std::size_t)
+void common::utils::WebSocketClient::OnWrite(boost::beast::error_code ec, std::size_t)
 {
     if (ec)
     {
@@ -221,7 +222,7 @@ void utils::WebSocketClient::OnWrite(boost::beast::error_code ec, std::size_t)
     }
 }
 
-void utils::WebSocketClient::CloseConnection()
+void common::utils::WebSocketClient::CloseConnection()
 {
     boost::asio::post(m_ioc,
                       [this, self = shared_from_this()]()
@@ -237,7 +238,7 @@ void utils::WebSocketClient::CloseConnection()
                       });
 }
 
-void utils::WebSocketClient::ReportError(boost::system::error_code ec, const std::string &context)
+void common::utils::WebSocketClient::ReportError(boost::system::error_code ec, const std::string &context)
 {
     // If this is the same error as before, suppress it
     if (m_last_error == ec) return;
@@ -246,7 +247,7 @@ void utils::WebSocketClient::ReportError(boost::system::error_code ec, const std
     if (m_on_error) m_on_error(ec, context);
 }
 
-void utils::WebSocketClient::ClearErrorState()
+void common::utils::WebSocketClient::ClearErrorState()
 {
     // Reset to default (success) state
     m_last_error = boost::system::error_code();

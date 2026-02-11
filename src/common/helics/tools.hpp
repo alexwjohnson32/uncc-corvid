@@ -6,9 +6,9 @@
 #include <helics/application_api/Publications.hpp>
 #include <helics/application_api/Inputs.hpp>
 
-namespace powerflow
+namespace common
 {
-namespace tools
+namespace helics
 {
 
 struct ThreePhaseValues
@@ -20,21 +20,21 @@ struct ThreePhaseValues
 
 struct ThreePhaseSubscriptions
 {
-    helics::Input a{};
-    helics::Input b{};
-    helics::Input c{};
+    ::helics::Input a{};
+    ::helics::Input b{};
+    ::helics::Input c{};
 };
 
 class VoltagePublisher
 {
   private:
-    helics::Publication m_a;
-    helics::Publication m_b;
-    helics::Publication m_c;
+    ::helics::Publication m_a;
+    ::helics::Publication m_b;
+    ::helics::Publication m_c;
     const double m_ln_magnitude{};
 
   public:
-    VoltagePublisher(helics::ValueFederate &fed, double ln_magnitude);
+    VoltagePublisher(::helics::ValueFederate &fed, double ln_magnitude);
 
     void Publish(const ThreePhaseValues &v);
 };

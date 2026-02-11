@@ -18,7 +18,7 @@ class DummyFederate
 
   private:
     common::helics::HelicsInput m_fed_input;
-    utils::LocalLogHelper m_log;
+    common::utils::LocalLogHelper m_log;
 };
 
 } // namespace data

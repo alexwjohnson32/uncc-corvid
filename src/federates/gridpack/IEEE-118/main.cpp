@@ -45,7 +45,7 @@ std::vector<int> GetBusIds(const ieee_118::IEEE118Input &input)
     return bus_ids;
 }
 
-std::optional<ieee_118::IEEE118Input> GetPowerflowInput(int argc, char **argv, utils::LocalLogHelper &log)
+std::optional<ieee_118::IEEE118Input> GetPowerflowInput(int argc, char **argv, common::utils::LocalLogHelper &log)
 {
     std::optional<ieee_118::IEEE118Input> pf_input{};
 
@@ -78,7 +78,7 @@ std::optional<ieee_118::IEEE118Input> GetPowerflowInput(int argc, char **argv, u
     return pf_input;
 }
 
-helics::ValueFederate GetGridpackFederate(const ieee_118::IEEE118Input &pf_input, utils::LocalLogHelper &log)
+helics::ValueFederate GetGridpackFederate(const ieee_118::IEEE118Input &pf_input, common::utils::LocalLogHelper &log)
 {
     // Create a FederateInfo object
     helics::FederateInfo fi;
@@ -90,13 +90,14 @@ helics::ValueFederate GetGridpackFederate(const ieee_118::IEEE118Input &pf_input
     return gpk_118;
 }
 
-double PerformLoop(helics::ValueFederate &gpk_118, const ieee_118::IEEE118Input &pf_input, utils::LocalLogHelper &log)
+double PerformLoop(helics::ValueFederate &gpk_118, const ieee_118::IEEE118Input &pf_input,
+                   common::utils::LocalLogHelper &log)
 {
     // Publications
-    powerflow::tools::VoltagePublisher pub(gpk_118, pf_input.ln_magnitude);
+    common::helics::VoltagePublisher pub(gpk_118, pf_input.ln_magnitude);
 
     // Subscriptions
-    std::unordered_map<std::string, powerflow::tools::ThreePhaseSubscriptions> subs;
+    std::unordered_map<std::string, common::helics::ThreePhaseSubscriptions> subs;
     for (const std::string &gridlabd_name : pf_input.GetGridalabDNames())
     {
         subs[gridlabd_name] = { gpk_118.registerSubscription(gridlabd_name + "/Sa", "VA"),
@@ -111,9 +112,9 @@ double PerformLoop(helics::ValueFederate &gpk_118, const ieee_118::IEEE118Input 
     const std::string xml_file = "118.xml";
     const std::complex<double> r120({ -0.5, -0.866025 });
     const std::vector<int> bus_ids = GetBusIds(pf_input);
-    const powerflow::tools::ThreePhaseValues initial_phased_voltage = { { 1.0, 0.0 },
-                                                                        { -0.5, -0.866025 },
-                                                                        { -0.5, 0.866025 } };
+    const common::helics::ThreePhaseValues initial_phased_voltage = { { 1.0, 0.0 },
+                                                                      { -0.5, -0.866025 },
+                                                                      { -0.5, 0.866025 } };
     const double period = gpk_118.getTimeProperty(HELICS_PROPERTY_TIME_PERIOD);
 
     // Initialize variables
@@ -130,10 +131,10 @@ double PerformLoop(helics::ValueFederate &gpk_118, const ieee_118::IEEE118Input 
         return -1.0;
     }
 
-    std::unordered_map<std::string, powerflow::tools::ThreePhaseValues> last_known_values;
+    std::unordered_map<std::string, common::helics::ThreePhaseValues> last_known_values;
     for (const std::string &gridlabd_name : pf_input.GetGridalabDNames())
     {
-        last_known_values[gridlabd_name] = powerflow::tools::ThreePhaseValues();
+        last_known_values[gridlabd_name] = common::helics::ThreePhaseValues();
     }
 
     // Enter execution mode
@@ -173,11 +174,11 @@ double PerformLoop(helics::ValueFederate &gpk_118, const ieee_118::IEEE118Input 
         {
             log << "\nBus Id: " << gridlabd_info.bus_id << "\nGridlabd Names:\n\t";
 
-            powerflow::tools::ThreePhaseValues s_total;
+            common::helics::ThreePhaseValues s_total;
             for (const std::string &gridlabd_name : gridlabd_info.names)
             {
                 log << "\"" << gridlabd_name << "\" ";
-                powerflow::tools::ThreePhaseSubscriptions &current_subs = subs.at(gridlabd_name);
+                common::helics::ThreePhaseSubscriptions &current_subs = subs.at(gridlabd_name);
                 if (current_subs.a.isUpdated() || current_subs.a.isValid())
                 {
                     last_known_values.at(gridlabd_name).a = current_subs.a.getValue<std::complex<double>>();
@@ -191,8 +192,8 @@ double PerformLoop(helics::ValueFederate &gpk_118, const ieee_118::IEEE118Input 
                     last_known_values.at(gridlabd_name).c = current_subs.c.getValue<std::complex<double>>();
                 }
 
-                powerflow::tools::ThreePhaseValues limited_power =
-                    powerflow::tools::LimitPower(subs.at(gridlabd_name), 1.0);
+                common::helics::ThreePhaseValues limited_power =
+                    common::helics::LimitPower(subs.at(gridlabd_name), 1.0);
                 s_total.a += limited_power.a;
                 s_total.b += limited_power.b;
                 s_total.c += limited_power.c;
@@ -201,7 +202,7 @@ double PerformLoop(helics::ValueFederate &gpk_118, const ieee_118::IEEE118Input 
             log << "\nTotal S received from Gridlab-D: [" << s_total.a << ", " << s_total.b << ", " << s_total.c
                 << "]\n";
 
-            powerflow::tools::ThreePhaseValues v = executor.ComputeVoltage(s_total, gridlabd_info.bus_id);
+            common::helics::ThreePhaseValues v = executor.ComputeVoltage(s_total, gridlabd_info.bus_id);
 
             log << "Updated V by GridPACK: [" << v.a << ", " << v.b << ", " << v.c << "]\n";
 
@@ -222,7 +223,7 @@ int main(int argc, char **argv)
     gridpack::Environment env(argc, argv);
 
     // Use this instead of std::cout.
-    utils::LocalLogHelper log("gpk_118_console.txt");
+    common::utils::LocalLogHelper log("gpk_118_console.txt");
     log.SetOnWriteCallback([](const std::string &msg) { std::cout << msg; });
 
     // Read PowerFlowInput and print json string

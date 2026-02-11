@@ -13,7 +13,7 @@ class StopwatchTest : public ::testing::Test
  */
 TEST_F(StopwatchTest, InitialStateIsStarted)
 {
-    utils::Stopwatch sw;
+    common::utils::Stopwatch sw;
     double elapsed = sw.ElapsedMilliseconds();
 
     // The elapsed time should be non-negative and very close to zero
@@ -29,7 +29,7 @@ TEST_F(StopwatchTest, InitialStateIsStarted)
  */
 TEST_F(StopwatchTest, MeasuresElapsedSleepTime)
 {
-    utils::Stopwatch sw;
+    common::utils::Stopwatch sw;
     const int sleep_ms = 100;
 
     // We don't strictly need to call sw.Start() here because of the constructor,
@@ -47,7 +47,7 @@ TEST_F(StopwatchTest, MeasuresElapsedSleepTime)
  */
 TEST_F(StopwatchTest, ResetFunctionality)
 {
-    utils::Stopwatch sw;
+    common::utils::Stopwatch sw;
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
     // Restarting the stopwatch
@@ -65,7 +65,7 @@ TEST_F(StopwatchTest, ResetFunctionality)
  */
 TEST_F(StopwatchTest, MonotonicIncrease)
 {
-    utils::Stopwatch sw;
+    common::utils::Stopwatch sw;
 
     double t1 = sw.ElapsedMilliseconds();
     std::this_thread::sleep_for(std::chrono::milliseconds(5));

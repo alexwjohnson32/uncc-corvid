@@ -15,7 +15,7 @@
 namespace
 {
 helics::MessageFederate GetFederate(const std::string &name, const std::string &fed_json_str,
-                                    utils::LocalLogHelper &log)
+                                    common::utils::LocalLogHelper &log)
 {
     helics::FederateInfo fi;
     fi.loadInfoFromJson(fed_json_str);
@@ -28,7 +28,7 @@ helics::MessageFederate GetFederate(const std::string &name, const std::string &
 
 std::string DiscreteQueriesLoop(double granted_time, helics::MessageFederate &msg_fed)
 {
-    utils::Stopwatch loop_watch;
+    common::utils::Stopwatch loop_watch;
     loop_watch.Start();
 
     std::stringstream ss;
@@ -45,9 +45,9 @@ std::string DiscreteQueriesLoop(double granted_time, helics::MessageFederate &ms
 }
 
 double PerformLoop(helics::MessageFederate &msg_fed, const double total_time, const double period,
-                   utils::LocalLogHelper &log)
+                   common::utils::LocalLogHelper &log)
 {
-    utils::Stopwatch main_watch;
+    common::utils::Stopwatch main_watch;
 
     double granted_time = 0.0;
 

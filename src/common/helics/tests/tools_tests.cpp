@@ -12,7 +12,7 @@ TEST(LimitPowerLogicTest, BelowLimitRemainsUnchanged)
 {
     const double max_v = 100.0;
     std::complex<double> s(30.0, 40.0); // Magnitude is 50.0
-    std::complex<double> result = powerflow::tools::LimitPower(s, max_v);
+    std::complex<double> result = common::helics::LimitPower(s, max_v);
 
     EXPECT_DOUBLE_EQ(result.real(), 30.0);
     EXPECT_DOUBLE_EQ(result.imag(), 40.0);
@@ -23,7 +23,7 @@ TEST(LimitPowerLogicTest, AboveLimitIsScaled)
     const double max_v = 100.0;
     // Magnitude is 200.0, limit is 100.0 (Scale factor 0.5)
     std::complex<double> s(120.0, 160.0);
-    std::complex<double> result = powerflow::tools::LimitPower(s, max_v);
+    std::complex<double> result = common::helics::LimitPower(s, max_v);
 
     EXPECT_DOUBLE_EQ(std::abs(result), max_v);
     EXPECT_DOUBLE_EQ(result.real(), 60.0);
@@ -77,14 +77,14 @@ TEST_F(HelicsToolsTest, VoltagePublisherRegistration)
 
     double magnitude = 240.0;
     // Ensure registrations happen without throwing
-    ASSERT_NO_THROW({ powerflow::tools::VoltagePublisher publisher(*fed, magnitude); });
+    ASSERT_NO_THROW({ common::helics::VoltagePublisher publisher(*fed, magnitude); });
 }
 
 TEST_F(HelicsToolsTest, LimitPowerWithSubscriptions)
 {
     if (!fed) return;
 
-    powerflow::tools::ThreePhaseSubscriptions subs;
+    common::helics::ThreePhaseSubscriptions subs;
     // Using local names (not global) for safer unit testing
     subs.a = fed->registerInput<std::complex<double>>("test_a", "V");
     subs.b = fed->registerInput<std::complex<double>>("test_b", "V");
@@ -106,7 +106,7 @@ TEST_F(HelicsToolsTest, LimitPowerWithSubscriptions)
     fed->requestNextStep();
 
     double limit = 10.0;
-    powerflow::tools::ThreePhaseValues results = powerflow::tools::LimitPower(subs, limit);
+    common::helics::ThreePhaseValues results = common::helics::LimitPower(subs, limit);
 
     EXPECT_DOUBLE_EQ(results.a.real(), 3.0);
     EXPECT_DOUBLE_EQ(results.a.imag(), 4.0);
@@ -116,7 +116,7 @@ TEST_F(HelicsToolsTest, LimitPowerWithSubscriptionsAboveLimit)
 {
     if (!fed) return;
 
-    powerflow::tools::ThreePhaseSubscriptions subs;
+    common::helics::ThreePhaseSubscriptions subs;
     subs.a = fed->registerInput<std::complex<double>>("scale_a", "V");
     subs.b = fed->registerInput<std::complex<double>>("scale_b", "V");
     subs.c = fed->registerInput<std::complex<double>>("scale_c", "V");
@@ -131,7 +131,7 @@ TEST_F(HelicsToolsTest, LimitPowerWithSubscriptionsAboveLimit)
     fed->requestNextStep();
 
     double limit = 10.0;
-    powerflow::tools::ThreePhaseValues results = powerflow::tools::LimitPower(subs, limit);
+    common::helics::ThreePhaseValues results = common::helics::LimitPower(subs, limit);
 
     EXPECT_DOUBLE_EQ(results.a.real(), 6.0);
     EXPECT_DOUBLE_EQ(results.a.imag(), 8.0);

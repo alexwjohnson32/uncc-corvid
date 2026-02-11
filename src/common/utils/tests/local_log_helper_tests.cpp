@@ -63,7 +63,7 @@ TEST_F(LocalLogHelperTest, UniqueFileWriting)
 {
     std::string filename = GetUniqueFileName();
     {
-        utils::LocalLogHelper logger(filename);
+        common::utils::LocalLogHelper logger(filename);
         logger << "Thread-safe data: " << 0xFF;
     }
 
@@ -76,7 +76,7 @@ TEST_F(LocalLogHelperTest, CallbackIsolation)
     std::string captured;
 
     {
-        utils::LocalLogHelper logger(filename);
+        common::utils::LocalLogHelper logger(filename);
         logger.SetOnWriteCallback([&](const std::string &msg) { captured = msg; });
 
         // Verify proxy destruction triggers callback
@@ -92,7 +92,7 @@ TEST_F(LocalLogHelperTest, MultipleStreamsSameLogger)
     std::vector<std::string> results;
 
     {
-        utils::LocalLogHelper logger(filename);
+        common::utils::LocalLogHelper logger(filename);
         logger.SetOnWriteCallback([&](const std::string &msg) { results.push_back(msg); });
 
         // Each line is a separate LogStream proxy
@@ -114,7 +114,7 @@ TEST_F(LocalLogHelperTest, ManipulatorNewlineTest)
     std::string captured;
 
     {
-        utils::LocalLogHelper logger(filename);
+        common::utils::LocalLogHelper logger(filename);
         logger.SetOnWriteCallback([&](const std::string &msg) { captured = msg; });
 
         logger << "Header" << std::endl;
@@ -133,7 +133,7 @@ TEST_F(LocalLogHelperTest, MidSessionFileSwitch)
     ASSERT_NE(file1, file2);
 
     {
-        utils::LocalLogHelper logger(file1);
+        common::utils::LocalLogHelper logger(file1);
         logger << "Part 1";
 
         logger.SetOutputFile(file2);
@@ -151,7 +151,7 @@ TEST_F(LocalLogHelperTest, InvalidPathRecovery)
     std::string captured;
 
     {
-        utils::LocalLogHelper logger(invalid_path);
+        common::utils::LocalLogHelper logger(invalid_path);
         EXPECT_FALSE(logger.IsOpen());
 
         logger.SetOnWriteCallback([&](const std::string &msg) { captured = msg; });

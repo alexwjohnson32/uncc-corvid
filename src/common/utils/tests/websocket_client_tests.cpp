@@ -129,7 +129,7 @@ class MockWebSocketServer
 class WebSocketClientTest : public ::testing::Test
 {
   protected:
-    void SetUp() override { m_client = std::make_shared<utils::WebSocketClient>(); }
+    void SetUp() override { m_client = std::make_shared<common::utils::WebSocketClient>(); }
 
     void TearDown() override
     {
@@ -137,7 +137,7 @@ class WebSocketClientTest : public ::testing::Test
         m_client->StopRun();
     }
 
-    std::shared_ptr<utils::WebSocketClient> m_client;
+    std::shared_ptr<common::utils::WebSocketClient> m_client;
 };
 
 TEST_F(WebSocketClientTest, RangeBasedConnectionTest)
