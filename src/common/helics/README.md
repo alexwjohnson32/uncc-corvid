@@ -12,6 +12,8 @@ The `helics` directory builds a library that can be referenced throughout CMake 
 
 All classes and functions found within this library exist under the `common::helics::` namespace.
 
+When including these files in your file, be sure to give the fully qualified path (example, `#include "common/helics/tools.hpp"`).
+
 We will briefly describe each file, but this is not an API document. If you want to see something more along those lines, look at the header files themselves. This is a purpose overview.
 
 ### `tools.hpp`

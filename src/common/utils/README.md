@@ -12,6 +12,8 @@ The `utils` directory builds a library that can be referenced throughout CMake b
 
 All classes and functions found within this library exist under the `common::utils::` namespace.
 
+When including these files in your file, be sure to give the fully qualified path (example, `#include "common/utils/stopwatch.hpp"`).
+
 We will briefly describe each file, but this is not an API document. If you want to see something more along those lines, look at the header files themselves. This is a purpose overview.
 
 ### `stopwatch.hpp`
