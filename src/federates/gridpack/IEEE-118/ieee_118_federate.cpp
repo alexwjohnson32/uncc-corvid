@@ -1,8 +1,8 @@
 #include "ieee_118_federate.hpp"
+#include "ieee_118_app.hpp"
 #include "tools.hpp"
-#include "json_templates.hpp"
+#include "common/utils/json_templates.hpp"
 
-#include <memory>
 #include <string>
 #include <stdexcept>
 #include <sstream>

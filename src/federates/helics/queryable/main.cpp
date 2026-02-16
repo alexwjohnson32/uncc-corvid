@@ -1,6 +1,6 @@
 #include "query_federate.hpp"
 #include "query_federate_input.hpp"
-#include "json_templates.hpp"
+#include "common/utils/json_templates.hpp"
 
 #include <cstdlib>
 #include <exception>

@@ -2,7 +2,7 @@
 #include <boost/json.hpp>
 #include <string>
 
-#include "helics_input.hpp"
+#include "common/helics/helics_input.hpp"
 
 class HelicsInputTest : public ::testing::Test
 {

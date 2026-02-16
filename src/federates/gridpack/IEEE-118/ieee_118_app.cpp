@@ -4,7 +4,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "stopwatch.hpp"
+#include "common/utils/stopwatch.hpp"
 
 #include "gridpack/include/gridpack.hpp"
 #include "/usr/local/GridPACK/include/gridpack/applications/modules/powerflow/pf_factory_module.hpp"

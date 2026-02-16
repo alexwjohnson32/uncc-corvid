@@ -1,8 +1,7 @@
 #pragma once
 
 #include "ieee_118_inputs.hpp"
-#include "ieee_118_app.hpp"
-#include "local_log_helper.hpp"
+#include "common/utils/local_log_helper.hpp"
 
 #include <memory>
 

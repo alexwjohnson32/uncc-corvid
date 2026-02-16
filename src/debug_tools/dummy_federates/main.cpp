@@ -1,6 +1,6 @@
-#include "helics_input.hpp"
+#include "common/helics/helics_input.hpp"
 #include "dummy_federate.hpp"
-#include "json_templates.hpp"
+#include "common/utils/json_templates.hpp"
 
 #include <cstdlib>
 #include <exception>

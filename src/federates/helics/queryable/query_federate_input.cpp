@@ -1,6 +1,6 @@
 #include "query_federate_input.hpp"
 
-#include "json_templates.hpp"
+#include "common/utils/json_templates.hpp"
 
 void queryable::tag_invoke(boost::json::value_from_tag, boost::json::value &json_value,
                            const queryable::ClientDetails &data)

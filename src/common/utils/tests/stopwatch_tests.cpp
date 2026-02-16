@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <thread>
 #include <chrono>
-#include "stopwatch.hpp"
+#include "common/utils/stopwatch.hpp"
 
 class StopwatchTest : public ::testing::Test
 {

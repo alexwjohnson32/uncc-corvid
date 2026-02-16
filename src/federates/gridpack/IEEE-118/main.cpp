@@ -5,7 +5,7 @@
 
 #include "ieee_118_inputs.hpp"
 #include "ieee_118_federate.hpp"
-#include "json_templates.hpp"
+#include "common/utils/json_templates.hpp"
 
 int main(int argc, char **argv)
 {

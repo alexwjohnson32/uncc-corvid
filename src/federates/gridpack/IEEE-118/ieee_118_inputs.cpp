@@ -1,5 +1,5 @@
 #include "ieee_118_inputs.hpp"
-#include "json_templates.hpp"
+#include "common/utils/json_templates.hpp"
 
 void ieee_118::tag_invoke(boost::json::value_from_tag, boost::json::value &json_value,
                           const ieee_118::GridlabDInputs &data)

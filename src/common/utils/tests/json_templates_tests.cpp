@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "json_templates.hpp"
+#include "common/utils/json_templates.hpp"
 #include <fstream>
 #include <filesystem>
 

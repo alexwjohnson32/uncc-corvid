@@ -1,6 +1,6 @@
 #include "dummy_federate.hpp"
 
-#include "stopwatch.hpp"
+#include "common/utils/stopwatch.hpp"
 
 #include <iostream>
 #include <string>

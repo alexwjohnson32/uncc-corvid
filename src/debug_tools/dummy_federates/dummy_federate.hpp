@@ -1,7 +1,7 @@
 #pragma once
 
-#include "helics_input.hpp"
-#include "local_log_helper.hpp"
+#include "common/helics/helics_input.hpp"
+#include "common/utils/local_log_helper.hpp"
 
 namespace dummy
 {

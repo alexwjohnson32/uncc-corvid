@@ -7,7 +7,7 @@ target_sources(${CORVID_HELICS_LIB}
                FILE_SET HEADERS BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
                FILES tools.hpp helics_input.hpp)
 
-target_include_directories(${CORVID_HELICS_LIB} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${HELICS_ROOT}/include)
+target_include_directories(${CORVID_HELICS_LIB} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../.. ${HELICS_ROOT}/include)
 target_link_directories(${CORVID_HELICS_LIB} PUBLIC ${HELICS_ROOT}/lib64)
 target_link_libraries(${CORVID_HELICS_LIB} PUBLIC helicscpp MPI::MPI_CXX ${CORVID_UTILS_LIB})
 

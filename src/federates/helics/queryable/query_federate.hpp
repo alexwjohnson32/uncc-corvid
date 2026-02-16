@@ -1,8 +1,8 @@
 #pragma once
 
 #include "query_federate_input.hpp"
-#include "local_log_helper.hpp"
-#include "websocket_client.hpp"
+#include "common/utils/local_log_helper.hpp"
+#include "common/utils/websocket_client.hpp"
 
 namespace queryable
 {

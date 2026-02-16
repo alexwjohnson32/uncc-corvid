@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "local_log_helper.hpp"
+#include "common/utils/local_log_helper.hpp"
 #include <filesystem>
 #include <fstream>
 #include <string>

@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "helics_input.hpp"
+#include "common/helics/helics_input.hpp"
 
 #include <boost/json.hpp>
 

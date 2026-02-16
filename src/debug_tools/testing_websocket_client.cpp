@@ -11,7 +11,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
 
-#include "websocket_client.hpp"
+#include "common/utils/websocket_client.hpp"
 
 #include <atomic>
 
