@@ -44,7 +44,7 @@ ieee_118::IEEE118Input ieee_118::tag_invoke(boost::json::value_to_tag<ieee_118::
     return data;
 }
 
-std::vector<std::string> ieee_118::IEEE118Input::GetGridalabDNames() const
+std::vector<std::string> ieee_118::IEEE118Input::GetGridlabDNames() const
 {
     std::vector<std::string> names;
 

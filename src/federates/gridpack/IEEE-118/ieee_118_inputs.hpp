@@ -20,7 +20,7 @@ struct IEEE118Input : public common::helics::HelicsInput
     std::vector<ieee_118::GridlabDInputs> gridlabd_infos{};
     double ln_magnitude;
 
-    std::vector<std::string> GetGridalabDNames() const;
+    std::vector<std::string> GetGridlabDNames() const;
 };
 
 void tag_invoke(boost::json::value_from_tag, boost::json::value &json_value, const ieee_118::GridlabDInputs &data);
