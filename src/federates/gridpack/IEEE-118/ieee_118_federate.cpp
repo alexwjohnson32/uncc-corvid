@@ -1,6 +1,5 @@
 #include "ieee_118_federate.hpp"
 #include "ieee_118_app.hpp"
-#include "tools.hpp"
 #include "common/utils/json_templates.hpp"
 
 #include <string>
@@ -119,10 +118,51 @@ class ieee_118::IEEE118Federate::FederateState
     }
     ~FederateState() {}
 
-    double SimulateStep(const std::vector<ieee_118::GridlabDInputs> &gridlabd_infos, const double current_time,
-                        const double period, common::utils::LocalLogHelper &log)
+    double RunSimulation(const ieee_118::IEEE118Input &input, common::utils::LocalLogHelper &log)
     {
-        double granted_time = m_fed.requestTime(current_time + period);
+        // Enter the federate into executing mode
+        m_fed.enterExecutingMode();
+        log << "GridPACK Federate has entered execution mode." << std::endl;
+
+        // Initial voltage publish
+        log << "Publish initial voltage." << std::endl;
+        m_pub.Publish(m_initial_phased_voltage);
+        log << "Published." << std::endl;
+
+        // Perform Simulation
+        /*
+         * What performing the simulation looks like:
+         * 1. Get the granted time
+         * 2. Separate the distribution systems based on bus_id
+         * 3. For each bus_id, aggregate the total power from the distribution systems. Meaning, limt the power for
+         * each phase and keep a total of all limited power for each phase per bus_id.
+         * 4. Run the powerflow application per bus id (maybe this means one application, or it means an application
+         * per bus_id).
+         * 5. Publish individual calculated V for each ID at the same granted time.
+         */
+        const double total_interval = input.total_time;
+        double granted_time = 0.0;
+
+        while (granted_time + m_period <= total_interval)
+        {
+            log << "\n##########################################\n"
+                << "New Loop Iteration Information:\n\tGranted Time + Period: " << granted_time + m_period
+                << "\n\tTotal Interval: " << total_interval
+                << "\nRequesting New Granted Time: " << granted_time + m_period << "\n";
+
+            granted_time = SimulateStep(input.gridlabd_infos, granted_time, log);
+
+            log << "##########################################\n";
+        }
+
+        return granted_time;
+    }
+
+  private:
+    double SimulateStep(const std::vector<ieee_118::GridlabDInputs> &gridlabd_infos, const double current_time,
+                        common::utils::LocalLogHelper &log)
+    {
+        double granted_time = m_fed.requestTime(current_time + m_period);
         log << "\n[Time " << granted_time << "]\n";
 
         for (const ieee_118::GridlabDInputs &gridlabd_info : gridlabd_infos)
@@ -203,39 +243,7 @@ void ieee_118::IEEE118Federate::Run()
 
     try
     {
-        m_state->m_fed.enterExecutingMode();
-        m_log << "GridPACK Federate has entered execution mode." << std::endl;
-
-        // Initial voltage publish
-        m_log << "Publish initial voltage." << std::endl;
-        m_state->m_pub.Publish(m_state->m_initial_phased_voltage);
-        m_log << "Published." << std::endl;
-
-        // Perform Simulation
-        /*
-         * What performing the simulation looks like:
-         * 1. Get the granted time
-         * 2. Separate the distribution systems based on bus_id
-         * 3. For each bus_id, aggregate the total power from the distribution systems. Meaning, limt the power for each
-         * phase and keep a total of all limited power for each phase per bus_id.
-         * 4. Run the powerflow application per bus id (maybe this means one application, or it means an application per
-         * bus_id).
-         * 5. Publish individual calculated V for each ID at the same granted time.
-         */
-        const double total_interval = m_fed_input.total_time;
-        granted_time = 0.0;
-
-        while (granted_time + m_state->m_period <= total_interval)
-        {
-            m_log << "\n##########################################\n"
-                  << "New Loop Iteration Information:\n\tGranted Time + Period: " << granted_time + m_state->m_period
-                  << "\n\tTotal Interval: " << total_interval
-                  << "\nRequesting New Granted Time: " << granted_time + m_state->m_period << "\n";
-
-            granted_time = m_state->SimulateStep(m_fed_input.gridlabd_infos, granted_time, m_state->m_period, m_log);
-
-            m_log << "##########################################\n";
-        }
+        granted_time = m_state->RunSimulation(m_fed_input, m_log);
     }
     catch (const std::exception &e)
     {
