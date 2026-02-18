@@ -1,0 +1,78 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "base-configure",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+        "BUILD_SHARED_LIBS": "OFF",
+        "ENABLE_TESTING": "OFF"
+      }
+    },
+    {
+      "name": "base-debug",
+      "hidden": true,
+      "inherits": "base-configure",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "release",
+      "inherits": "base-configure",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "test-coverage-config",
+      "inherits": "base-debug",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "--coverage",
+        "CMAKE_C_FLAGS": "--coverage",
+        "ENABLE_TESTING": "ON"
+      }
+    },
+    {
+      "name": "debug",
+      "inherits": "test-coverage-config"
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "base-build",
+      "hidden": true,
+      "jobs": 16,
+      "verbose": false,
+      "targets": [
+        "install"
+      ]
+    },
+    {
+      "name": "build-debug",
+      "configurePreset": "debug",
+      "inherits": "base-build"
+    },
+    {
+      "name": "build-release",
+      "configurePreset": "release",
+      "inherits": "base-build"
+    },
+    {
+      "name": "build-test",
+      "configurePreset": "test-coverage-config",
+      "inherits": "base-build"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "test-coverage",
+      "configurePreset": "test-coverage-config",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

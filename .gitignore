@@ -3,6 +3,7 @@
 
 # Build directories
 build/
+install/
 
 # Logs and output CSV files
 *.log
