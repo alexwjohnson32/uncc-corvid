@@ -28,3 +28,4 @@ class IDeployable(abc.ABC):
     def get_name(self) -> str:
         """Returns the name of the Plugin (NOT the model). This is the unique identifier for the plugin.
         Be careful to give a specific enough name to prevent name collisions."""
+        pass
