@@ -3,68 +3,113 @@ import typing
 import json
 import pathlib
 import dataclasses
+import typing
+import shutil
+
+T = typing.TypeVar("T")
 
 @dataclasses.dataclass
-class DummyFederateInputData:
-    name: str
-    local_log_file: str
-    total_time: float
-    core_type: str
-    core_init: str
+class InputPaths:
+    executable: pathlib.Path
+    configuration: pathlib.Path
+    readme: pathlib.Path
 
+class InputData:
+    def _validate_config(self, json_dict: dict, key: str, expected_type: typing.Type[T], errors: list[str]) -> T:
+        value = expected_type()
 
-def get_install_path(install_root: str) -> pathlib.Path:
-    # Assume install_root is valid and exists, we need to check if we need to append "release" or "debug"
-    # to the file. Then attempt to append the rest of the path.
-    my_path = pathlib.Path(install_root)
-    temp_path = my_path / "release"
-    if not temp_path.exists():
-        temp_path = my_path / "debug"
-        if not temp_path.exists():
-            temp_path = None
+        if not key in json_dict:
+            errors.append(f"Key {key} not found!")
+        elif not type(json_dict[key]) is type(expected_type):
+            errors.append(f"Key {key} found, but the type is incorrect. Expected '{expected_type.__name__}', Actual: '{type(json_dict[key]).__name__}'")
+        else:
+            value = json_dict[key]
 
-    if temp_path is not None:
-        my_path = temp_path
+        return value
 
-    return my_path / "debug_tools" / "dummy_federates"
+    def __init__(self, json_dict: dict):
+        self.name: str = ""
+        self.local_log_file: str = ""
+        self.total_time: float = 0.0
+        self.core_type: str = ""
+        self.core_init: str = ""
 
-def get_model_files_root(model_name: str, deploy_root: str) -> pathlib.Path:
-    # Assume that the deploy_root is valid and does exist. Append the rest of the
-    # path with the given model_name
-    my_path = pathlib.Path(deploy_root)
-    return my_path / "debug_tools" / "dummy_federate" / model_name
+        errs = list[str]()
+
+        self.name = self._validate_config(json_dict, "name", str, errs)
+        self.local_log_file = self._validate_config(json_dict, "local_log_file", str, errs)
+        self.total_time = self._validate_config(json_dict, "total_time", float, errs)
+        self.core_type = self._validate_config(json_dict, "core_type", str, errs)
+        self.core_init = self._validate_config(json_dict, "core_init", str, errs)
+
+        if errs:
+            err_msgs = str.join("\n", errs)
+            raise ValueError(f"Errors parsing configuration:\n{err_msgs}")
 
 class DummyFederatePlugin(interface.IDeployable):
-    def deploy(self, json_config: dict, deploy_root: str, install_root: str) -> bool:
-        # We can assume that deploy_root and install_root are valid directories and that they exist.
-        install_path = get_install_path(install_root)
-        deploy_path = get_model_files_root(json_config["name"], deploy_root)
+    @classmethod
+    def _get_specific_path(cls) -> pathlib.Path:
+        return pathlib.Path("debug_tools", "dummy_federate")
 
-        return True
+    def _get_input_paths(self, root: pathlib.Path) -> InputPaths:
+        return InputPaths(
+            root / "dummy_federate",
+            root / "helics.json",
+            root / "README.md"
+        )
+
+    def _get_install_path(self, install_root: str) -> pathlib.Path:
+        return pathlib.Path(install_root) / self._get_specific_path()
+
+    def _get_deploy_path(self, deploy_root: str, model_name: str) -> pathlib.Path:
+        return pathlib.Path(deploy_root) / self._get_specific_path() / model_name
+
+    def deploy(self, json_config: dict, deploy_root: str, install_root: str) -> None:
+        # If this cannot be parsed, it will raise a ValueError with a list of parse errors
+        input_data = InputData(json_config)
+
+        # Raise a ValueError if the path does not exist.
+        install_path = self._get_install_path(install_root)
+        if (not install_path.exists()):
+            raise ValueError(f"Install path does not exist: '{install_path}'")
+        source_files = self._get_input_paths(install_path)
+
+        # If this deploy path does not exist, create it
+        deploy_path = self._get_deploy_path(deploy_root, input_data.name)
+        deploy_path.mkdir(parents=True, exist_ok=True)
+        destination_files = self._get_input_paths(deploy_path)
+
+        # Copy the source to the destination, modifying the config file data
+        shutil.copy2(source_files.executable, destination_files.executable)
+        shutil.copy2(source_files.readme, destination_files.readme)
+        with open(source_files.configuration, "r") as json_file:
+            json_data = json.load(json_file)
+        json_data["federate_name"] = input_data.name
+        json_data["local_log_file"] = input_data.local_log_file
+        json_data["total_time"] = input_data.total_time
+        json_data["fed_info_json"]["coreInit"] = input_data.core_init
+        json_data["fed_info_json"]["coreType"] = input_data.core_type
+        with open(destination_files.configuration, "w") as source_file:
+            json.dump(json_data, source_file, indent=4)
 
     def get_baseline_files(self, install_root: str) -> list[str]:
-        files = list()
+        install_path = self._get_install_path(install_root)
+        if (not install_path.exists()):
+            raise ValueError(f"Install path does not exist: '{install_path}'")
 
-        install_path = get_install_path(install_root)
-        if (install_path.exists()):
-            # Converts list of Paths to list of Strings
-            files = [str(p) for p in list(install_path.iterdir())]
-
-        return files
+        install_paths = self._get_input_paths(install_path)
+        return [str(install_paths.executable), str(install_paths.configuration), str(install_paths.readme)]
 
     def get_model_files(self, model_name: str, deploy_root: str) -> list[str]:
-        files = list()
-
-        deploy_path = get_model_files_root(model_name, deploy_root)
-        if (deploy_path.exists()):
-            files.append(str(deploy_path / "helics.json"))
-            files.append(str(deploy_path / "dummy_federate"))
-            files.append(str(deploy_path / "README.md"))
-
-        return files
+        deploy_path = self._get_deploy_path(deploy_root, model_name)
+        if deploy_path.exists():
+            deploy_paths = self._get_input_paths(deploy_path)
+            return [str(deploy_paths.executable), str(deploy_paths.configuration), str(deploy_paths.readme)]
+        else:
+            return list[str]()
 
     def get_exec_json(self, model_name: str, deploy_root: str) -> typing.Dict[str, typing.Any]:
-        relative_working_directory = pathlib.Path("debug_tools", "dummy_federate", model_name)
+        relative_working_directory = self._get_specific_path() / model_name
         absolute_working_directory = pathlib.Path(deploy_root) / relative_working_directory
 
         json_definition = dict()
