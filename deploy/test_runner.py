@@ -3,7 +3,7 @@ import argparse
 import sys
 import os
 import pathlib
-import base_plugin_test_case
+import plugins.tests.base_plugin_test_case as base
 
 def main():
     parser = argparse.ArgumentParser(description="Plugin Test Central Runner")
@@ -28,18 +28,17 @@ def main():
     try:
         # 1. Inject configuration into the Base Class
         # Because all tests inherit from this, they will all "see" these values.
-
         # The install dir must exist before call time
-        base_plugin_test_case.BasePluginTestCase.install_dir = pathlib.Path(args.install_dir).resolve(strict=True)
+        base.BasePluginTestCase.install_dir = pathlib.Path(args.install_dir).resolve(strict=True)
         # Get the deploy dir, and if it does not exist, create it.
-        base_plugin_test_case.BasePluginTestCase.deploy_dir = pathlib.Path(args.deploy_dir)
-        if not base_plugin_test_case.BasePluginTestCase.deploy_dir.exists():
-            base_plugin_test_case.BasePluginTestCase.deploy_dir.mkdir()
+        base.BasePluginTestCase.deploy_dir = pathlib.Path(args.deploy_dir)
+        if not base.BasePluginTestCase.deploy_dir.exists():
+            base.BasePluginTestCase.deploy_dir.mkdir()
         # At this point it should exist, so get the absolute path with a strict resolve
-        base_plugin_test_case.BasePluginTestCase.deploy_dir = base_plugin_test_case.BasePluginTestCase.deploy_dir.resolve(True)
+        base.BasePluginTestCase.deploy_dir = base.BasePluginTestCase.deploy_dir.resolve(True)
 
-        print(f"BaseTestInstallDir: {base_plugin_test_case.BasePluginTestCase.install_dir}")
-        print(f"BaseTestDeployDir: {base_plugin_test_case.BasePluginTestCase.deploy_dir}")
+        print(f"BaseTestInstallDir: {base.BasePluginTestCase.install_dir}")
+        print(f"BaseTestDeployDir: {base.BasePluginTestCase.deploy_dir}")
 
         # 2. Discover Tests
         # This looks through 'start_dir' and finds all files matching 'pattern'

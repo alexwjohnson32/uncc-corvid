@@ -1,7 +1,6 @@
 import unittest
 import pathlib
 import abc
-import shutil
 
 class BasePluginTestCase(unittest.TestCase):
     install_dir: pathlib.Path = pathlib.Path()
@@ -43,11 +42,6 @@ class BasePluginTestCase(unittest.TestCase):
     def validate_deploy_dir(cls) -> None:
         deploy_path = cls._get_safe_deployed_path()
         print(f"Deploy Dir: {deploy_path}")
-
-        # Delete local deploy if it exists. By deleting the parent, this should remove
-        # all the test artifacts from previous runs and ensure a clean workspace
-        if deploy_path.exists():
-            shutil.rmtree(deploy_path.parent)
 
         deploy_path.mkdir(parents=True, exist_ok=True)
         cls._init_deployed_files(deploy_path)

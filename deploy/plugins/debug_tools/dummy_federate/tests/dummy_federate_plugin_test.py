@@ -1,7 +1,7 @@
 import pathlib
 import json
-from .. import dummy_federate_plugin as plugin
-import tests.base_plugin_test_case as base_test
+import plugins.debug_tools.dummy_federate.dummy_federate_plugin as plugin
+import plugins.tests.base_plugin_test_case as base_test
 
 def get_default_values() -> dict:
     values = dict()

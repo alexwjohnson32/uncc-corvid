@@ -1,4 +1,4 @@
-import interface
+import plugins.interface as interface
 import typing
 import json
 import pathlib
@@ -20,7 +20,7 @@ class InputData:
 
         if not key in json_dict:
             errors.append(f"Key {key} not found!")
-        elif not type(json_dict[key]) is type(expected_type):
+        elif not isinstance(json_dict[key], expected_type):
             errors.append(f"Key {key} found, but the type is incorrect. Expected '{expected_type.__name__}', Actual: '{type(json_dict[key]).__name__}'")
         else:
             value = json_dict[key]
@@ -122,4 +122,5 @@ class DummyFederatePlugin(interface.IDeployable):
         return json_definition
 
     def get_name(self) -> str:
+        # Don't return the path, because we want this name to be unchanging independent of filesystem
         return "debug_tools/dummy_federate"
