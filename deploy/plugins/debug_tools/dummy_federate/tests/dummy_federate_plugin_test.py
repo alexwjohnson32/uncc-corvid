@@ -6,7 +6,7 @@ import plugins.tests.base_plugin_test_case as base_test
 def get_default_values() -> dict:
     values = dict()
 
-    values["federate_name"] = "test_name"
+    values["name"] = "test_name"
     values["local_log_file"] = "local_file.txt"
     values["total_time"] = 60.0
     values["core_type"] = "ipc"
@@ -17,11 +17,11 @@ def get_default_values() -> dict:
 class TestDummyFederatePlugin(base_test.BasePluginTestCase):
     @classmethod
     def _get_install_path(cls) -> pathlib.Path:
-        return cls.install_dir / "debug_tools" / "dummy_federates"
+        return cls.install_dir / "debug_tools" / "dummy_federate"
 
     @classmethod
     def _get_safe_deployed_path(cls) -> pathlib.Path:
-        return cls.deploy_dir / "debug_tools" / "dummy_federates" / cls.get_safe_model_name()
+        return cls.deploy_dir / "debug_tools" / "dummy_federate" / cls.get_safe_model_name()
 
     @classmethod
     def _init_deployed_files(cls, deployed_path: pathlib.Path) -> None:
@@ -33,7 +33,7 @@ class TestDummyFederatePlugin(base_test.BasePluginTestCase):
 
         json_data = dict()
         default_values = get_default_values()
-        json_data["federate_name"] = default_values["federate_name"]
+        json_data["federate_name"] = default_values["name"]
         json_data["local_log_file"] = default_values["local_log_file"]
         json_data["total_time"] = default_values["total_time"]
         json_data["fed_info_json"] = dict()
@@ -69,15 +69,15 @@ class TestDummyFederatePlugin(base_test.BasePluginTestCase):
         # Assert exception is raised, and then check the message
         with self.assertRaises(ValueError) as e:
             plugin.InputData(backing_values)
-        self.assertIn("Key core_type not found", str(e))
-        self.assertIn("Key local_log_file found, but the type is incorrect", str(e))
+        self.assertIn("Key core_type not found", str(e.exception))
+        self.assertIn("Key local_log_file found, but the type is incorrect", str(e.exception))
 
     def test_DummyFederatePlugin_deploy(self):
         dummy_plugin = plugin.DummyFederatePlugin()
         dummy_plugin.deploy(get_default_values(), str(self.deploy_dir), str(self.install_dir))
 
         expected_values = plugin.InputData(get_default_values())
-        expected_deployed_path = pathlib.Path(self.deploy_dir) / "debug_tools" / "dummy_federates" / self.get_safe_model_name()
+        expected_deployed_path = pathlib.Path(self.deploy_dir) / "debug_tools" / "dummy_federate" / self.get_safe_model_name()
         expected_paths = plugin.InputPaths(
             expected_deployed_path / "dummy_federate",
             expected_deployed_path / "helics.json",
@@ -101,7 +101,7 @@ class TestDummyFederatePlugin(base_test.BasePluginTestCase):
         dummy_plugin = plugin.DummyFederatePlugin()
         actual = dummy_plugin.get_baseline_files(str(self.install_dir))
 
-        install_path = pathlib.Path(self.install_dir) / "debug_tools" / "dummy_federates"
+        install_path = pathlib.Path(self.install_dir) / "debug_tools" / "dummy_federate"
         install_paths = plugin.InputPaths(
             install_path / "dummy_federate",
             install_path / "helics.json",
@@ -113,14 +113,13 @@ class TestDummyFederatePlugin(base_test.BasePluginTestCase):
 
     def test_DummyFederatePlugin_get_baseline_files_fake_path(self):
         dummy_plugin = plugin.DummyFederatePlugin()
-        self.assertRaises(ValueError, dummy_plugin.get_baseline_files, pathlib.Path("fake", "path"),
-                          "Fake Path should have caused ValueError exceptions")
+        self.assertRaises(ValueError, dummy_plugin.get_baseline_files, pathlib.Path("fake", "path"))
 
     def test_DummyFederatePlugin_get_model_files_real_path(self):
         dummy_plugin = plugin.DummyFederatePlugin()
         actual = dummy_plugin.get_model_files(self.get_safe_model_name(), str(self.deploy_dir))
 
-        deployed_path = pathlib.Path(self.deploy_dir) / "debug_tools" / "dummy_federates" / self.get_safe_model_name()
+        deployed_path = pathlib.Path(self.deploy_dir) / "debug_tools" / "dummy_federate" / self.get_safe_model_name()
         deployed_paths = plugin.InputPaths(
             deployed_path / "dummy_federate",
             deployed_path / "helics.json",
@@ -140,7 +139,7 @@ class TestDummyFederatePlugin(base_test.BasePluginTestCase):
         actual = dummy_plugin.get_exec_json(self.get_safe_model_name(), str(self.deploy_dir))
 
         expected = {
-            "directory": str(pathlib.Path("debug_tools", "dummy_federates", self.get_safe_model_name())),
+            "directory": str(pathlib.Path("debug_tools", "dummy_federate", self.get_safe_model_name())),
             "exec": "/bin/sh -c './dummy_federate helics.json'",
             "host": "localhost",
             "name": self.get_safe_model_name()
@@ -150,4 +149,4 @@ class TestDummyFederatePlugin(base_test.BasePluginTestCase):
 
     def test_DummyFederatePlugin_get_name(self):
         dummy_plugin = plugin.DummyFederatePlugin()
-        self.assertEqual("debug_tools/dummy_federates", dummy_plugin.get_name())
+        self.assertEqual("debug_tools/dummy_federate", dummy_plugin.get_name())
