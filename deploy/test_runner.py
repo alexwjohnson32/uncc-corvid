@@ -11,12 +11,12 @@ def main():
     # Configuration Arguments
     parser.add_argument('--install-dir', type=str, required=True,
                         help='Path to installation, this will remain unchanged by testing')
-    parser.add_argument('--deploy-dir', type=str, required=True,
-                        help='Path to deployment, any contents within may be deleted or modified')
+    parser.add_argument('--write-dir', type=str, required=True,
+                        help='Path to a writable directory, any contents within may be deleted or modified')
 
     # Discovery Arguments
-    parser.add_argument('--start-dir', type=str, default='..',
-                        help='Directory to start discovery (default: parent)')
+    parser.add_argument('--discover-dir', type=str, default='.',
+                        help='Directory to start discovery (default: current)')
     parser.add_argument('--pattern', type=str, default='*.py',
                         help='Pattern to match test files (default: *.py)')
 
@@ -31,22 +31,19 @@ def main():
         # The install dir must exist before call time
         base.BasePluginTestCase.install_dir = pathlib.Path(args.install_dir).resolve(strict=True)
         # Get the deploy dir, and if it does not exist, create it.
-        base.BasePluginTestCase.deploy_dir = pathlib.Path(args.deploy_dir)
+        base.BasePluginTestCase.deploy_dir = pathlib.Path(args.write_dir, "deploy")
         if not base.BasePluginTestCase.deploy_dir.exists():
             base.BasePluginTestCase.deploy_dir.mkdir()
         # At this point it should exist, so get the absolute path with a strict resolve
         base.BasePluginTestCase.deploy_dir = base.BasePluginTestCase.deploy_dir.resolve(True)
 
-        print(f"BaseTestInstallDir: {base.BasePluginTestCase.install_dir}")
-        print(f"BaseTestDeployDir: {base.BasePluginTestCase.deploy_dir}")
-
         # 2. Discover Tests
         # This looks through 'start_dir' and finds all files matching 'pattern'
         loader = unittest.TestLoader()
-        suite = loader.discover(start_dir=args.start_dir, pattern=args.pattern)
+        suite = loader.discover(start_dir=args.discover_dir, pattern=args.pattern)
 
         # 3. Run the Suite
-        print(f"Discovering tests in: {pathlib.Path(args.start_dir).resolve()}")
+        print(f"Discovering tests in: {pathlib.Path(args.discover_dir).resolve()}")
         print("-" * 40)
 
         runner = unittest.TextTestRunner(verbosity=2 if args.verbose else 1)
