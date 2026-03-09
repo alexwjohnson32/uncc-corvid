@@ -3,7 +3,7 @@ import argparse
 import sys
 import os
 import pathlib
-import plugins.tests.base_plugin_test_case as base
+import tests.tools.base_plugin_test_case as base
 
 def main():
     parser = argparse.ArgumentParser(description="Plugin Test Central Runner")
@@ -15,10 +15,10 @@ def main():
                         help='Path to a writable directory, any contents within may be deleted or modified')
 
     # Discovery Arguments
-    parser.add_argument('--discover-dir', type=str, default='.',
-                        help='Directory to start discovery (default: current)')
+    parser.add_argument('--discover-dir', type=str, default='tests',
+                        help='Directory to start discovery (default: tests)')
     parser.add_argument('--pattern', type=str, default='*.py',
-                        help='Pattern to match test files (default: *.py)')
+                        help='Pattern to match test files (default: test_*.py)')
 
     # Unittest Verbosity
     parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
