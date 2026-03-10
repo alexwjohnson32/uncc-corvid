@@ -4,6 +4,7 @@
 # Build directories
 build/
 install/
+**/__pycache__/**
 
 # Logs and output CSV files
 *.log
