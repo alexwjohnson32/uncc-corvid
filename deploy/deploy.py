@@ -1,6 +1,8 @@
 import argparse
 
 import commands.list_names
+import pathlib
+import plugins.manager as manager
 
 def main():
     top_parser = argparse.ArgumentParser("UNCC Deploy Tool for initializing runnable cosimulation models")
@@ -11,8 +13,15 @@ def main():
 
     args = top_parser.parse_args()
 
-    if args.command == "list-names":
-        commands.list_names.get_plugin_names()
+    try:
+        # Initialize Plugins
+        plugins_dir = pathlib.Path(__file__, "plugins") # Safe way to get to plugins directory
+        plugin_manager = manager.PluginManager(plugins_dir)
+
+        if args.command == "list-names":
+            commands.list_names.get_plugin_names()
+    except ValueError as e:
+        print(str(e))
 
 if __name__ == '__main__':
     main()
