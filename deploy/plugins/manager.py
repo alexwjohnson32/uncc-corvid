@@ -26,6 +26,9 @@ class PluginManager:
                     # Set the plugins dict to the name and instance
                     self._plugins[obj().get_name()] = obj()
 
+        if not self._plugins:
+            raise ValueError(f"Plugin directory contains no plugins: {plugin_directory}")
+
 
     def get(self, name: str) -> interface.IDeployable | None:
         if name in self._plugins:
