@@ -15,13 +15,16 @@ def main():
 
     try:
         # Initialize Plugins
-        plugins_dir = pathlib.Path(__file__, "plugins") # Safe way to get to plugins directory
+        plugins_dir = pathlib.Path(__file__).resolve().parent / "plugins" # Safe way to get to plugins directory
         plugin_manager = manager.PluginManager(plugins_dir)
 
         if args.command == "list-names":
-            commands.list_names.get_plugin_names()
+            commands.list_names.get_plugin_names(plugin_manager)
     except ValueError as e:
         print(str(e))
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        print(f"Exception type: {type(e).__name__}")
 
 if __name__ == '__main__':
     main()
