@@ -48,7 +48,9 @@ class BasePluginTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
+        print("-" * 40)
         print(f"Starting {cls.__name__}")
         print(f"{cls.__name__} Install Dir: {cls.install_dir}")
         cls.validate_install_dir()
         cls.validate_deploy_dir()
+        print("-" * 40)

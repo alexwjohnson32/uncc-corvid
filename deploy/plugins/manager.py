@@ -1,17 +1,12 @@
 import importlib
 import pkgutil
 import inspect
-import interface
+from . import interface
 import pathlib
-import typing
 
 class PluginManager:
-    def _check_plugin_name(self, plugin_name: str) -> None:
-        if not plugin_name in self.plugins:
-            raise ValueError(f"Plugin Name '{plugin_name}' not recognized!")
-
     def __init__(self, plugin_directory: pathlib.Path):
-        self.plugins = dict[str, interface.IDeployable]()
+        self._plugins = dict[str, interface.IDeployable]()
 
         if not plugin_directory.exists():
             raise ValueError(f"Plugin Directory does not exist: {plugin_directory}")
@@ -29,23 +24,14 @@ class PluginManager:
                     and obj != interface.IDeployable
                 ):
                     # Set the plugins dict to the name and instance
-                    self.plugins[obj().get_name()] = obj()
+                    self._plugins[obj().get_name()] = obj()
+
+
+    def get(self, name: str) -> interface.IDeployable | None:
+        if name in self._plugins:
+            return self._plugins[name]
+        else:
+            return None
 
     def get_plugin_names(self) -> list[str]:
-        return list(self.plugins.keys())
-
-    def get_exec_info(self, plugin_name: str, model_name: str, deploy_root: pathlib.Path) -> typing.Dict[str, typing.Any]:
-        self._check_plugin_name(plugin_name)
-        return self.plugins[plugin_name].get_exec_json(model_name, str(deploy_root))
-
-    def get_model_files(self, plugin_name: str, model_name: str, deploy_root: pathlib.Path) -> list[str]:
-        self._check_plugin_name(plugin_name)
-        return self.plugins[plugin_name].get_model_files(model_name, str(deploy_root))
-
-    def get_baseline_files(self, plugin_name: str, install_root: pathlib.Path) -> list[str]:
-        self._check_plugin_name(plugin_name)
-        return self.plugins[plugin_name].get_baseline_files(str(install_root))
-
-    def deploy(self, plugin_name: str, json_config: dict, deploy_root: pathlib.Path, install_root: pathlib.Path) -> None:
-        self._check_plugin_name(plugin_name)
-        return self.plugins[plugin_name].deploy(json_config, str(deploy_root), str(install_root))
+        return list(self._plugins.keys())
