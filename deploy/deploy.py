@@ -9,7 +9,7 @@ def main():
     subparsers = top_parser.add_subparsers(dest="command", help="The Deploy Tool Commands")
 
     # list-names command
-    list_names_parser = subparsers.add_parser("list-names", help="List the names of the found IDeployable Plugins")
+    subparsers.add_parser("list-names", help="List the names of the found IDeployable Plugins")
 
     args = top_parser.parse_args()
 
@@ -19,7 +19,7 @@ def main():
         plugin_manager = manager.PluginManager(plugins_dir)
 
         if args.command == "list-names":
-            commands.list_names.get_plugin_names(plugin_manager)
+            commands.list_names.print_plugin_names(plugin_manager)
     except ValueError as e:
         print(str(e))
     except Exception as e:
