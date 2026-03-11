@@ -1,0 +1,9 @@
+// Examples:1a.glm
+module residential;
+module tape;
+object house {
+  object recorder {
+    property air_temperature;
+    file "temperature.csv";
+  };
+}

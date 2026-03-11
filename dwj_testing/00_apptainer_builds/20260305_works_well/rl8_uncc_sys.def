@@ -1,0 +1,136 @@
+Bootstrap: docker
+From: rockylinux:8
+
+%environment
+    export BASE_DIR=/usr/local
+    export MPI_HOME=$BASE_DIR/openmpi-4.1.6
+    export BOOST_ROOT=$BASE_DIR/boost-1.78.0
+    export PETSC_DIR=$BASE_DIR/petsc-3.16.4
+    export GA_DIR=$BASE_DIR/ga-5.8
+    # Put custom MPI first to ensure it's the one used
+    export PATH=$MPI_HOME/bin:/usr/local/bin:/usr/bin:/bin
+    export LD_LIBRARY_PATH=$MPI_HOME/lib:$PETSC_DIR/lib:$BOOST_ROOT/lib:$GA_DIR/lib:$LD_LIBRARY_PATH
+
+%post
+    export BASE_DIR=/usr/local
+
+    echo "Installing base packages..."
+
+    # Install plugins core
+    dnf install -y dnf-plugins-core
+
+    # Install EPEL
+    dnf install -y epel-release
+
+    # Enabling PowerTools
+    dnf config-manager --set-enabled powertools
+
+    # Update metadata
+    dnf makecache --refresh
+
+    # Install build tools
+    dnf groupinstall -y "Development Tools"
+
+    # Install additional packages
+    dnf install -y \
+	wget \
+    vim \
+    which \
+    cmake \
+    zeromq \
+    zeromq-devel \
+    boost-devel \
+    swig \
+	python3.11 \
+	python3.11-devel \
+	python3.11-pip \
+    pkgconf-pkg-config \
+	pkg-config \
+    libaec-devel \
+    gtest \
+    gtest-devel \
+    libevent-devel \
+    hwloc-devel
+    #openmpi \
+	#openmpi-devel \
+
+    dnf install -y gcc gcc-c++ make automake autoconf libtool
+
+    cd ~
+    mkdir -p develop
+
+    #----------
+    # 2. Build OpenMPI 4.1.6
+    cd ~/develop
+    wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.6.tar.gz
+    tar -xvf openmpi-4.1.6.tar.gz 
+    cd openmpi-4.1.6
+    ./configure --prefix=$BASE_DIR/openmpi-4.1.6
+    make install
+    
+    export MPI_HOME=$BASE_DIR/openmpi-4.1.6
+    export PATH=$MPI_HOME/bin:$PATH
+    export LD_LIBRARY_PATH=$MPI_HOME/lib:$LD_LIBRARY_PATH
+
+    #--------------
+    # 2.5. MISC
+    #infiniband
+    dnf install libibverbs libibverbs-utils rdma-core librdmacm librdmacm-utils -y ##install IB support  
+
+
+    # Set up symlinks to make python3 and pip3 point to Python 3.11
+    ln -sf /usr/bin/python3.11 /usr/bin/python3
+    ln -sf /usr/bin/pip3.11 /usr/bin/pip3
+    ln -sf /usr/bin/pip3.11 /usr/bin/pip
+
+    #-----
+    # Install Boost 1.78.0 manually
+    # 3. Build Boost 1.78.0 (with MPI support)
+    cd ~/develop
+    wget https://archives.boost.io/release/1.78.0/source/boost_1_78_0.tar.gz
+    tar -xzf boost_1_78_0.tar.gz
+    cd boost_1_78_0
+    echo "using mpi : $MPI_HOME/bin/mpicxx ;" > user-config.jam
+    ./bootstrap.sh --prefix=$BASE_DIR/boost-1.78.0 --with-libraries=mpi,serialization,system,filesystem,random,json
+    ./b2 --user-config=user-config.jam install
+
+    #------
+    # GridPACK dependency: GA-5.8
+    cd ~/develop
+    wget https://github.com/GlobalArrays/ga/releases/download/v5.8/ga-5.8.tar.gz
+    tar -xzf ga-5.8.tar.gz && cd ga-5.8
+    ./configure --with-mpi-ts --enable-cxx --enable-i4 --without-blas --disable-f77 --prefix=$BASE_DIR/ga-5.8
+    make -j10 install
+
+
+    #------
+    # GridPACK dependency: PETSc-3.16.4
+    cd ~/develop
+
+    # 6. Build PETSc 3.16.4 (Configured for GridPACK)
+    git clone -b release https://gitlab.com/petsc/petsc.git petsc-src
+    cd petsc-src && git checkout v3.16.4
+    python3 ./configure --prefix=$BASE_DIR/petsc-3.16.4 \
+        --with-debugging=0 --with-shared-libraries=1 \
+        --with-cc=mpicc --with-cxx=mpicxx --with-fc=0 \
+        --download-superlu_dist --download-f2cblaslapack \
+        --download-metis --download-parmetis --download-suitesparse --download-cmake
+    make all && make -j10 install
+
+    #-----MISC
+    export OMPI_ALLOW_RUN_AS_ROOT=1
+    export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+
+    export PETSC_DIR=/usr/local/petsc-3.16.4
+    export LD_LIBRARY_PATH=/usr/local/petsc-3.16.4/lib
+
+    /sbin/ldconfig
+
+%labels
+    Author Alex Johnson
+    Version 1.0
+    Description Rocky Linux 8 Base Image
+
+%runscript
+    echo "Welcome to your Rocky Linux 8 container"
+    exec /bin/bash

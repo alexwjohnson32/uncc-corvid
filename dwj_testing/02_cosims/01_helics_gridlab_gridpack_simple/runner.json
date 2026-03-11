@@ -1,0 +1,16 @@
+{
+  "name": "uncc_simple_cosim",
+  "broker": false,
+  "federates": [
+    {
+      "name": "gridlabd",
+      "directory": ".",
+      "exec": "gridlabd gld_model.glm"
+    },
+    {
+      "name": "gridpack_fed",
+      "directory": ".",
+      "exec": "./build/gpk_fed"
+    }
+  ]
+}

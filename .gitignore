@@ -1,3 +1,7 @@
+#old examples
+examples/
+scripts/
+
 # Docker and Apptainer
 *.sif
 

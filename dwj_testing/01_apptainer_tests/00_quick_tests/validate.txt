@@ -1,0 +1,37 @@
+VALIDATION TEST REPORT
+GridLAB-D 5.3.0-20095 (1b2e463d:heads/v5.3.0)
+
+TEST CONFIGURATION
+	Date	2026-02-27 14:02:01 -0500
+	User	djacobson
+	Host	dev-el8.corvidtec.com
+	Platform	64-bit LINUX RELEASE
+	Workdir	/beegfs/users/djacobson/programs/uncc_electric/installs/20251014_uncc_corvid/20260212_build_and_run/03_misc/00_aa_instant_verification
+	Arguments	 --redirect all
+	Clean	FALSE
+	Threads	1
+	Options	TSTD|RALL
+	Mailto	(NA)
+
+DIRECTORY SCAN RESULTS
+
+FILE TEST RESULTS
+
+OVERALL RESULTS
+	Directory results
+		Scanned	1
+		Denied	0
+		Tested	0
+		Failed	0
+	File results
+		Tested	0
+		Passed	0
+		Failed	0
+	Unexpected results
+		Successes	0
+		Errors	0
+		Exceptions	0
+	Runtime	0.3 s
+	Result code	0
+
+END TEST REPORT

@@ -1,0 +1,85 @@
+Bootstrap: localimage
+From: rl8_uncc_sys.sif
+
+%environment
+    export LD_LIBRARY_PATH=/usr/local/helics/lib64/:$LD_LIBRARY_PATH
+    export VIRTUAL_ENV=/opt/myenv
+    export PATH=/opt/myenv/bin:/usr/local/helics/bin:/usr/local/openmpi-4.1.6/bin:/opt/rh/gcc-toolset-11/root/usr/bin:$PATH
+    export PYHELICS_INSTALL=/usr/local/helics
+    export LD_LIBRARY_PATH=/usr/local/helics/lib64:/usr/local/helics/bin:/usr/llocal/openmpi-4.1.6/lib:/opt/rh/gcc-toolset-11/root/usr/lib64:/opt/rh/gcc-toolset-11/root/usr/lib:$LD_LIBRARY_PATH
+
+%post
+    dnf install -y libatomic emacs
+    dnf install -y gcc-toolset-11 \
+    	python3.11 \
+    	python3.11-devel \
+	    python3.11-pip 
+    source /opt/rh/gcc-toolset-11/enable
+        # Set up symlinks to make python3 and pip3 point to Python 3.11
+    ln -sf /usr/bin/python3.11 /usr/bin/python3
+    ln -sf /usr/bin/pip3.11 /usr/bin/pip3
+    ln -sf /usr/bin/pip3.11 /usr/bin/pip
+    
+    # 2. Set MPI paths for the build session
+    export MPI_HOME=/usr/local/openmpi-4.1.6
+    export PATH=$MPI_HOME/bin:$PATH
+    export LD_LIBRARY_PATH=$MPI_HOME/lib:$LD_LIBRARY_PATH
+    export PYHELICS_INSTALL=/usr/local/helics
+
+    # Download, build and install HELICS
+    cd ~/develop
+    rm -rf helics
+    git clone --recurse-submodules https://github.com/GMLC-TDC/HELICS.git helics
+    cd helics
+    git checkout -b v3.6.1 tags/v3.6.1
+
+    echo $CC
+    echo $CXX
+    export CC=/usr/local/openmpi-4.1.6/bin/mpicc
+    export CXX=/usr/local/openmpi-4.1.6/bin/mpicxx
+    echo $CC
+    echo $CXX
+
+    rm -rf build
+    ls
+    mkdir build 
+    cd build
+    cmake .. \
+    -DCMAKE_INSTALL_PREFIX=/usr/local/helics \
+    -DCMAKE_C_COMPILER=$MPI_HOME/bin/mpicc \
+    -DCMAKE_CXX_COMPILER=$MPI_HOME/bin/mpicxx \
+    -DBOOST_ROOT=/usr/local/boost-1.78.0 \
+	-DCMAKE_BUILD_TYPE=Release \
+    -DHELICS_BUILD_CXX_SHARED_LIB=ON \
+    -DHELICS_ENABLE_MPI_CORE=ON \
+    -DHELICS_BUILD_APPS=ON \
+        -DHELICS_BUILD_APP_LIBRARY=ON
+    #-B build
+    #cmake --build .. -j12 -t install
+    make -j 12
+    make install
+
+    # 5. Finalize Shared Libraries
+    echo "/usr/local/helics/lib64" > /etc/ld.so.conf.d/helics.conf
+    echo "/usr/local/helics/lib" >> /etc/ld.so.conf.d/helics.conf
+    /sbin/ldconfig
+
+    # 6. Set up Python environment
+    python3.11 -m venv /opt/myenv
+    
+    #export PYHELICS_INSTALL=/usr/local/helics/
+    #python3.11 -m pip install 'helics[cli]'
+
+    export LD_LIBRARY_PATH=/usr/local/helics/lib64:$LD_LIBRARY_PATH
+    /opt/myenv/bin/pip install --upgrade pip
+    /opt/myenv/bin/pip install helics[cli]
+
+
+%labels
+    Author Alex Johnson
+    Version 1.0
+    Description Rocky Linux 8 Base Image
+
+%runscript
+    echo "Welcome to your Rocky Linux 8 container"
+    exec /bin/bash

@@ -1,0 +1,12 @@
+00_quick tests
+    -> useful for evaluating the apptainer during the build phase
+01_helics_test
+    -> isolated helics tests, runs locally
+02_gridlab_test
+    -> isolated gridlab test, runs locally
+03_gridpack_test
+    -> isolated gridpack test, runs locally, DOESN'T WORK / DEPENDENCY PROBLEM
+    
+NOTE: 00_quick_tests are the most valuable / bang for your buck
+NOTE: all tests require passing the sif file to the run script
+NOTE: probably want to add tests for petsc, mpi, other dependencies that are built from source

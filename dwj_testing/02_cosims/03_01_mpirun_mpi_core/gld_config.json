@@ -1,0 +1,22 @@
+{
+  "name": "gridlabd",
+  "coreType": "mpi",
+  "period": 1.0,
+  "offset": 0.0,
+  "timeDelta": 1.0,
+  "publications": [
+    {
+      "global": true,
+      "key": "gridlabd/total_load",
+      "type": "complex",
+      "info": { "object": "my_load", "property": "constant_power_A" }
+    }
+  ],
+  "subscriptions": [
+    {
+      "key": "gridpack/bus_voltage",
+      "type": "double",
+      "info": { "object": "my_load", "property": "nominal_voltage" }
+    }
+  ]
+}

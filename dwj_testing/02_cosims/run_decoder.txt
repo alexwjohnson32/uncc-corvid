@@ -1,0 +1,17 @@
+00_helics_run_python: 
+    - DESCRIPTION: Game of life sim using helics
+    - HOW TO RUN: sbatch submit.slurm.sh [PATH/TO/SIF/FILE.SIF]
+    - BEHAVIOR: Utilizes
+01_...:
+    - DESCRIPTION: Basic helics, gridlab, gridpack cosim with two way communication
+    - HOW TO RUN: ./run_local.sh path_to_your_sif_file.sif
+    - BEHAVIOR: as expected
+02...:
+    - DESCRIPTION: Same sim as number 1, but is run manually rathern than via helicsrun [MPI + ZMQ]
+    - HOW TO RUN: ./run_local.sh path_to_your_sif_file.sif
+    - BEHAVIOR: as expected, this might be a slow scalable solution (zmq on hpc can have significant overhead)
+    - NOTE: you need to recompile gpk_fed.cpp (./build.sh path_to_your_sif_file.sif) every time you change it
+03...:
+    - DESCRIPTION: Same sim as number 1, but is run manually rathern than via helics run [ALL MPI, NO ZMQ]
+    - HOW TO RUN: ./run_local.sh path_to_your_sif_file.sif
+    - BEHAVIOR: hangs or crashes, multiple variations have been tried.

@@ -11,13 +11,15 @@ From: rl8_uncc_sys.sif
     cd helics
     git checkout -b v3.6.1 tags/v3.6.1
 
-    cmake -DCMAKE_INSTALL_PREFIX=/usr/local/helics \
+    cmake \
+    -DCMAKE_INSTALL_PREFIX=/usr/local/helics \
 	-DCMAKE_C_COMPILER=$CC \
-      	-DCMAKE_CXX_COMPILER=$CXX \
-        -DBOOST_ROOT=/usr/local/boost-1.78.0 \
+    -DCMAKE_CXX_COMPILER=$CXX \
+    -DBOOST_ROOT=/usr/local/boost-1.78.0 \
 	-DCMAKE_BUILD_TYPE=Release \
-        -DHELICS_BUILD_CXX_SHARED_LIB=ON \
-        -B build
+    -DHELICS_BUILD_CXX_SHARED_LIB=ON \
+    -DHELICS_ENABLE_MPI_CORE=ON \
+    -B build
     cmake --build build -j12 -t install
 
     # Creating venv

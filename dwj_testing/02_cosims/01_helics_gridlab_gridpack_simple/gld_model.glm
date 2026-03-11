@@ -1,0 +1,36 @@
+module powerflow;
+module connection;
+module tape;
+
+clock {
+     starttime '2026-03-09 08:00:00';
+     stoptime '2026-03-09 08:01:00';
+}
+
+// 1. Define the Load first
+object load {
+    name my_load;
+    phases "ABCN";
+    nominal_voltage 7200;
+}
+
+// 2. Define the Player to drive that specific load
+object player {
+    parent my_load;
+    property constant_power_A;
+    file "load_schedule.player";
+}
+
+// 3. Define the HELICS connection
+object helics_msg {
+     name gld_hlc_conn;
+     configure "gld_config.json";
+}
+
+// 4. Define the Recorder
+object recorder {
+    parent my_load;
+    property nominal_voltage,constant_power_A;
+    interval 1;
+    file "voltages_output.csv";
+}
