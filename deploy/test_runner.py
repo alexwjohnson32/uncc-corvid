@@ -43,6 +43,9 @@ def main():
         suite = loader.discover(start_dir=args.discover_dir, pattern=args.pattern)
 
         # 3. Run the Suite
+        print("-" * 40)
+        print("Starting Test Runner")
+        print("-" * 40)
         print(f"Discovering tests in: {pathlib.Path(args.discover_dir).resolve()}")
         print("-" * 40)
 
