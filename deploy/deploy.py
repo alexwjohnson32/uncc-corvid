@@ -4,6 +4,10 @@ import commands.list_names
 import pathlib
 import plugins.manager as manager
 
+def print_plugin_names(plugin_manager: manager.PluginManager) -> None:
+    print("IDeployable Plugin Names:")
+    print(commands.list_names.get_plugin_names(plugin_manager))
+
 def main():
     top_parser = argparse.ArgumentParser("UNCC Deploy Tool for initializing runnable cosimulation models")
     subparsers = top_parser.add_subparsers(dest="command", help="The Deploy Tool Commands")
@@ -19,7 +23,7 @@ def main():
         plugin_manager = manager.PluginManager(plugins_dir)
 
         if args.command == "list-names":
-            commands.list_names.print_plugin_names(plugin_manager)
+            print_plugin_names(plugin_manager)
     except ValueError as e:
         print(str(e))
     except Exception as e:

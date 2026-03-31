@@ -1,6 +1,9 @@
 import plugins.manager
 
-def print_plugin_names(manager: plugins.manager.PluginManager) -> None:
-    print("Printing IDeployable Plugin Name:")
-    for name in manager.get_plugin_names():
-        print(f"\t{name}")
+def get_plugin_names(manager: plugins.manager.PluginManager) -> str:
+    names = manager.get_plugin_names()
+    if not names:
+        return ""
+    else:
+        # We need to tab the first object as well
+        return "\t" + "\n\t".join(manager.get_plugin_names())
