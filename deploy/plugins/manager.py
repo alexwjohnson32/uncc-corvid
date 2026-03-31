@@ -51,6 +51,9 @@ class PluginManager:
         if parent_dir not in sys.path:
             sys.path.insert(0, parent_dir)
 
+        if not self._plugins:
+            raise ValueError(f"Plugin directory contains no plugins: {plugin_directory}")
+
         try:
             # rglob("*.py") handles the recursion automatically
             for file_path in plugin_root.rglob("*.py"):
