@@ -20,7 +20,7 @@ class IDeployable(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_exec_json(self, model_name: str, deploy_root: str) -> typing.Dict[str, typing.Any]:
+    def get_exec_json(self, model_name: str, deploy_root: str) -> typing.Dict[str, str]:
         """Returns a JSON object that represents a valid HELICS Runner file federate object.
         Should contain the fields directory, exec, host, name."""
         pass
