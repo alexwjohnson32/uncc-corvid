@@ -19,7 +19,7 @@ def get_federate_definition(manager: plugins.manager.PluginManager, model_name: 
             output = f"Could not find '{model_name}' with given plugin '{plugin_name}' with deploy root '{str(deploy_root)}'!"
             output = f"{output}\nThe model name '{model_name}' may still exist within this deploy root with a different plugin."
         else:
-            output = output = f"Could not find '{model_name}' within deploy root '{str(deploy_root)}'!"
+            output = f"Could not find '{model_name}' within deploy root '{str(deploy_root)}'!"
         return output
 
 def _get_json_dict(manager: plugins.manager.PluginManager, model_name: str, deploy_root: pathlib.Path, plugin_name: str = "") -> dict[str, str]:
