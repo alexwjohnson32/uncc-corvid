@@ -28,7 +28,7 @@ def main():
         elif args.command == "list-source-files":
             _print_list_source_files(plugin_manager, args.plugin_name, pathlib.Path(args.install_dir))
         elif args.command == "list-model-files":
-            _print_list_model_files(plugin_manager, args.model_name, pathlib.Path(args.deploy_dir), args.model_name)
+            _print_list_model_files(plugin_manager, args.model_name, pathlib.Path(args.deploy_dir), args.plugin_name)
         else:
             print(f"Unrecognized Command '{args.command}', terminating.")
 
