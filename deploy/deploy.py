@@ -26,11 +26,7 @@ def main():
         else:
             print(f"Unrecognized Command '{args.command}', terminating.")
 
-    except ValueError as e:
-        print(str(e))
-    except RuntimeError as e:
-        print(str(e))
-    except KeyError as e:
+    except (ValueError, RuntimeError, KeyError) as e:
         print(str(e))
     except Exception as e:
         print(f"An unexpected error occurred: {e}")

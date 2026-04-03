@@ -16,13 +16,16 @@ class MockPluginA(plugins.interface.IDeployable):
     def get_model_files(self, model_name: str, deploy_root: str) -> list[str]:
         return [str(pathlib.Path(deploy_root, model_name))]
 
-    def get_exec_json(self, model_name: str, deploy_root: str) -> typing.Dict[str, typing.Any]:
-        return {
-            "directory": ".",
-            "exec": "./mock_plugin_a",
-            "host": "localhost",
-            "name": "mock_plugin_a"
-        }
+    def get_exec_json(self, model_name: str, deploy_root: str) -> typing.Dict[str, str]:
+        if model_name == "model_plugin_a":
+            return {
+                "directory": ".",
+                "exec": "./mock_plugin_a",
+                "host": "localhost",
+                "name": "mock_plugin_a"
+            }
+        else:
+            return dict[str, str]()
 
     def get_name(self) -> str:
         return "mock_plugin_a/interface"
@@ -37,13 +40,16 @@ class MockPluginB(plugins.interface.IDeployable):
     def get_model_files(self, model_name: str, deploy_root: str) -> list[str]:
         return [str(pathlib.Path(deploy_root, model_name))]
 
-    def get_exec_json(self, model_name: str, deploy_root: str) -> typing.Dict[str, typing.Any]:
-        return {
-            "directory": ".",
-            "exec": "./mock_plugin_b",
-            "host": "localhost",
-            "name": "mock_plugin_b"
-        }
+    def get_exec_json(self, model_name: str, deploy_root: str) -> typing.Dict[str, str]:
+        if model_name == "model_plugin_b":
+            return {
+                "directory": ".",
+                "exec": "./mock_plugin_b",
+                "host": "localhost",
+                "name": "mock_plugin_b"
+            }
+        else:
+            return dict[str, str]()
 
     def get_name(self) -> str:
         return "mock_plugin_b/interface"
