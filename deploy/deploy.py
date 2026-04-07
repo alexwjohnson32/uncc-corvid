@@ -2,6 +2,8 @@ import argparse
 
 import commands.list_names
 import commands.get_federate_definition
+import commands.list_source_files
+import commands.list_model_files
 import pathlib
 import plugins.manager as manager
 
@@ -64,7 +66,7 @@ def _setup_list_source_files_parser(subparser: argparse._SubParsersAction) -> No
 
 def _print_list_source_files(plugin_manager: manager.PluginManager, plugin_name: str, install_dir: pathlib.Path) -> None:
     print(f"Source Files for {plugin_name}")
-    print(f"list-source-files command, plugin-name: {plugin_name}, install-dir: {str(install_dir)}")
+    print(commands.list_source_files.get_source_files(plugin_manager, plugin_name, install_dir))
 
 def _setup_list_model_files_parser(subparser: argparse._SubParsersAction) -> None:
     list_model_files_parser = subparser.add_parser("list-model-files", help="Attempts to list the given model files for a plugin and model name "
@@ -76,8 +78,7 @@ def _setup_list_model_files_parser(subparser: argparse._SubParsersAction) -> Non
 
 def _print_list_model_files(plugin_manager: manager.PluginManager, model_name: str, deploy_dir: pathlib.Path, plugin_name: str) -> None:
     print(f"Model Files for {model_name}")
-    print(f"list-model-files command, plugin_name: {plugin_name}, deploy_dir: {str(deploy_dir)}, model_name: {model_name}")
-
+    print(commands.list_model_files.get_model_files(plugin_manager, model_name, deploy_dir, plugin_name))
 
 if __name__ == '__main__':
     main()
