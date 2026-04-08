@@ -16,6 +16,7 @@ class PluginManager:
         try:
             # Create a full dotted module name
             module_name = self._get_module_name(file_path, plugin_root)
+            # print(f"\nPluginManager->_attempt_store->module_name: {module_name}")
 
             # Import the module
             # Using import_module ensures __package__ and parent hierarchy
@@ -41,6 +42,7 @@ class PluginManager:
         self._plugins = dict[str, interface.IDeployable]()
 
         plugin_root = plugin_directory.resolve()
+        # print(f"\nPluginManager->__init__->plugin_root: {plugin_root}")
         if not plugin_root.exists():
             raise ValueError(f"Plugin Directory does not exist: {plugin_root}")
         elif not plugin_root.is_dir():
@@ -48,11 +50,10 @@ class PluginManager:
 
         # The parent directory must be in sys.path for dotted imports to work
         parent_dir = str(plugin_root.parent)
+        # print(f"\nPluginManager->__init__->parent_dir: {parent_dir}")
         if parent_dir not in sys.path:
             sys.path.insert(0, parent_dir)
-
-        if not self._plugins:
-            raise ValueError(f"Plugin directory contains no plugins: {plugin_directory}")
+        # print(f"\nPluginManager->__init__->sys.path: {sys.path}")
 
         try:
             # rglob("*.py") handles the recursion automatically
@@ -66,12 +67,20 @@ class PluginManager:
             # Clean up sys.path
             if parent_dir in sys.path:
                 sys.path.remove(parent_dir)
+            # print(f"\nPluginManager->__init__->sys.path: {sys.path}")
 
     def get(self, name: str) -> interface.IDeployable | None:
+        # print(f"\nplugin_manager->get({name})")
+        keys_string = ', '.join(str(key) for key in self._plugins)
+        # print(f"\nplugin_manager->_plugin->get_keys(): '{keys_string}'")
         if name in self._plugins:
+            # print(f"\nplugin_manager->get({name}): Key Found!")
             return self._plugins[name]
         else:
+            # print(f"\nplugin_manager->get({name}): Key Not Found!")
             return None
 
     def get_plugin_names(self) -> list[str]:
-        return list(self._plugins.keys())
+        keys_list = list(self._plugins.keys())
+        # print(f"\nplugin_manager->get_plugin_names() keys: '{keys_list}'")
+        return keys_list

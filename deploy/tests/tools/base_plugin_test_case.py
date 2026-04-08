@@ -34,23 +34,23 @@ class BasePluginTestCase(unittest.TestCase):
     @classmethod
     def validate_install_dir(cls) -> None:
         install_path = cls._get_install_path()
-        print(f"Install Dir: {install_path}")
+        # print(f"Install Dir: {install_path}")
         if not install_path.exists():
             raise cls.failureException(f"Install Dir does not exist: {install_path}")
 
     @classmethod
     def validate_deploy_dir(cls) -> None:
         deploy_path = cls._get_safe_deployed_path()
-        print(f"Deploy Dir: {deploy_path}")
+        # print(f"Deploy Dir: {deploy_path}")
 
         deploy_path.mkdir(parents=True, exist_ok=True)
         cls._init_deployed_files(deploy_path)
 
     @classmethod
     def setUpClass(cls) -> None:
-        print("-" * 40)
-        print(f"Starting {cls.__name__}")
-        print(f"{cls.__name__} Install Dir: {cls.install_dir}")
+        # print("-" * 40)
+        # print(f"Starting {cls.__name__}")
+        # print(f"{cls.__name__} Install Dir: {cls.install_dir}")
         cls.validate_install_dir()
         cls.validate_deploy_dir()
-        print("-" * 40)
+        # print("-" * 40)
