@@ -11,10 +11,16 @@ class MockPluginA(plugins.interface.IDeployable):
         pass
 
     def get_baseline_files(self, install_root: str) -> list[str]:
-        return [str(pathlib.Path(install_root, "mock_plugin_a"))]
+        return [str(pathlib.Path(install_root, "mock_plugin_a")), str(pathlib.Path(install_root, "file_2"))]
 
     def get_model_files(self, model_name: str, deploy_root: str) -> list[str]:
-        return [str(pathlib.Path(deploy_root, model_name))]
+        if model_name == "model_plugin_a":
+            return [
+                str(pathlib.Path(deploy_root, model_name)),
+                str(pathlib.Path(deploy_root, "model_file_2"))
+            ]
+        else:
+            return list[str]()
 
     def get_exec_json(self, model_name: str, deploy_root: str) -> typing.Dict[str, str]:
         if model_name == "model_plugin_a":
@@ -38,7 +44,10 @@ class MockPluginB(plugins.interface.IDeployable):
         return [str(pathlib.Path(install_root, "mock_plugin_b"))]
 
     def get_model_files(self, model_name: str, deploy_root: str) -> list[str]:
-        return [str(pathlib.Path(deploy_root, model_name))]
+        if model_name == "model_plugin_b":
+            return [str(pathlib.Path(deploy_root, model_name))]
+        else:
+            return list[str]()
 
     def get_exec_json(self, model_name: str, deploy_root: str) -> typing.Dict[str, str]:
         if model_name == "model_plugin_b":
