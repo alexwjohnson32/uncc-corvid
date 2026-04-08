@@ -6,4 +6,4 @@ def get_plugin_names(manager: plugins.manager.PluginManager) -> str:
         return ""
     else:
         # We need to tab the first object as well
-        return "\t" + "\n\t".join(manager.get_plugin_names())
+        return "\t" + "\n\t".join(names)

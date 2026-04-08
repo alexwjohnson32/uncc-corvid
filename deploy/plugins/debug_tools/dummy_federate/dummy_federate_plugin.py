@@ -108,7 +108,7 @@ class DummyFederatePlugin(interface.IDeployable):
         else:
             return list[str]()
 
-    def get_exec_json(self, model_name: str, deploy_root: str) -> typing.Dict[str, typing.Any]:
+    def get_exec_json(self, model_name: str, deploy_root: str) -> typing.Dict[str, str]:
         relative_working_directory = self._get_specific_path() / model_name
         absolute_working_directory = pathlib.Path(deploy_root) / relative_working_directory
 
