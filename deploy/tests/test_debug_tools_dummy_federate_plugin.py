@@ -49,6 +49,7 @@ class TestDummyFederatePlugin(base_test.BasePluginTestCase):
 
         backing_values = get_default_values()
         data = plugin.InputData(backing_values)
+        total_time_seconds = backing_values["total_time"]
 
         # Check that backing values is unchanged
         self.assertDictEqual(expected_values, backing_values, "Expected first, then Actual.")
@@ -56,7 +57,7 @@ class TestDummyFederatePlugin(base_test.BasePluginTestCase):
         # Check that the object was initialized
         self.assertEqual(expected_values["name"], data.name)
         self.assertEqual(expected_values["local_log_file"], data.local_log_file)
-        self.assertEqual(expected_values["total_time"], data.total_time)
+        self.assertEqual(expected_values["total_time"], total_time_seconds)
         self.assertEqual(expected_values["core_type"], data.core_type)
         self.assertEqual(expected_values["core_init"], data.core_init)
 
@@ -73,10 +74,14 @@ class TestDummyFederatePlugin(base_test.BasePluginTestCase):
         self.assertIn("Key local_log_file found, but the type is incorrect", str(e.exception))
 
     def test_DummyFederatePlugin_deploy(self):
+        default_data = get_default_values()
+        total_time_seconds = default_data["total_time"]
         dummy_plugin = plugin.DummyFederatePlugin()
-        dummy_plugin.deploy(get_default_values(), str(self.deploy_dir), str(self.install_dir))
+        dummy_plugin.deploy(default_data, total_time_seconds, str(self.deploy_dir), str(self.install_dir))
 
-        expected_values = plugin.InputData(get_default_values())
+        expected_data = get_default_values()
+        expected_total_time_seconds = expected_data["total_time"]
+        expected_values = plugin.InputData(expected_data)
         expected_deployed_path = pathlib.Path(self.deploy_dir) / "debug_tools" / "dummy_federate" / self.get_safe_model_name()
         expected_paths = plugin.InputPaths(
             expected_deployed_path / "dummy_federate",
@@ -93,7 +98,7 @@ class TestDummyFederatePlugin(base_test.BasePluginTestCase):
 
         self.assertEqual(expected_values.name, actual_data["federate_name"])
         self.assertEqual(expected_values.local_log_file, actual_data["local_log_file"])
-        self.assertEqual(expected_values.total_time, actual_data["total_time"])
+        self.assertEqual(expected_total_time_seconds, actual_data["total_time"])
         self.assertEqual(expected_values.core_init, actual_data["fed_info_json"]["coreInit"])
         self.assertEqual(expected_values.core_type, actual_data["fed_info_json"]["coreType"])
 
