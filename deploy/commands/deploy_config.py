@@ -4,6 +4,8 @@ import typing
 
 import plugins.manager
 
+T = typing.TypeVar("T")
+
 def deploy(manager: plugins.manager.PluginManager, install_root: pathlib.Path, deploy_root: pathlib.Path, json_file: pathlib.Path) -> str:
     """:raises: ValueError if any paths do not exist or issues arise related to paths."""
 
@@ -11,7 +13,7 @@ def deploy(manager: plugins.manager.PluginManager, install_root: pathlib.Path, d
 
     json_data = _get_json_data(json_file)
 
-    _iterate_components(json_data, manager, install_root, deploy_root)
+    _deploy_config(json_data, manager, install_root, deploy_root)
     helics_json_file = _write_helics_json(manager, deploy_root)
 
     return f"Successfully deployed and wrote json configuration to '{str(helics_json_file)}'!"
@@ -37,8 +39,84 @@ def _get_json_data(json_file: pathlib.Path) -> dict[str, typing.Any]:
     with open(json_file, "r") as file:
         return json.load(file)
 
+def _deploy_config(json_data: dict[str, typing.Any], manager: plugins.manager.PluginManager, install_root: pathlib.Path, deploy_root: pathlib.Path) -> None:
+    # Validate that a total time has been set
+    total_time_seconds = _validate_key_value(json_data, "total_time_seconds", float)
+
+    # Validate that a components key has been set
+    components = _validate_key_value(json_data, "components", list[dict[str, typing.Any]])
+
+    # Validate that a cosim name has been set
+    cosim_name = _validate_key_value(json_data, "cosim_name", str)
+
+    # Append cosim name to deploy root
+    deploy_root = deploy_root / cosim_name
+    deploy_root.mkdir(exist_ok=True)
+
+    try:
+        # Iterate over the components
+        for component in components:
+            component["total_time_seconds"] = total_time_seconds
+            _iterate_components(component, manager, install_root, deploy_root)
+    finally:
+        # write cosim json file to deploy root
+        with open(deploy_root / "cosim_def.json", "w") as json_file:
+            json.dump(json_data, json_file, indent=4)
+
 def _iterate_components(json_data: dict[str, typing.Any], manager: plugins.manager.PluginManager, install_root: pathlib.Path, deploy_root: pathlib.Path) -> None:
-    pass
+    # If no type key is found within the component, assume it is a sub-component
+    # If the type is not recognized in the plugin names, assume it is a sub-component
+    plugin_name = _validate_key_value(json_data, "type", str, raise_error=False)
+    plugin = manager.get(plugin_name)
+
+    if plugin:
+        plugin_options = _validate_key_value(json_data, "options", dict[str, typing.Any], raise_error=False)
+        plugin_options["total_time_seconds"] = json_data["total_time_seconds"]
+        plugin.deploy(plugin_options, str(deploy_root), str(install_root))
+
+    components = _validate_key_value(json_data, "components", list[dict[str, typing.Any]], raise_error=False)
+    for component in components:
+        component["total_time_seconds"] = json_data["total_time_seconds"]
+        _iterate_components(component, manager, install_root, deploy_root)
 
 def _write_helics_json(manager: plugins.manager.PluginManager, deploy_root: pathlib.Path) -> pathlib.Path:
     return pathlib.Path("")
+
+def _validate_key_value(json_dict: dict[str, typing.Any], key: str, expected_type: typing.Type[T], raise_error: bool = True) -> T:
+    value = expected_type()
+
+    # Check for raise error within the blocks to keep from attempting to access the key in the final
+    # if statement for when raise_error is false
+    if not key in json_dict:
+        if raise_error:
+            raise ValueError(f"Key '{key}' not found!")
+    elif not isinstance(json_dict[key], expected_type):
+        if raise_error:
+            raise ValueError(f"Key {key} found, but the type is incorrect. Expected '{expected_type.__name__}', Actual: '{type(json_dict[key]).__name__}'")
+    else:
+        value = json_dict[key]
+
+    return value
+
+class _HelicsConfig:
+    def _validate_key_value(self, json_dict: dict[str, typing.Any], key: str, expected_type: typing.Type[T]) -> T:
+        value = expected_type()
+
+        if not key in json_dict:
+            raise ValueError(f"Key '{key}' not found!")
+        elif not isinstance(json_dict[key], expected_type):
+            raise ValueError(f"Key {key} found, but the type is incorrect. Expected '{expected_type.__name__}', Actual: '{type(json_dict[key]).__name__}'")
+        else:
+            value = json_dict[key]
+
+        return value
+
+    def __init__(self, json_config: dict[str, typing.Any]):
+        self.cosim_name: str = ""
+        self.total_time_seconds: float = 0.0
+        self.components: dict[str, typing.Any] = dict()
+
+        self.cosim_name = self._validate_key_value(json_config, "cosim_name", str)
+        self.total_time_seconds = self._validate_key_value(json_config, "total_time_seconds", float)
+        self.components = self._validate_key_value(json_config, "components", dict[str, typing.Any])
+
