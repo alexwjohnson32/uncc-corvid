@@ -155,3 +155,20 @@ class TestDummyFederatePlugin(base_test.BasePluginTestCase):
     def test_DummyFederatePlugin_get_name(self):
         dummy_plugin = plugin.DummyFederatePlugin()
         self.assertEqual("debug_tools/dummy_federate", dummy_plugin.get_name())
+
+    def test_DummyFederatePlugin_list_model_names_fake_path(self):
+        dummy_plugin = plugin.DummyFederatePlugin()
+        actual = dummy_plugin.list_model_names(str(pathlib.Path("fake", "path")))
+        self.assertFalse(actual, "The list should be empty but it is not.")
+
+    def test_DummyFederatePlugin_list_model_names_real_path(self):
+        dummy_plugin = plugin.DummyFederatePlugin()
+
+        actual = dummy_plugin.list_model_names(str(self.deploy_dir))
+        expected = [self.get_safe_model_name()]
+        # To ensure this does not matter when its ran, make sure that we have a check for test_name
+        # only if we have 2 items
+        if len(actual) == 2:
+            expected.append("test_name")
+
+        self.assertCountEqual(expected, actual)

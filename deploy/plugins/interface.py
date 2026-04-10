@@ -30,3 +30,8 @@ class IDeployable(abc.ABC):
         """Returns the name of the Plugin (NOT the model). This is the unique identifier for the plugin.
         Be careful to give a specific enough name to prevent name collisions."""
         pass
+
+    @abc.abstractmethod
+    def list_model_names(self, deploy_root: str) -> list[str]:
+        """Returns a list of the models that belong to this plugin within the given deploy directory."""
+        pass

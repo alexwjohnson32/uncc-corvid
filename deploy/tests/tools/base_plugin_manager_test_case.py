@@ -36,6 +36,9 @@ class MockPluginA(plugins.interface.IDeployable):
     def get_name(self) -> str:
         return "mock_plugin_a/interface"
 
+    def list_model_names(self, deploy_root: str) -> list[str]:
+        return ["model_plugin_a", "model_plugin_a_sub1"]
+
 class MockPluginB(plugins.interface.IDeployable):
     def deploy(self, json_config: dict, deploy_root: str, install_root: str):
         pass
@@ -62,6 +65,9 @@ class MockPluginB(plugins.interface.IDeployable):
 
     def get_name(self) -> str:
         return "mock_plugin_b/interface"
+
+    def list_model_names(self, deploy_root: str) -> list[str]:
+        return ["model_plugin_b"]
 
 class BaseTestPluginManager(unittest.TestCase):
     manager: plugins.manager.PluginManager

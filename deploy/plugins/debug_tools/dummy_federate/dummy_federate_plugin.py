@@ -122,3 +122,14 @@ class DummyFederatePlugin(interface.IDeployable):
     def get_name(self) -> str:
         # Don't return the path, because we want this name to be unchanging independent of filesystem
         return "debug_tools/dummy_federate"
+
+    def list_model_names(self, deploy_root: str) -> list[str]:
+        model_names = list[str]()
+
+        models_root_dir = pathlib.Path(deploy_root) / self._get_specific_path()
+        if models_root_dir.exists():
+            for model_dir in models_root_dir.iterdir():
+                if (model_dir.is_dir()):
+                    model_names.append(model_dir.name)
+
+        return model_names
