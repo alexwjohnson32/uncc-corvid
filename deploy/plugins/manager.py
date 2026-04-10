@@ -65,7 +65,6 @@ class PluginManager:
                 sys.path.remove(parent_dir)
 
     def get(self, name: str) -> interface.IDeployable | None:
-        keys_string = ', '.join(str(key) for key in self._plugins)
         if name in self._plugins:
             return self._plugins[name]
         else:

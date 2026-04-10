@@ -3,7 +3,7 @@ import typing
 
 class IDeployable(abc.ABC):
     @abc.abstractmethod
-    def deploy(self, json_config: dict, deploy_root: str, install_root: str) -> None:
+    def deploy(self, json_config: dict, total_time_seconds: float, deploy_root: str, install_root: str) -> None:
         """Writes the plugin info to the corresponding deploy directory. Throw standard exceptions
         if the deployment cannot be completed."""
         pass
