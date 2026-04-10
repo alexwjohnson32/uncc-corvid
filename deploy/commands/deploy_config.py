@@ -104,18 +104,51 @@ def _get_value_or_default(json_dict: dict[str, typing.Any], key: str, expected_t
     return value
 
 def _write_helics_json(cosim_def_file: pathlib.Path, manager: plugins.manager.PluginManager, deploy_root: pathlib.Path) -> pathlib.Path:
+    # Get cosim name
     cosim_def_data = _get_json_data(cosim_def_file)
-
     cosim_name = cosim_def_data["cosim_name"]
 
+    # Initialize the federates
+    federates = list[dict[str, str]]()
+    models = _get_models(manager, deploy_root)
+    for plugin_name, model_names in models:
+        plugin = manager.get(plugin_name)
+        if not plugin:
+            continue # this should never happen
+
+        for model_name in model_names:
+            federates.append(plugin.get_exec_json(model_name, str(deploy_root)))
+
+    # Setup the broker
+    federate_count = len(models)
+    broker_federate = {
+        "directory": ".",
+        "exec": f"helics-broker --federates={federate_count} --port 23500",
+        "host": "localhost",
+        "name": "main_broker"
+    }
+    federates.insert(0, broker_federate)
+
+    # Setup helics json
     helics_json_data = dict()
     helics_json_data["name"] = cosim_name
+    helics_json_data["federates"] = federates
 
-def _get_models(manager: plugins.manager.PluginManager, json_data: dict[str, typing.Any]) -> dict[str, list[str]]:
+    # Write helics json data to the cosim directory
+    helics_runner_file = cosim_def_file.parent / "helics_runner.json"
+    with open(helics_runner_file, "w") as json_file:
+        json.dump(helics_json_data, json_file, indent=4)
+
+    return helics_runner_file
+
+def _get_models(manager: plugins.manager.PluginManager, deploy_root: pathlib.Path) -> dict[str, list[str]]:
     models = dict[str, list[str]]()
 
-    components = _get_value_or_default(json_data, "components", list[dict[str, typing.Any]])
+    for plugin_name in manager.get_plugin_names():
+        plugin = manager.get(plugin_name)
+        if not plugin:
+            continue
+
+        models[plugin_name] = plugin.list_model_names(str(deploy_root))
 
     return models
-
-def
