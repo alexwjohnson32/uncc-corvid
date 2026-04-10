@@ -4,6 +4,7 @@ import commands.list_names
 import commands.get_federate_definition
 import commands.list_source_files
 import commands.list_model_files
+import commands.list_model_names
 import pathlib
 import plugins.manager as manager
 
@@ -15,6 +16,7 @@ def main():
     _setup_get_exec_parser(subparsers)
     _setup_list_source_files_parser(subparsers)
     _setup_list_model_files_parser(subparsers)
+    _setup_list_model_names_parser(subparsers)
 
     args = top_parser.parse_args()
 
@@ -31,6 +33,8 @@ def main():
             _print_list_source_files(plugin_manager, args.plugin_name, pathlib.Path(args.install_dir))
         elif args.command == "list-model-files":
             _print_list_model_files(plugin_manager, args.model_name, pathlib.Path(args.deploy_dir), args.plugin_name)
+        elif args.command == "list-model-names":
+            _print_list_model_names(plugin_manager, args.deploy_dir, args.plugin_name)
         else:
             print(f"Unrecognized Command '{args.command}', terminating.")
 
@@ -74,11 +78,23 @@ def _setup_list_model_files_parser(subparser: argparse._SubParsersAction) -> Non
 
     list_model_files_parser.add_argument("--model-name", required=True, help="The name of the model to get input files for", type=str)
     list_model_files_parser.add_argument("--deploy-dir", required=True, help="The path to the deploy directory to read from", type=str)
-    list_model_files_parser.add_argument("--plugin-name", required=False, help="The name of the plugin to search from to find the model's input files", type=str)
+    list_model_files_parser.add_argument("--plugin-name", required=False,
+                                         help="(Optional) The name of the plugin to search from to find the model's input files", type=str, default="")
 
 def _print_list_model_files(plugin_manager: manager.PluginManager, model_name: str, deploy_dir: pathlib.Path, plugin_name: str) -> None:
     print(f"Model Files for {model_name}")
     print(commands.list_model_files.get_model_files(plugin_manager, model_name, deploy_dir, plugin_name))
+
+def _setup_list_model_names_parser(subparser: argparse._SubParsersAction) -> None:
+    list_model_names_parser = subparser.add_parser("list-model-names", help="Attempts to list the model names found within a given deploy directory")
+
+    list_model_names_parser.add_argument("--deploy-dir", required=True, help="The deploy directory to search for model names", type=pathlib.Path)
+    list_model_names_parser.add_argument("--plugin-name", required=False,
+                                         help="(Optional) The name of the plugin to search from to find the model names", type=str, default="")
+
+def _print_list_model_names(plugin_manager: manager.PluginManager, deploy_dir: pathlib.Path, plugin_name: str):
+    print(f"Model Names for Deploy Directory: {str(deploy_dir)}")
+    print(commands.list_model_names.get_model_names(plugin_manager, deploy_dir, plugin_name))
 
 if __name__ == '__main__':
     main()
