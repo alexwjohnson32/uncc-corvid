@@ -30,7 +30,6 @@ class InputData:
     def __init__(self, json_dict: dict):
         self.name: str = ""
         self.local_log_file: str = ""
-        self.total_time: float = 0.0
         self.core_type: str = ""
         self.core_init: str = ""
 
@@ -38,7 +37,6 @@ class InputData:
 
         self.name = self._validate_config(json_dict, "name", str, errs)
         self.local_log_file = self._validate_config(json_dict, "local_log_file", str, errs)
-        self.total_time = self._validate_config(json_dict, "total_time", float, errs)
         self.core_type = self._validate_config(json_dict, "core_type", str, errs)
         self.core_init = self._validate_config(json_dict, "core_init", str, errs)
 
@@ -64,7 +62,7 @@ class DummyFederatePlugin(interface.IDeployable):
     def _get_deploy_path(self, deploy_root: str, model_name: str) -> pathlib.Path:
         return pathlib.Path(deploy_root) / self._get_specific_path() / model_name
 
-    def deploy(self, json_config: dict, deploy_root: str, install_root: str) -> None:
+    def deploy(self, json_config: dict, total_time_seconds: float, deploy_root: str, install_root: str) -> None:
         # If this cannot be parsed, it will raise a ValueError with a list of parse errors
         input_data = InputData(json_config)
 
@@ -86,7 +84,7 @@ class DummyFederatePlugin(interface.IDeployable):
             json_data = json.load(json_file)
         json_data["federate_name"] = input_data.name
         json_data["local_log_file"] = input_data.local_log_file
-        json_data["total_time"] = input_data.total_time
+        json_data["total_time"] = total_time_seconds
         json_data["fed_info_json"]["coreInit"] = input_data.core_init
         json_data["fed_info_json"]["coreType"] = input_data.core_type
         with open(destination_files.configuration, "w") as source_file:
