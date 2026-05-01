@@ -14,7 +14,9 @@ def deploy(manager: plugins.manager.PluginManager, install_root: pathlib.Path, d
     json_data = _get_json_data(json_file)
 
     cosim_def_file = _deploy_config(json_data, manager, install_root, deploy_root)
-    helics_json_file = _write_helics_json(cosim_def_file, manager, deploy_root)
+    helics_json_data = _get_helics_json_data(_get_cosim_name(cosim_def_file), manager, deploy_root)
+    helics_json_file = cosim_def_file.parent / "helics_runner.json"
+    _write_json(helics_json_data, helics_json_file)
 
     return f"Successfully deployed and wrote json configuration to '{str(helics_json_file)}'!"
 
@@ -28,7 +30,7 @@ def _validate_input_paths(install_root: pathlib.Path, deploy_root: pathlib.Path,
     try:
         deploy_root.mkdir(parents=True, exist_ok=True)
     except OSError as e:
-        raise ValueError(f"Error when preparing Deploy Root '{str(deploy_root)}'! Exception: {e.strerror}")
+        raise ValueError(f"Error when preparing Deploy Root '{str(deploy_root)}'! Exception: {str(e)}")
     if deploy_root.is_file():
         raise ValueError(f"Given Deploy Root '{str(deploy_root)}' is not a directory!")
 
@@ -45,7 +47,7 @@ def _deploy_config(json_data: dict[str, typing.Any], manager: plugins.manager.Pl
     total_time_seconds = _validate_key_value(json_data, "total_time_seconds", float)
 
     # Validate that a components key has been set
-    components = _validate_key_value(json_data, "components", list[dict[str, typing.Any]])
+    components = _validate_key_value(json_data, "components", list)
 
     # Validate that a cosim name has been set
     cosim_name = _validate_key_value(json_data, "cosim_name", str)
@@ -62,8 +64,7 @@ def _deploy_config(json_data: dict[str, typing.Any], manager: plugins.manager.Pl
     finally:
         # Do this in a finally to ensure we write out the info regardless of how we got here.
         # write cosim json file to deploy root
-        with open(cosim_def_path, "w") as json_file:
-            json.dump(json_data, json_file, indent=4)
+        _write_json(json_data, cosim_def_path)
 
     # Do not return within the finally clause, it may silence an exception
     return cosim_def_path
@@ -74,7 +75,7 @@ def _validate_key_value(json_dict: dict[str, typing.Any], key: str, expected_typ
     if not key in json_dict:
         raise ValueError(f"Key '{key}' not found!")
     elif not isinstance(json_dict[key], expected_type):
-        raise ValueError(f"Key {key} found, but the type is incorrect. Expected '{expected_type.__name__}', Actual: '{type(json_dict[key]).__name__}'")
+        raise ValueError(f"Key '{key}' found, but the type is incorrect. Expected '{expected_type.__name__}', Actual: '{type(json_dict[key]).__name__}'")
     else:
         value = json_dict[key]
 
@@ -88,10 +89,10 @@ def _deploy_components(json_data: dict[str, typing.Any], total_time_seconds: flo
     plugin = manager.get(plugin_name)
 
     if plugin:
-        plugin_options = _get_value_or_default(json_data, "options", dict[str, typing.Any])
+        plugin_options = _get_value_or_default(json_data, "options", dict)
         plugin.deploy(plugin_options, total_time_seconds, str(deploy_root), str(install_root))
 
-    components = _get_value_or_default(json_data, "components", list[dict[str, typing.Any]])
+    components = _get_value_or_default(json_data, "components", list)
     for component in components:
         _deploy_components(component, total_time_seconds, manager, install_root, deploy_root)
 
@@ -103,15 +104,16 @@ def _get_value_or_default(json_dict: dict[str, typing.Any], key: str, expected_t
 
     return value
 
-def _write_helics_json(cosim_def_file: pathlib.Path, manager: plugins.manager.PluginManager, deploy_root: pathlib.Path) -> pathlib.Path:
+def _get_cosim_name(cosim_def_file: pathlib.Path) -> str:
     # Get cosim name
     cosim_def_data = _get_json_data(cosim_def_file)
-    cosim_name = cosim_def_data["cosim_name"]
+    return cosim_def_data["cosim_name"]
 
+def _get_model_execs(manager: plugins.manager.PluginManager, deploy_root: pathlib.Path) -> list[dict[str, str]]:
     # Initialize the federates
     federates = list[dict[str, str]]()
     models = _get_models(manager, deploy_root)
-    for plugin_name, model_names in models:
+    for plugin_name, model_names in models.items():
         plugin = manager.get(plugin_name)
         if not plugin:
             continue # this should never happen
@@ -120,7 +122,7 @@ def _write_helics_json(cosim_def_file: pathlib.Path, manager: plugins.manager.Pl
             federates.append(plugin.get_exec_json(model_name, str(deploy_root)))
 
     # Setup the broker
-    federate_count = len(models)
+    federate_count = len(federates)
     broker_federate = {
         "directory": ".",
         "exec": f"helics-broker --federates={federate_count} --port 23500",
@@ -129,17 +131,19 @@ def _write_helics_json(cosim_def_file: pathlib.Path, manager: plugins.manager.Pl
     }
     federates.insert(0, broker_federate)
 
+    return federates
+
+def _get_helics_json_data(cosim_name: str, manager: plugins.manager.PluginManager, deploy_root: pathlib.Path) -> dict[str, typing.Any]:
     # Setup helics json
     helics_json_data = dict()
     helics_json_data["name"] = cosim_name
-    helics_json_data["federates"] = federates
+    helics_json_data["federates"] = _get_model_execs(manager, deploy_root)
 
-    # Write helics json data to the cosim directory
-    helics_runner_file = cosim_def_file.parent / "helics_runner.json"
-    with open(helics_runner_file, "w") as json_file:
-        json.dump(helics_json_data, json_file, indent=4)
+    return helics_json_data
 
-    return helics_runner_file
+def _write_json(json_data: dict[str, typing.Any], json_path: pathlib.Path) -> None:
+    with open(json_path, "w") as json_file:
+        json.dump(json_data, json_file, indent=4)
 
 def _get_models(manager: plugins.manager.PluginManager, deploy_root: pathlib.Path) -> dict[str, list[str]]:
     models = dict[str, list[str]]()

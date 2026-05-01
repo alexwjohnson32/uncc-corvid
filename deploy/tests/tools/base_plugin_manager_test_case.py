@@ -7,8 +7,8 @@ import plugins.manager
 import plugins.interface
 
 class MockPluginA(plugins.interface.IDeployable):
-    def deploy(self, json_config: dict, deploy_root: str, install_root: str):
-        pass
+    def deploy(self, json_config: dict, total_time_seconds: float, deploy_root: str, install_root: str):
+        json_config["deploy"] = True
 
     def get_baseline_files(self, install_root: str) -> list[str]:
         return [str(pathlib.Path(install_root, "mock_plugin_a")), str(pathlib.Path(install_root, "file_2"))]
@@ -30,6 +30,13 @@ class MockPluginA(plugins.interface.IDeployable):
                 "host": "localhost",
                 "name": "mock_plugin_a"
             }
+        elif model_name == "model_plugin_a_sub1":
+            return {
+                "directory": ".",
+                "exec": "./model_plugin_a_sub1",
+                "host": "localhost",
+                "name": "model_plugin_a_sub1"
+            }
         else:
             return dict[str, str]()
 
@@ -40,8 +47,8 @@ class MockPluginA(plugins.interface.IDeployable):
         return ["model_plugin_a", "model_plugin_a_sub1"]
 
 class MockPluginB(plugins.interface.IDeployable):
-    def deploy(self, json_config: dict, deploy_root: str, install_root: str):
-        pass
+    def deploy(self, json_config: dict, total_time_seconds: float, deploy_root: str, install_root: str):
+        json_config["deploy"] = True
 
     def get_baseline_files(self, install_root: str) -> list[str]:
         return [str(pathlib.Path(install_root, "mock_plugin_b"))]
