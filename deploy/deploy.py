@@ -30,15 +30,15 @@ def main():
         if args.command == "list-names":
             _print_plugin_names(plugin_manager)
         elif args.command == "get-exec":
-            _print_federate_definition(plugin_manager, args.plugin_name, args.model_name, args.deploy_root)
+            _print_federate_definition(plugin_manager, args.plugin_name, args.model_name, args.deploy_root.resolve())
         elif args.command == "list-source-files":
-            _print_list_source_files(plugin_manager, args.plugin_name, args.install_dir)
+            _print_list_source_files(plugin_manager, args.plugin_name, args.install_dir.resolve())
         elif args.command == "list-model-files":
-            _print_list_model_files(plugin_manager, args.model_name, args.deploy_dir, args.plugin_name)
+            _print_list_model_files(plugin_manager, args.model_name, args.deploy_dir.resolve(), args.plugin_name)
         elif args.command == "list-model-names":
-            _print_list_model_names(plugin_manager, args.deploy_dir, args.plugin_name)
+            _print_list_model_names(plugin_manager, args.deploy_dir.resolve(), args.plugin_name)
         elif args.command == "deploy":
-            _print_deploy_parser(plugin_manager, args.install_dir, args.deploy_dir, args.config)
+            _print_deploy_parser(plugin_manager, args.install_dir.resolve(), args.deploy_dir.resolve(), args.config.resolve())
         else:
             print(f"Unrecognized Command '{args.command}', terminating.")
 
