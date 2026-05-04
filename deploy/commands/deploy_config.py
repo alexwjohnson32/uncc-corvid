@@ -14,8 +14,9 @@ def deploy(manager: plugins.manager.PluginManager, install_root: pathlib.Path, d
     json_data = _get_json_data(json_file)
 
     cosim_def_file = _deploy_config(json_data, manager, install_root, deploy_root)
-    helics_json_data = _get_helics_json_data(_get_cosim_name(cosim_def_file), manager, deploy_root)
-    helics_json_file = cosim_def_file.parent / "helics_runner.json"
+    deploy_path = cosim_def_file.parent
+    helics_json_data = _get_helics_json_data(_get_cosim_name(cosim_def_file), manager, deploy_path)
+    helics_json_file = deploy_path / "helics_runner.json"
     _write_json(helics_json_data, helics_json_file)
 
     return f"Successfully deployed and wrote json configuration to '{str(helics_json_file)}'!"
