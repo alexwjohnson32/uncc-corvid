@@ -111,8 +111,8 @@ class IEEE8500FederatePlugin(interface.IDeployable):
         now_obj = datetime.datetime.now()
         start_time_obj = now_obj.replace(year=(now_obj.year - 1), minute=0, second=0)
         start_time_str = start_time_obj.strftime("%Y-%m-%d %H:%M:%S")
-        stop_time_obj = start_time_obj + datetime.timedelta(total_time_seconds)
-        stop_time_str = stop_time_obj.strftime("%Y-%m-%d %H:%M:%S.%f")
+        stop_time_obj = start_time_obj + datetime.timedelta(seconds=total_time_seconds)
+        stop_time_str = stop_time_obj.strftime("%Y-%m-%d %H:%M:%S")
 
         return f"""#include "{baseline_file_path}"
 
