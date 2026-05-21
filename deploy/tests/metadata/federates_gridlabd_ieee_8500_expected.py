@@ -91,7 +91,7 @@ def get_model_glm(baseline_file_path: pathlib.Path, name: str, total_time_second
 
 object helics_msg {{
     name {name};
-    configure {name}.json;
+    configure IEEE_8500node.json;
 }}
 
 clock {{
