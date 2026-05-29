@@ -58,7 +58,7 @@ def _print_plugin_names(plugin_manager: manager.PluginManager) -> None:
 def _setup_get_exec_parser(subparser: argparse._SubParsersAction) -> None:
     get_exec_parser = subparser.add_parser("get-exec", help="Attempts to find a specific model-name within a given deployed directory")
     get_exec_parser.add_argument("--model-name", required=True, help="The name of the model to find", type=str)
-    get_exec_parser.add_argument("--deploy-root", required=True, help="The deploy directory to search within", type=pathlib.Path)
+    get_exec_parser.add_argument("--deploy-dir", required=True, help="The deploy directory to search within", type=pathlib.Path)
     get_exec_parser.add_argument("--plugin-name", required=False, help="(Optional) The name of the plugin that is expected to contain the name.", type=str, default="")
 
 def _print_federate_definition(plugin_manager: manager.PluginManager, plugin_name: str, model_name: str, deploy_root: pathlib.Path) -> None:
