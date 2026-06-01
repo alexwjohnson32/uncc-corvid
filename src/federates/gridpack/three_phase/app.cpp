@@ -1,13 +1,17 @@
-#include "ieee_118_app.hpp"
+#include "app.hpp"
 
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <cmath>
 
 #include "common/utils/stopwatch.hpp"
 
 #include "gridpack/include/gridpack.hpp"
 #include "/usr/local/GridPACK/include/gridpack/applications/modules/powerflow/pf_factory_module.hpp"
+
+#include "common_math.hpp"
+#include "inputs.hpp"
 
 namespace
 {
@@ -19,15 +23,13 @@ enum class Parser
     PTI33
 };
 
-constexpr double PI = 3.14159265358979323846;
-
 } // namespace
 
 // ###################################
-// IEEE118App::State Implementation
+// ThreePhaseApp::State Implementation
 // ###################################
 
-class ieee_118::IEEE118App::State
+class three_phase::PhaseApp::State
 {
   private:
     std::unordered_map<int, int> m_bus_indeces;
@@ -189,6 +191,7 @@ class ieee_118::IEEE118App::State
         solver = std::make_unique<gridpack::math::LinearSolver>(*J);
         solver->configure(cursor);
     }
+
     int GetBusIndex(int bus_id) const
     {
         int bus_index = -1;
@@ -200,10 +203,11 @@ class ieee_118::IEEE118App::State
 
         return bus_index;
     }
+
     int GetWorldRank() const { return m_world.rank(); }
 
-    std::complex<double> ComputeVoltageCurrent(const std::string &config_file, int target_bus_id,
-                                               const std::string &phase_name, const std::complex<double> &Sa)
+    std::complex<double> ComputeVoltageCurrent(int target_bus_id, const std::complex<double> &Sa,
+                                               const std::string &phase_name)
     {
         // Apply S (pu in MW/Mvar) and solve
         const double P_MW = Sa.real() * this->base_MVA;
@@ -254,7 +258,7 @@ class ieee_118::IEEE118App::State
 
         if (this->GetWorldRank() == 0)
         {
-            const std::string filename_out = "bus_voltages_phase" + phase_name + ".csv";
+            const std::string filename_out = "bus_voltages_phase_" + phase_name + ".csv";
             std::ofstream out_file(filename_out);
 
             out_file << "Original Bus Number,Voltage Magnitude (pu),Voltage Angle (deg)\n";
@@ -268,34 +272,35 @@ class ieee_118::IEEE118App::State
             std::cout << "Bus voltages written to " << filename_out << "\n";
         }
 
-        return std::polar(v_mag, v_ang_deg * PI / 180.0);
+        return three_phase::RotationToRadians(v_mag, v_ang_deg);
     }
 };
 
 // ###################################
-// IEEE118App Implementation
+// PhaseApp Implementation
 // ###################################
 
-ieee_118::IEEE118App::IEEE118App()
-    : m_state(std::make_unique<ieee_118::IEEE118App::State>()), m_config_file(""), m_bus_ids(), m_r(0.0, 0.0),
-      m_log("three_phase_timing.log")
+three_phase::PhaseApp::PhaseApp()
+    : m_state(std::make_unique<three_phase::PhaseApp::State>()), m_bus_ids(), m_r(0.0, 0.0), m_phase_name("")
 {
 }
 
 // At this point the inner State class has been defined, so we can default delete.
-ieee_118::IEEE118App::~IEEE118App() = default;
+three_phase::PhaseApp::~PhaseApp() = default;
 
-bool ieee_118::IEEE118App::Initialize(const std::string &config_file, const std::vector<int> &bus_ids,
-                                      const std::complex<double> &r)
+bool three_phase::PhaseApp::Initialize(const std::string &config_file, const std::vector<int> &bus_ids,
+                                       const std::string &phase_name, const std::complex<double> &r,
+                                       common::utils::LocalLogHelper &log)
 {
-    m_config_file = config_file;
     m_bus_ids = bus_ids;
     m_r = r;
+    m_phase_name = phase_name;
 
-    bool success = m_state->InitializeConfig(m_config_file);
+    bool success = m_state->InitializeConfig(config_file);
     if (!success)
     {
-        m_log << "Could not initialize pf state with config file: " << m_config_file << std::endl;
+        log << "Phase " << m_phase_name << ": Could not initialize pf state with config file: " << config_file
+            << std::endl;
         return success;
     }
 
@@ -303,13 +308,13 @@ bool ieee_118::IEEE118App::Initialize(const std::string &config_file, const std:
     if (!success)
     {
         std::stringstream out;
-        out << "Could not initialize bus indeces with the following ids:\n";
+        out << "Phase " << m_phase_name << ": Could not initialize bus indeces with the following ids:\n";
         for (int bus_ids : m_bus_ids)
         {
             out << bus_ids << " ";
         }
         out << "/n";
-        m_log << out.str();
+        log << out.str();
         return success;
     }
 
@@ -318,8 +323,65 @@ bool ieee_118::IEEE118App::Initialize(const std::string &config_file, const std:
     return success;
 }
 
-common::helics::ThreePhaseValues ieee_118::IEEE118App::ComputeVoltage(const common::helics::ThreePhaseValues &power_s,
-                                                                      int bus_id)
+std::complex<double> three_phase::PhaseApp::ComputeVoltageCurrent(int target_bus_id, const std::complex<double> &Sa)
+{
+    return m_state->ComputeVoltageCurrent(target_bus_id, Sa, m_phase_name) * m_r;
+}
+
+std::complex<double> three_phase::PhaseApp::GetRotationAngle() const { return m_r; }
+
+// ###################################
+// ThreePhaseApp Implementation
+// ###################################
+
+three_phase::ThreePhaseApp::ThreePhaseApp() {}
+
+bool three_phase::ThreePhaseApp::Initialize(const three_phase::PhaseInput &phase_a,
+                                            const three_phase::PhaseInput &phase_b,
+                                            const three_phase::PhaseInput &phase_c, const std::vector<int> &bus_ids,
+                                            common::utils::LocalLogHelper &log)
+{
+    auto logger_lambda =
+        [](const three_phase::PhaseInput &phase, const std::vector<int> &bus_ids, common::utils::LocalLogHelper &log)
+    {
+        log << "Failed to initialize the executor.\nxml_file: " << phase.xml_file << "\n";
+        log << "bus_ids: ";
+        for (int bus_id : bus_ids)
+        {
+            log << bus_id << " ";
+        }
+        log << "\nr120: " << three_phase::RotationToRadians(1.0, phase.rotation_degrees) << "\n";
+    };
+
+    bool success_a, success_b, success_c = false;
+
+    success_a = m_phase_a.Initialize(phase_a.xml_file, bus_ids, "A",
+                                     three_phase::RotationToRadians(1.0, phase_a.rotation_degrees), log);
+    if (!success_a)
+    {
+        logger_lambda(phase_a, bus_ids, log);
+    }
+
+    success_b = m_phase_b.Initialize(phase_b.xml_file, bus_ids, "B",
+                                     three_phase::RotationToRadians(1.0, phase_b.rotation_degrees), log);
+    if (!success_b)
+    {
+        logger_lambda(phase_b, bus_ids, log);
+    }
+
+    success_c = m_phase_c.Initialize(phase_c.xml_file, bus_ids, "C",
+                                     three_phase::RotationToRadians(1.0, phase_c.rotation_degrees), log);
+    if (!success_c)
+    {
+        logger_lambda(phase_c, bus_ids, log);
+    }
+
+    return success_a && success_b && success_c;
+}
+
+common::helics::ThreePhaseValues
+three_phase::ThreePhaseApp::ComputeVoltage(const common::helics::ThreePhaseValues &power_s, int bus_id,
+                                           common::utils::LocalLogHelper &log)
 {
     common::helics::ThreePhaseValues phased_voltage;
 
@@ -332,23 +394,35 @@ common::helics::ThreePhaseValues ieee_118::IEEE118App::ComputeVoltage(const comm
 
     common::utils::Stopwatch watch;
     watch.Start();
-    phased_voltage.a = m_state->ComputeVoltageCurrent(m_config_file, bus_id, "A", power_s.a);
+    phased_voltage.a = m_phase_a.ComputeVoltageCurrent(bus_id, power_s.a);
     long long time_a = watch.ElapsedMilliseconds();
     out << "Time A: " << time_a << " ms\n";
 
     watch.Start();
-    phased_voltage.b = m_state->ComputeVoltageCurrent(m_config_file, bus_id, "B", power_s.b) * m_r;
+    phased_voltage.b = m_phase_b.ComputeVoltageCurrent(bus_id, power_s.b);
     long long time_b = watch.ElapsedMilliseconds();
     out << "Time B: " << time_b << " ms\n";
 
     watch.Start();
-    phased_voltage.c = m_state->ComputeVoltageCurrent(m_config_file, bus_id, "C", power_s.c) * m_r * m_r;
+    phased_voltage.c = m_phase_c.ComputeVoltageCurrent(bus_id, power_s.c);
     long long time_c = watch.ElapsedMilliseconds();
     out << "Time C: " << time_c << " ms\n";
 
+    out << "Computed A: " << phased_voltage.a << "\n";
+    out << "Computed B: " << phased_voltage.b << "\n";
+    out << "Computed C: " << phased_voltage.c << "\n";
+
     out << "####################################\n\n";
 
-    m_log << out.str();
+    log << out.str();
 
     return phased_voltage;
+}
+
+common::helics::ThreePhaseValues three_phase::ThreePhaseApp::GetInitialPhasedVoltages() const
+{
+    const static common::helics::ThreePhaseValues initial_phased = { m_phase_a.GetRotationAngle(),
+                                                                     m_phase_b.GetRotationAngle(),
+                                                                     m_phase_c.GetRotationAngle() };
+    return initial_phased;
 }

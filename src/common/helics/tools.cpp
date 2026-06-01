@@ -1,5 +1,7 @@
 #include "tools.hpp"
 
+common::helics::VoltagePublisher::VoltagePublisher() : m_a{}, m_b{}, m_c{}, m_ln_magnitude{} {}
+
 common::helics::VoltagePublisher::VoltagePublisher(::helics::ValueFederate &fed, double ln_magnitude)
     : m_ln_magnitude(ln_magnitude)
 {
@@ -18,7 +20,7 @@ void common::helics::VoltagePublisher::Publish(const common::helics::ThreePhaseV
 std::complex<double> common::helics::LimitPower(const std::complex<double> &s, double max_v)
 {
     const double abs_s = std::abs(s);
-    if (abs_s > max_v)
+    if (abs_s > max_v && abs_s > 0.0)
     {
         return s * (max_v / abs_s);
     }
@@ -28,13 +30,14 @@ std::complex<double> common::helics::LimitPower(const std::complex<double> &s, d
     }
 }
 
-common::helics::ThreePhaseValues common::helics::LimitPower(common::helics::ThreePhaseSubscriptions &sub, double max_v)
+common::helics::ThreePhaseValues common::helics::LimitPower(common::helics::ThreePhaseSubscriptions &sub, double max_v,
+                                                            double divisor)
 {
     common::helics::ThreePhaseValues limited_power;
 
-    limited_power.a = LimitPower(sub.a.getValue<std::complex<double>>() / 1e8, max_v);
-    limited_power.b = LimitPower(sub.b.getValue<std::complex<double>>() / 1e8, max_v);
-    limited_power.c = LimitPower(sub.c.getValue<std::complex<double>>() / 1e8, max_v);
+    limited_power.a = LimitPower(sub.a.getValue<std::complex<double>>() / divisor, max_v);
+    limited_power.b = LimitPower(sub.b.getValue<std::complex<double>>() / divisor, max_v);
+    limited_power.c = LimitPower(sub.c.getValue<std::complex<double>>() / divisor, max_v);
 
     return limited_power;
 }

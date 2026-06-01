@@ -31,16 +31,17 @@ class VoltagePublisher
     ::helics::Publication m_a;
     ::helics::Publication m_b;
     ::helics::Publication m_c;
-    const double m_ln_magnitude{};
+    double m_ln_magnitude{};
 
   public:
+    VoltagePublisher();
     VoltagePublisher(::helics::ValueFederate &fed, double ln_magnitude);
 
     void Publish(const ThreePhaseValues &v);
 };
 
 std::complex<double> LimitPower(const std::complex<double> &s, double max_v);
-ThreePhaseValues LimitPower(ThreePhaseSubscriptions &sub, double max_v);
+ThreePhaseValues LimitPower(ThreePhaseSubscriptions &sub, double max_v, double divisor = 1e8);
 
 } // namespace tools
 } // namespace powerflow
