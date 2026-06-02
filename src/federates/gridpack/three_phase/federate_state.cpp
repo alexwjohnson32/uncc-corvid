@@ -96,7 +96,8 @@ void three_phase::FederateState::Initialize(const three_phase::ThreePhaseInput &
     m_period = m_fed.getTimeProperty(HELICS_PROPERTY_TIME_PERIOD);
 
     log << "Initializing the executor..." << std::endl;
-    if (!m_executor.Initialize(input.phase_a, input.phase_b, input.phase_c, m_bus_ids, log))
+    if (!m_executor.Initialize(input.phase_a.xml_file, input.phase_a.rotation_degrees, input.phase_b.rotation_degrees,
+                               input.phase_c.rotation_degrees, m_bus_ids, log))
     {
         throw std::runtime_error("Could Not Initialize Executor, Exiting.");
     }

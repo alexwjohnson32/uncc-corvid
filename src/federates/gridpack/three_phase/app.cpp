@@ -64,10 +64,6 @@ class three_phase::PhaseApp::State
         {
             opened = config->open(config_file, m_world);
         }
-        else
-        {
-            opened = config->open("118.xml", m_world);
-        }
 
         if (!opened)
         {
@@ -280,36 +276,27 @@ class three_phase::PhaseApp::State
 // PhaseApp Implementation
 // ###################################
 
-three_phase::PhaseApp::PhaseApp()
-    : m_state(std::make_unique<three_phase::PhaseApp::State>()), m_bus_ids(), m_r(0.0, 0.0), m_phase_name("")
-{
-}
+three_phase::PhaseApp::PhaseApp() : m_state(std::make_unique<three_phase::PhaseApp::State>()) {}
 
 // At this point the inner State class has been defined, so we can default delete.
 three_phase::PhaseApp::~PhaseApp() = default;
 
 bool three_phase::PhaseApp::Initialize(const std::string &config_file, const std::vector<int> &bus_ids,
-                                       const std::string &phase_name, const std::complex<double> &r,
                                        common::utils::LocalLogHelper &log)
 {
-    m_bus_ids = bus_ids;
-    m_r = r;
-    m_phase_name = phase_name;
-
     bool success = m_state->InitializeConfig(config_file);
     if (!success)
     {
-        log << "Phase " << m_phase_name << ": Could not initialize pf state with config file: " << config_file
-            << std::endl;
+        log << "Could not initialize pf state with config file: " << config_file << std::endl;
         return success;
     }
 
-    success = m_state->InitializeBusIndeces(m_bus_ids);
+    success = m_state->InitializeBusIndeces(bus_ids);
     if (!success)
     {
         std::stringstream out;
-        out << "Phase " << m_phase_name << ": Could not initialize bus indeces with the following ids:\n";
-        for (int bus_ids : m_bus_ids)
+        out << "Could not initialize bus indeces with the following ids:\n";
+        for (int bus_ids : bus_ids)
         {
             out << bus_ids << " ";
         }
@@ -323,12 +310,27 @@ bool three_phase::PhaseApp::Initialize(const std::string &config_file, const std
     return success;
 }
 
-std::complex<double> three_phase::PhaseApp::ComputeVoltageCurrent(int target_bus_id, const std::complex<double> &Sa)
+std::complex<double> three_phase::PhaseApp::ComputeVoltageCurrent(int target_bus_id, const std::complex<double> &Sa,
+                                                                  const std::string &phase_name,
+                                                                  const std::complex<double> rotation_radians)
 {
-    return m_state->ComputeVoltageCurrent(target_bus_id, Sa, m_phase_name) * m_r;
+    return m_state->ComputeVoltageCurrent(target_bus_id, Sa, phase_name) * rotation_radians;
 }
 
-std::complex<double> three_phase::PhaseApp::GetRotationAngle() const { return m_r; }
+// ###################################
+// Rotation Implementation
+// ###################################
+
+three_phase::Rotation::Rotation(double a, double b, double c) : m_a(a), m_b(b), m_c(c) {}
+
+std::complex<double> three_phase::Rotation::GetRotation(double rot) const
+{
+    return three_phase::RotationToRadians(1.0, rot);
+}
+
+std::complex<double> three_phase::Rotation::GetARad() const { return GetRotation(m_a); }
+std::complex<double> three_phase::Rotation::GetBRad() const { return GetRotation(m_b); }
+std::complex<double> three_phase::Rotation::GetCRad() const { return GetRotation(m_c); }
 
 // ###################################
 // ThreePhaseApp Implementation
@@ -336,47 +338,26 @@ std::complex<double> three_phase::PhaseApp::GetRotationAngle() const { return m_
 
 three_phase::ThreePhaseApp::ThreePhaseApp() {}
 
-bool three_phase::ThreePhaseApp::Initialize(const three_phase::PhaseInput &phase_a,
-                                            const three_phase::PhaseInput &phase_b,
-                                            const three_phase::PhaseInput &phase_c, const std::vector<int> &bus_ids,
-                                            common::utils::LocalLogHelper &log)
+bool three_phase::ThreePhaseApp::Initialize(const std::string &xml_file, double a_rotation_degrees,
+                                            double b_rotation_degrees, double c_rotation_degrees,
+                                            const std::vector<int> &bus_ids, common::utils::LocalLogHelper &log)
 {
-    auto logger_lambda =
-        [](const three_phase::PhaseInput &phase, const std::vector<int> &bus_ids, common::utils::LocalLogHelper &log)
+    if (m_phase.Initialize(xml_file, bus_ids, log))
     {
-        log << "Failed to initialize the executor.\nxml_file: " << phase.xml_file << "\n";
+        m_rotation = three_phase::Rotation(a_rotation_degrees, b_rotation_degrees, c_rotation_degrees);
+        return true;
+    }
+    else
+    {
+        log << "Failed to initialize the executor.\nxml_file: " << xml_file << "\n";
         log << "bus_ids: ";
         for (int bus_id : bus_ids)
         {
             log << bus_id << " ";
         }
-        log << "\nr120: " << three_phase::RotationToRadians(1.0, phase.rotation_degrees) << "\n";
-    };
-
-    bool success_a, success_b, success_c = false;
-
-    success_a = m_phase_a.Initialize(phase_a.xml_file, bus_ids, "A",
-                                     three_phase::RotationToRadians(1.0, phase_a.rotation_degrees), log);
-    if (!success_a)
-    {
-        logger_lambda(phase_a, bus_ids, log);
+        log << "\n";
+        return false;
     }
-
-    success_b = m_phase_b.Initialize(phase_b.xml_file, bus_ids, "B",
-                                     three_phase::RotationToRadians(1.0, phase_b.rotation_degrees), log);
-    if (!success_b)
-    {
-        logger_lambda(phase_b, bus_ids, log);
-    }
-
-    success_c = m_phase_c.Initialize(phase_c.xml_file, bus_ids, "C",
-                                     three_phase::RotationToRadians(1.0, phase_c.rotation_degrees), log);
-    if (!success_c)
-    {
-        logger_lambda(phase_c, bus_ids, log);
-    }
-
-    return success_a && success_b && success_c;
 }
 
 common::helics::ThreePhaseValues
@@ -394,17 +375,17 @@ three_phase::ThreePhaseApp::ComputeVoltage(const common::helics::ThreePhaseValue
 
     common::utils::Stopwatch watch;
     watch.Start();
-    phased_voltage.a = m_phase_a.ComputeVoltageCurrent(bus_id, power_s.a);
+    phased_voltage.a = m_phase.ComputeVoltageCurrent(bus_id, power_s.a, "A", m_rotation.GetARad());
     long long time_a = watch.ElapsedMilliseconds();
     out << "Time A: " << time_a << " ms\n";
 
     watch.Start();
-    phased_voltage.b = m_phase_b.ComputeVoltageCurrent(bus_id, power_s.b);
+    phased_voltage.b = m_phase.ComputeVoltageCurrent(bus_id, power_s.b, "B", m_rotation.GetBRad());
     long long time_b = watch.ElapsedMilliseconds();
     out << "Time B: " << time_b << " ms\n";
 
     watch.Start();
-    phased_voltage.c = m_phase_c.ComputeVoltageCurrent(bus_id, power_s.c);
+    phased_voltage.c = m_phase.ComputeVoltageCurrent(bus_id, power_s.c, "C", m_rotation.GetCRad());
     long long time_c = watch.ElapsedMilliseconds();
     out << "Time C: " << time_c << " ms\n";
 
@@ -421,8 +402,5 @@ three_phase::ThreePhaseApp::ComputeVoltage(const common::helics::ThreePhaseValue
 
 common::helics::ThreePhaseValues three_phase::ThreePhaseApp::GetInitialPhasedVoltages() const
 {
-    const static common::helics::ThreePhaseValues initial_phased = { m_phase_a.GetRotationAngle(),
-                                                                     m_phase_b.GetRotationAngle(),
-                                                                     m_phase_c.GetRotationAngle() };
-    return initial_phased;
+    return { m_rotation.GetARad(), m_rotation.GetBRad(), m_rotation.GetCRad() };
 }
