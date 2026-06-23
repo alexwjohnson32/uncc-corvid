@@ -2,13 +2,37 @@
 #include <filesystem>
 #include <string>
 #include <exception>
+#include <memory>
 
 #include "ieee_118_inputs.hpp"
 #include "ieee_118_federate.hpp"
 #include "common/utils/json_templates.hpp"
 
+// GridPACK includes
+#include "mpi.h"
+#include <ga.h>
+#include <macdecls.h>
+#include "gridpack/include/gridpack.hpp"
+
+#include <helics/application_api/ValueFederate.hpp>
+
+namespace
+{
+std::shared_ptr<helics::ValueFederate> GetGridpackFederate(const ieee_118::IEEE118Input &pf_input)
+{
+    // Create a FederateInfo object
+    helics::FederateInfo fi;
+    fi.loadInfoFromJson(pf_input.fed_info_json);
+
+    return std::make_shared<helics::ValueFederate>(pf_input.federate_name, fi);
+}
+} // namespace
+
 int main(int argc, char **argv)
 {
+    // Prepare GridPACK Environment
+    gridpack::Environment env(argc, argv);
+
     int ret_val = EXIT_FAILURE;
 
     if (argc < 2)
@@ -27,13 +51,12 @@ int main(int argc, char **argv)
     }
 
     ieee_118::IEEE118Input input = common::utils::FromJsonFile<ieee_118::IEEE118Input>(json_file);
-    ieee_118::IEEE118Federate fed;
-
+    std::shared_ptr<helics::ValueFederate> fed_ptr = GetGridpackFederate(input);
     try
     {
-        fed.Initialize(input, { argc, argv });
+        ieee_118::IEEE118Federate fed;
+        fed.Initialize(input, fed_ptr);
         fed.Run();
-
         ret_val = EXIT_SUCCESS;
     }
     catch (const std::exception &e)
@@ -45,7 +68,9 @@ int main(int argc, char **argv)
         std::cerr << "Unknown Exception: An object that does not inherit std::exception was thrown!" << std::endl;
     }
 
-    fed.Close();
+    // finalize gridpack first
+    gridpack::math::Finalize();
+    fed_ptr->finalize();
 
     return ret_val;
 }

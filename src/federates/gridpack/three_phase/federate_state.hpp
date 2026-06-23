@@ -19,9 +19,10 @@ class FederateState
 {
   public:
     static std::unique_ptr<FederateState> Create(const three_phase::ThreePhaseInput &input,
+                                                 const std::shared_ptr<helics::ValueFederate> &fed,
                                                  common::utils::LocalLogHelper &log);
 
-    helics::ValueFederate m_fed;
+    std::shared_ptr<helics::ValueFederate> m_fed;
     common::helics::VoltagePublisher m_pub;
     std::unordered_map<std::string, common::helics::ThreePhaseSubscriptions> m_subs;
     std::unordered_map<std::string, common::helics::ThreePhaseValues> m_last_known_values;
@@ -35,7 +36,8 @@ class FederateState
 
   private:
     FederateState();
-    void Initialize(const three_phase::ThreePhaseInput &input, common::utils::LocalLogHelper &log);
+    void Initialize(const three_phase::ThreePhaseInput &input, const std::shared_ptr<helics::ValueFederate> &fed,
+                    common::utils::LocalLogHelper &log);
     double SimulateStep(const std::vector<three_phase::GridlabDInputs> &gridlabd_infos, const double current_time,
                         common::utils::LocalLogHelper &log);
 };

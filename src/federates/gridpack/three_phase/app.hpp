@@ -19,8 +19,8 @@ class PhaseApp
     ~PhaseApp(); // This is required in order to use the forward declared inner class.
 
     bool Initialize(const std::string &config_file, const std::vector<int> &bus_ids, const std::string &phase_name,
-                    const std::complex<double> &r, common::utils::LocalLogHelper &log);
-    std::complex<double> ComputeVoltageCurrent(int target_bus_id, const std::complex<double> &Sa);
+                    const std::complex<double> &r, common::utils::LocalLogHelper &log, double ln_magnitude);
+    std::complex<double> ComputeVoltageCurrent(double time_step, int target_bus_id, const std::complex<double> &Sa);
     std::complex<double> GetRotationAngle() const;
 
   private:
@@ -29,6 +29,8 @@ class PhaseApp
     std::vector<int> m_bus_ids;
     std::complex<double> m_r;
     std::string m_phase_name;
+    std::string m_local_file;
+    double m_ln_magnitude;
 };
 
 class ThreePhaseApp
@@ -38,10 +40,10 @@ class ThreePhaseApp
 
     bool Initialize(const three_phase::PhaseInput &phase_a, const three_phase::PhaseInput &phase_b,
                     const three_phase::PhaseInput &phase_c, const std::vector<int> &bus_ids,
-                    common::utils::LocalLogHelper &log);
+                    common::utils::LocalLogHelper &log, double ln_magnitude);
 
-    common::helics::ThreePhaseValues ComputeVoltage(const common::helics::ThreePhaseValues &power_s, int bus_id,
-                                                    common::utils::LocalLogHelper &log);
+    common::helics::ThreePhaseValues ComputeVoltage(double time_step, const common::helics::ThreePhaseValues &power_s,
+                                                    int bus_id, common::utils::LocalLogHelper &log);
     common::helics::ThreePhaseValues GetInitialPhasedVoltages() const;
 
   private:

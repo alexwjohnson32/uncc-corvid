@@ -10,6 +10,15 @@ common::helics::VoltagePublisher::VoltagePublisher(::helics::ValueFederate &fed,
     m_c = fed.registerPublication("Vc", "complex", "V");
 }
 
+common::helics::VoltagePublisher::VoltagePublisher(const std::shared_ptr<::helics::ValueFederate> fed,
+                                                   double ln_magnitude)
+    : m_ln_magnitude(ln_magnitude)
+{
+    m_a = fed->registerPublication("Va", "complex", "V");
+    m_b = fed->registerPublication("Vb", "complex", "V");
+    m_c = fed->registerPublication("Vc", "complex", "V");
+}
+
 void common::helics::VoltagePublisher::Publish(const common::helics::ThreePhaseValues &v)
 {
     m_a.publish(v.a * m_ln_magnitude);

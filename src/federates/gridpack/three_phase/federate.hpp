@@ -5,24 +5,18 @@
 #include "common/utils/local_log_helper.hpp"
 
 #include <memory>
+#include <helics/application_api/ValueFederate.hpp>
 
 namespace three_phase
 {
-struct GridpackEnvConfig
-{
-    int argc;
-    char **argv;
-};
-
 class ThreePhaseFederate
 {
   public:
     ThreePhaseFederate();
     ~ThreePhaseFederate();
 
-    void Initialize(const three_phase::ThreePhaseInput &input, three_phase::GridpackEnvConfig config);
+    void Initialize(const three_phase::ThreePhaseInput &input, const std::shared_ptr<helics::ValueFederate> &fed);
     void Run();
-    void Close();
 
   private:
     three_phase::ThreePhaseInput m_fed_input;

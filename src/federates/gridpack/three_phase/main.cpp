@@ -2,13 +2,33 @@
 #include <filesystem>
 #include <string>
 #include <exception>
+#include <memory>
 
 #include "inputs.hpp"
 #include "federate.hpp"
 #include "common/utils/json_templates.hpp"
 
+// GridPACK includes
+#include "mpi.h"
+#include <ga.h>
+#include <macdecls.h>
+#include "gridpack/include/gridpack.hpp"
+
+namespace
+{
+std::shared_ptr<helics::ValueFederate> GetGridpackFederate(const three_phase::ThreePhaseInput &pf_input)
+{
+    // Create a FederateInfo object
+    helics::FederateInfo fi;
+    fi.loadInfoFromJson(pf_input.fed_info_json);
+
+    return std::make_shared<helics::ValueFederate>(pf_input.federate_name, fi);
+}
+} // namespace
+
 int main(int argc, char **argv)
 {
+    gridpack::Environment env(argc, argv);
     int ret_val = EXIT_FAILURE;
 
     if (argc < 2)
@@ -27,11 +47,12 @@ int main(int argc, char **argv)
     }
 
     three_phase::ThreePhaseInput input = common::utils::FromJsonFile<three_phase::ThreePhaseInput>(json_file);
-    three_phase::ThreePhaseFederate fed;
+    std::shared_ptr<helics::ValueFederate> fed_ptr = GetGridpackFederate(input);
 
     try
     {
-        fed.Initialize(input, { argc, argv });
+        three_phase::ThreePhaseFederate fed;
+        fed.Initialize(input, fed_ptr);
         fed.Run();
 
         ret_val = EXIT_SUCCESS;
@@ -45,7 +66,8 @@ int main(int argc, char **argv)
         std::cerr << "Unknown Exception: An object that does not inherit std::exception was thrown!" << std::endl;
     }
 
-    fed.Close();
+    gridpack::math::Finalize();
+    fed_ptr->finalize();
 
     return ret_val;
 }

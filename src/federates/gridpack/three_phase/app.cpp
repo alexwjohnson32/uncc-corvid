@@ -39,8 +39,6 @@ class three_phase::PhaseApp::State
     boost::shared_ptr<gridpack::powerflow::PFNetwork> network;
     gridpack::utility::Configuration::CursorPtr cursor;
 
-    double base_MVA = 100.0;
-
     std::unique_ptr<gridpack::powerflow::PFFactoryModule> pf_factory;
     std::unique_ptr<gridpack::mapper::BusVectorMap<gridpack::powerflow::PFNetwork>> v_map;
     std::unique_ptr<gridpack::mapper::FullMatrixMap<gridpack::powerflow::PFNetwork>> j_map;
@@ -75,7 +73,6 @@ class three_phase::PhaseApp::State
         }
 
         cursor = config->getCursor("Configuration.Powerflow");
-        base_MVA = cursor->get("baseMVA", 100.0);
 
         std::string filename = "";
         Parser file_type = Parser::PTI23;
@@ -206,12 +203,12 @@ class three_phase::PhaseApp::State
 
     int GetWorldRank() const { return m_world.rank(); }
 
-    std::complex<double> ComputeVoltageCurrent(int target_bus_id, const std::complex<double> &Sa,
-                                               const std::string &phase_name)
+    std::complex<double> ComputeVoltageCurrent(double time_step, int target_bus_id, const std::complex<double> &Sa,
+                                               const std::string &phase_name, const std::string &local_filename)
     {
         // Apply S (pu in MW/Mvar) and solve
-        const double P_MW = Sa.real() * this->base_MVA;
-        const double Q_Mvar = Sa.imag() * this->base_MVA;
+        const double P_MW = Sa.real();
+        const double Q_Mvar = Sa.imag();
 
         const int bus_index = this->GetBusIndex(target_bus_id);
 
@@ -272,7 +269,16 @@ class three_phase::PhaseApp::State
             std::cout << "Bus voltages written to " << filename_out << "\n";
         }
 
-        return three_phase::RotationToRadians(v_mag, v_ang_deg);
+        const std::complex<double> result = three_phase::RotationToRadians(v_mag, v_ang_deg);
+        std::ofstream output(local_filename, std::ios::app);
+
+        output << "\n###################\n";
+        output << "Time:        " << time_step << "\n";
+        output << "Input Power: " << P_MW << "," << Q_Mvar << "\n";
+        output << "Computed V : " << result.real() << "," << result.imag() << "\n";
+        output.close();
+
+        return result;
     }
 };
 
@@ -290,11 +296,15 @@ three_phase::PhaseApp::~PhaseApp() = default;
 
 bool three_phase::PhaseApp::Initialize(const std::string &config_file, const std::vector<int> &bus_ids,
                                        const std::string &phase_name, const std::complex<double> &r,
-                                       common::utils::LocalLogHelper &log)
+                                       common::utils::LocalLogHelper &log, double ln_magnitude)
 {
     m_bus_ids = bus_ids;
     m_r = r;
     m_phase_name = phase_name;
+    m_local_file = "powerflow_" + m_phase_name + "_outputs.txt";
+    std::ofstream local_file(m_local_file); // this reset's the file contents
+    local_file.close();
+    m_ln_magnitude = ln_magnitude;
 
     bool success = m_state->InitializeConfig(config_file);
     if (!success)
@@ -323,9 +333,18 @@ bool three_phase::PhaseApp::Initialize(const std::string &config_file, const std
     return success;
 }
 
-std::complex<double> three_phase::PhaseApp::ComputeVoltageCurrent(int target_bus_id, const std::complex<double> &Sa)
+std::complex<double> three_phase::PhaseApp::ComputeVoltageCurrent(double time_step, int target_bus_id,
+                                                                  const std::complex<double> &Sa)
 {
-    return m_state->ComputeVoltageCurrent(target_bus_id, Sa, m_phase_name) * m_r;
+    const std::complex<double> result =
+        m_state->ComputeVoltageCurrent(time_step, target_bus_id, Sa, m_phase_name, m_local_file) * m_r;
+    const std::complex<double> published = result * m_ln_magnitude;
+
+    std::ofstream output(m_local_file, std::ios::app);
+    output << "Rotated V  : " << result.real() << "," << result.imag() << "\n";
+    output << "Published V: " << published.real() << "," << published.imag() << "\n";
+    output << "###################\n";
+    return result;
 }
 
 std::complex<double> three_phase::PhaseApp::GetRotationAngle() const { return m_r; }
@@ -339,7 +358,7 @@ three_phase::ThreePhaseApp::ThreePhaseApp() {}
 bool three_phase::ThreePhaseApp::Initialize(const three_phase::PhaseInput &phase_a,
                                             const three_phase::PhaseInput &phase_b,
                                             const three_phase::PhaseInput &phase_c, const std::vector<int> &bus_ids,
-                                            common::utils::LocalLogHelper &log)
+                                            common::utils::LocalLogHelper &log, double ln_magnitude)
 {
     auto logger_lambda =
         [](const three_phase::PhaseInput &phase, const std::vector<int> &bus_ids, common::utils::LocalLogHelper &log)
@@ -356,21 +375,21 @@ bool three_phase::ThreePhaseApp::Initialize(const three_phase::PhaseInput &phase
     bool success_a, success_b, success_c = false;
 
     success_a = m_phase_a.Initialize(phase_a.xml_file, bus_ids, "A",
-                                     three_phase::RotationToRadians(1.0, phase_a.rotation_degrees), log);
+                                     three_phase::RotationToRadians(1.0, phase_a.rotation_degrees), log, ln_magnitude);
     if (!success_a)
     {
         logger_lambda(phase_a, bus_ids, log);
     }
 
     success_b = m_phase_b.Initialize(phase_b.xml_file, bus_ids, "B",
-                                     three_phase::RotationToRadians(1.0, phase_b.rotation_degrees), log);
+                                     three_phase::RotationToRadians(1.0, phase_b.rotation_degrees), log, ln_magnitude);
     if (!success_b)
     {
         logger_lambda(phase_b, bus_ids, log);
     }
 
     success_c = m_phase_c.Initialize(phase_c.xml_file, bus_ids, "C",
-                                     three_phase::RotationToRadians(1.0, phase_c.rotation_degrees), log);
+                                     three_phase::RotationToRadians(1.0, phase_c.rotation_degrees), log, ln_magnitude);
     if (!success_c)
     {
         logger_lambda(phase_c, bus_ids, log);
@@ -380,8 +399,8 @@ bool three_phase::ThreePhaseApp::Initialize(const three_phase::PhaseInput &phase
 }
 
 common::helics::ThreePhaseValues
-three_phase::ThreePhaseApp::ComputeVoltage(const common::helics::ThreePhaseValues &power_s, int bus_id,
-                                           common::utils::LocalLogHelper &log)
+three_phase::ThreePhaseApp::ComputeVoltage(double time_step, const common::helics::ThreePhaseValues &power_s,
+                                           int bus_id, common::utils::LocalLogHelper &log)
 {
     common::helics::ThreePhaseValues phased_voltage;
 
@@ -394,17 +413,17 @@ three_phase::ThreePhaseApp::ComputeVoltage(const common::helics::ThreePhaseValue
 
     common::utils::Stopwatch watch;
     watch.Start();
-    phased_voltage.a = m_phase_a.ComputeVoltageCurrent(bus_id, power_s.a);
+    phased_voltage.a = m_phase_a.ComputeVoltageCurrent(time_step, bus_id, power_s.a);
     long long time_a = watch.ElapsedMilliseconds();
     out << "Time A: " << time_a << " ms\n";
 
     watch.Start();
-    phased_voltage.b = m_phase_b.ComputeVoltageCurrent(bus_id, power_s.b);
+    phased_voltage.b = m_phase_b.ComputeVoltageCurrent(time_step, bus_id, power_s.b);
     long long time_b = watch.ElapsedMilliseconds();
     out << "Time B: " << time_b << " ms\n";
 
     watch.Start();
-    phased_voltage.c = m_phase_c.ComputeVoltageCurrent(bus_id, power_s.c);
+    phased_voltage.c = m_phase_c.ComputeVoltageCurrent(time_step, bus_id, power_s.c);
     long long time_c = watch.ElapsedMilliseconds();
     out << "Time C: " << time_c << " ms\n";
 

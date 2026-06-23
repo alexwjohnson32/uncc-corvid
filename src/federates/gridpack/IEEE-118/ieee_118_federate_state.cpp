@@ -1,16 +1,19 @@
-#include "federate_state.hpp"
+#include "ieee_118_federate_state.hpp"
+#include <fstream>
 
 #include "common/utils/json_templates.hpp"
-
-#include <memory>
-#include <stdexcept>
-#include <complex>
 
 namespace
 {
 
+std::string FederateToString(const std::shared_ptr<helics::ValueFederate> fed)
+{
+    std::string json_result = fed->query(fed->getName(), "federate");
+    return common::utils::ToJsonString(json_result, true);
+}
+
 std::unordered_map<std::string, common::helics::ThreePhaseSubscriptions>
-GetSubscriptions(const three_phase::ThreePhaseInput &input, const std::shared_ptr<helics::ValueFederate> &fed)
+GetSubscriptions(const ieee_118::IEEE118Input &input, const std::shared_ptr<helics::ValueFederate> fed)
 {
     std::unordered_map<std::string, common::helics::ThreePhaseSubscriptions> subs;
 
@@ -25,7 +28,7 @@ GetSubscriptions(const three_phase::ThreePhaseInput &input, const std::shared_pt
 }
 
 std::unordered_map<std::string, common::helics::ThreePhaseValues>
-GetInitialPhaseValues(const three_phase::ThreePhaseInput &input)
+GetInitialPhaseValues(const ieee_118::IEEE118Input &input)
 {
     std::unordered_map<std::string, common::helics::ThreePhaseValues> initial_values;
     for (const std::string &gridlabd_name : input.GetGridlabDNames())
@@ -35,37 +38,25 @@ GetInitialPhaseValues(const three_phase::ThreePhaseInput &input)
     return initial_values;
 }
 
-std::vector<int> GetBusIds(const three_phase::ThreePhaseInput &input)
+std::vector<int> GetBusIds(const ieee_118::IEEE118Input &input)
 {
     std::vector<int> bus_ids;
-    for (const three_phase::GridlabDInputs &gridlabd_info : input.gridlabd_infos)
+    for (const ieee_118::GridlabDInputs &gridlabd_info : input.gridlabd_infos)
     {
         bus_ids.push_back(gridlabd_info.bus_id);
     }
     return bus_ids;
 }
 
-std::string FederateToString(const std::shared_ptr<helics::ValueFederate> &fed)
-{
-    std::string json_result = fed->query(fed->getName(), "federate");
-    return common::utils::ToJsonString(json_result, true);
-}
-
 } // namespace
 
-std::unique_ptr<three_phase::FederateState>
-three_phase::FederateState::Create(const three_phase::ThreePhaseInput &input,
-                                   const std::shared_ptr<helics::ValueFederate> &fed,
-                                   common::utils::LocalLogHelper &log)
-{
-    auto ptr = std::unique_ptr<three_phase::FederateState>(new three_phase::FederateState());
-    ptr->Initialize(input, fed, log);
-    return ptr;
-}
+ieee_118::FederateState::FederateState() {}
 
-void three_phase::FederateState::Initialize(const three_phase::ThreePhaseInput &input,
-                                            const std::shared_ptr<helics::ValueFederate> &fed,
-                                            common::utils::LocalLogHelper &log)
+ieee_118::FederateState::~FederateState() {}
+
+void ieee_118::FederateState::Initialize(const ieee_118::IEEE118Input &input,
+                                         const std::shared_ptr<helics::ValueFederate> fed,
+                                         common::utils::LocalLogHelper &log)
 {
     log << "Creating Federate..." << std::endl;
     m_fed = fed;
@@ -86,7 +77,7 @@ void three_phase::FederateState::Initialize(const three_phase::ThreePhaseInput &
     m_period = m_fed->getTimeProperty(HELICS_PROPERTY_TIME_PERIOD);
 
     log << "Initializing the executor..." << std::endl;
-    if (!m_executor.Initialize(input.phase_a, input.phase_b, input.phase_c, m_bus_ids, log, input.ln_magnitude))
+    if (!m_executor.Initialize("118.xml", m_bus_ids, std::complex<double>(-0.5, -0.866025)))
     {
         throw std::runtime_error("Could Not Initialize Executor, Exiting.");
     }
@@ -96,10 +87,7 @@ void three_phase::FederateState::Initialize(const three_phase::ThreePhaseInput &
     }
 }
 
-three_phase::FederateState::FederateState() {}
-
-double three_phase::FederateState::RunSimulation(const three_phase::ThreePhaseInput &input,
-                                                 common::utils::LocalLogHelper &log)
+double ieee_118::FederateState::RunSimulation(const ieee_118::IEEE118Input &input, common::utils::LocalLogHelper &log)
 {
     // Enter the federate into executing mode
     m_fed->enterExecutingMode();
@@ -107,7 +95,7 @@ double three_phase::FederateState::RunSimulation(const three_phase::ThreePhaseIn
 
     // Initial voltage publish
     log << "Publish initial voltage." << std::endl;
-    m_pub.Publish(m_executor.GetInitialPhasedVoltages());
+    m_pub.Publish({ { 1.0, 0.0 }, { -0.5, -0.866025 }, { -0.5, 0.866025 } });
     log << "Published." << std::endl;
 
     // Perform Simulation
@@ -139,13 +127,13 @@ double three_phase::FederateState::RunSimulation(const three_phase::ThreePhaseIn
     return granted_time;
 }
 
-double three_phase::FederateState::SimulateStep(const std::vector<three_phase::GridlabDInputs> &gridlabd_infos,
-                                                const double current_time, common::utils::LocalLogHelper &log)
+double ieee_118::FederateState::SimulateStep(const std::vector<ieee_118::GridlabDInputs> &gridlabd_infos,
+                                             const double current_time, common::utils::LocalLogHelper &log)
 {
     double granted_time = m_fed->requestTime(current_time + m_period);
     log << "\n[Time " << granted_time << "]\n";
 
-    for (const three_phase::GridlabDInputs &gridlabd_info : gridlabd_infos)
+    for (const ieee_118::GridlabDInputs &gridlabd_info : gridlabd_infos)
     {
         log << "\nBus Id: " << gridlabd_info.bus_id << "\nGridlabd Names:\n\t";
 
@@ -167,8 +155,7 @@ double three_phase::FederateState::SimulateStep(const std::vector<three_phase::G
                 m_last_known_values.at(gridlabd_name).c = current_subs.c.getValue<std::complex<double>>();
             }
 
-            common::helics::ThreePhaseValues limited_power =
-                common::helics::LimitPower(m_subs.at(gridlabd_name), 100.0, 1e6);
+            common::helics::ThreePhaseValues limited_power = common::helics::LimitPower(m_subs.at(gridlabd_name), 1.0);
             s_total.a += limited_power.a;
             s_total.b += limited_power.b;
             s_total.c += limited_power.c;
@@ -176,7 +163,7 @@ double three_phase::FederateState::SimulateStep(const std::vector<three_phase::G
 
         log << "\nTotal S received from Gridlab-D: [" << s_total.a << ", " << s_total.b << ", " << s_total.c << "]\n";
 
-        common::helics::ThreePhaseValues v = m_executor.ComputeVoltage(granted_time, s_total, gridlabd_info.bus_id, log);
+        common::helics::ThreePhaseValues v = m_executor.ComputeVoltage(s_total, gridlabd_info.bus_id);
 
         log << "Updated V by GridPACK: [" << v.a << ", " << v.b << ", " << v.c << "]\n";
 

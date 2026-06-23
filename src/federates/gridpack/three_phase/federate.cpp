@@ -3,21 +3,15 @@
 
 #include <stdexcept>
 #include <sstream>
-
-// GridPACK includes
-#include "mpi.h"
-#include <ga.h>
-#include <macdecls.h>
-#include "gridpack/include/gridpack.hpp"
+#include <iostream>
 
 three_phase::ThreePhaseFederate::ThreePhaseFederate() {}
-three_phase::ThreePhaseFederate::~ThreePhaseFederate() { Close(); }
+three_phase::ThreePhaseFederate::~ThreePhaseFederate() {}
 
 void three_phase::ThreePhaseFederate::Initialize(const three_phase::ThreePhaseInput &input,
-                                                 three_phase::GridpackEnvConfig config)
+                                                 const std::shared_ptr<helics::ValueFederate> &fed)
 {
     m_fed_input = input;
-    gridpack::Environment env(config.argc, config.argv);
 
     // Setup Logging
     m_log.SetOutputFile(m_fed_input.local_log_file);
@@ -35,7 +29,7 @@ void three_phase::ThreePhaseFederate::Initialize(const three_phase::ThreePhaseIn
     m_log << "Json Input:\n" << common::utils::ToJsonString(input, true) << std::endl;
 
     // Setup Federate State
-    m_state = three_phase::FederateState::Create(m_fed_input, m_log);
+    m_state = three_phase::FederateState::Create(m_fed_input, fed, m_log);
 }
 
 void three_phase::ThreePhaseFederate::Run()
@@ -51,8 +45,6 @@ void three_phase::ThreePhaseFederate::Run()
         m_log << "Error: " << e.what() << std::endl;
     }
 
-    Close();
-
     if (granted_time < 0.0)
     {
         m_log << "Could not perform simulation! Federate finalized.\nGranted time: " << granted_time << std::endl;
@@ -61,10 +53,4 @@ void three_phase::ThreePhaseFederate::Run()
     {
         m_log << "Federate finalized.\nGranted time: " << granted_time << std::endl;
     }
-}
-
-void three_phase::ThreePhaseFederate::Close()
-{
-    gridpack::math::Finalize();
-    if (m_state) m_state->m_fed.finalize();
 }

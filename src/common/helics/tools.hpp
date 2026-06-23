@@ -5,6 +5,7 @@
 #include <helics/application_api/ValueFederate.hpp>
 #include <helics/application_api/Publications.hpp>
 #include <helics/application_api/Inputs.hpp>
+#include <memory>
 
 namespace common
 {
@@ -36,6 +37,7 @@ class VoltagePublisher
   public:
     VoltagePublisher();
     VoltagePublisher(::helics::ValueFederate &fed, double ln_magnitude);
+    VoltagePublisher(const std::shared_ptr<::helics::ValueFederate> fed, double ln_magnitude);
 
     void Publish(const ThreePhaseValues &v);
 };
