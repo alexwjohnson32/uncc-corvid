@@ -19,17 +19,17 @@ class PhaseApp
     ~PhaseApp(); // This is required in order to use the forward declared inner class.
 
     bool Initialize(const std::string &config_file, const std::vector<int> &bus_ids, const std::string &phase_name,
-                    const std::complex<double> &r, common::utils::LocalLogHelper &log, double ln_magnitude);
-    std::complex<double> ComputeVoltageCurrent(double time_step, int target_bus_id, const std::complex<double> &Sa);
-    std::complex<double> GetRotationAngle() const;
+                    double rotation_degrees, common::utils::LocalLogHelper &log, double ln_magnitude);
+    std::complex<double> ComputeVoltageCurrent(double time_step, int target_bus_id, const std::complex<double> &Sa,
+                                               common::utils::LocalLogHelper &log);
+    double GetRotationAngle() const;
 
   private:
     class State; // forward declare, implement in source file
     std::unique_ptr<State> m_state;
     std::vector<int> m_bus_ids;
-    std::complex<double> m_r;
+    double m_rotation_degrees;
     std::string m_phase_name;
-    std::string m_local_file;
     double m_ln_magnitude;
 };
 

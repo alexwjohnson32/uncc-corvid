@@ -22,10 +22,10 @@ class FederateState
     std::shared_ptr<helics::ValueFederate> m_fed;
     common::helics::VoltagePublisher m_pub;
     std::unordered_map<std::string, common::helics::ThreePhaseSubscriptions> m_subs;
-    std::unordered_map<std::string, common::helics::ThreePhaseValues> m_last_known_values;
     ieee_118::IEEE118App m_executor;
     std::vector<int> m_bus_ids;
     double m_period;
+    double m_ln_magnitude;
 
     FederateState();
     ~FederateState();

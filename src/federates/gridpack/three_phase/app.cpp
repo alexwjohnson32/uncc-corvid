@@ -1,5 +1,6 @@
 #include "app.hpp"
 
+#include <complex>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -10,7 +11,6 @@
 #include "gridpack/include/gridpack.hpp"
 #include "/usr/local/GridPACK/include/gridpack/applications/modules/powerflow/pf_factory_module.hpp"
 
-#include "common_math.hpp"
 #include "inputs.hpp"
 
 namespace
@@ -22,6 +22,10 @@ enum class Parser
     PTI23,
     PTI33
 };
+
+double ToRadian(double degrees) { return degrees * (M_PI / 180.0); }
+
+std::complex<double> ToComplexRadian(double degrees) { return std::polar(1.0, ToRadian(degrees)); }
 
 } // namespace
 
@@ -204,19 +208,23 @@ class three_phase::PhaseApp::State
     int GetWorldRank() const { return m_world.rank(); }
 
     std::complex<double> ComputeVoltageCurrent(double time_step, int target_bus_id, const std::complex<double> &Sa,
-                                               const std::string &phase_name, const std::string &local_filename)
+                                               const std::string &phase_name, double rotation_degrees,
+                                               common::utils::LocalLogHelper &log)
     {
         // Apply S (pu in MW/Mvar) and solve
-        const double P_MW = Sa.real();
-        const double Q_Mvar = Sa.imag();
+        const double tolerance = this->cursor->get("tolerance", 1.0e-6);
+        const int max_iteration = this->cursor->get("maxIteration", 50);
 
         const int bus_index = this->GetBusIndex(target_bus_id);
 
-        this->network->getBusData(bus_index)->setValue(LOAD_PL, P_MW, 0);
-        this->network->getBusData(bus_index)->setValue(LOAD_QL, Q_Mvar, 0);
+        log << "Target Bus: " << target_bus_id << "\n";
+        log << "bus_index: " << bus_index << "\n";
+        log << "Tolerance: " << tolerance << "\n";
+        log << "Max Iterations: " << max_iteration << "\n";
+        log << "S: " << Sa << "\n";
 
-        const double tolerance = this->cursor->get("tolerance", 1.0e-6);
-        const int max_iteration = this->cursor->get("maxIteration", 50);
+        this->network->getBusData(bus_index)->setValue(LOAD_PL, Sa.real(), 0);
+        this->network->getBusData(bus_index)->setValue(LOAD_QL, Sa.imag(), 0);
 
         this->pf_factory->setMode(gridpack::powerflow::RHS);
         this->v_map->mapToVector(*this->PQ);
@@ -247,11 +255,8 @@ class three_phase::PhaseApp::State
 
         // Push solution and return bus id voltage
         this->pf_factory->setMode(gridpack::powerflow::RHS);
-        this->v_map->mapToBus(*this->X);
+        this->v_map->mapToBus(this->X);
         this->network->updateBuses();
-
-        const double v_mag = this->network->getBus(bus_index)->getVoltage();
-        const double v_ang_deg = this->network->getBus(bus_index)->getPhase(); // deg
 
         if (this->GetWorldRank() == 0)
         {
@@ -269,14 +274,16 @@ class three_phase::PhaseApp::State
             std::cout << "Bus voltages written to " << filename_out << "\n";
         }
 
-        const std::complex<double> result = three_phase::RotationToRadians(v_mag, v_ang_deg);
-        std::ofstream output(local_filename, std::ios::app);
-
-        output << "\n###################\n";
-        output << "Time:        " << time_step << "\n";
-        output << "Input Power: " << P_MW << "," << Q_Mvar << "\n";
-        output << "Computed V : " << result.real() << "," << result.imag() << "\n";
-        output.close();
+        const double v_mag = this->network->getBus(bus_index)->getVoltage();
+        const double v_ang = this->network->getBus(bus_index)->getPhase();
+        log << "v_mag: " << v_mag << "\n";
+        log << "v_ang: " << v_ang << "\n";
+        const std::complex<double> solver = std::polar(v_mag, v_ang);
+        log << "v_solver: " << solver << "\n";
+        const double rotation_radians = ToRadian(rotation_degrees);
+        log << "rotation_radians: " << rotation_radians << "\n";
+        const std::complex<double> result = solver * std::polar(1.0, rotation_radians);
+        log << "boundary result: " << result << "\n";
 
         return result;
     }
@@ -287,7 +294,7 @@ class three_phase::PhaseApp::State
 // ###################################
 
 three_phase::PhaseApp::PhaseApp()
-    : m_state(std::make_unique<three_phase::PhaseApp::State>()), m_bus_ids(), m_r(0.0, 0.0), m_phase_name("")
+    : m_state(std::make_unique<three_phase::PhaseApp::State>()), m_bus_ids(), m_rotation_degrees(0.0), m_phase_name("")
 {
 }
 
@@ -295,15 +302,12 @@ three_phase::PhaseApp::PhaseApp()
 three_phase::PhaseApp::~PhaseApp() = default;
 
 bool three_phase::PhaseApp::Initialize(const std::string &config_file, const std::vector<int> &bus_ids,
-                                       const std::string &phase_name, const std::complex<double> &r,
+                                       const std::string &phase_name, double rotation_degrees,
                                        common::utils::LocalLogHelper &log, double ln_magnitude)
 {
     m_bus_ids = bus_ids;
-    m_r = r;
+    m_rotation_degrees = rotation_degrees;
     m_phase_name = phase_name;
-    m_local_file = "powerflow_" + m_phase_name + "_outputs.txt";
-    std::ofstream local_file(m_local_file); // this reset's the file contents
-    local_file.close();
     m_ln_magnitude = ln_magnitude;
 
     bool success = m_state->InitializeConfig(config_file);
@@ -334,20 +338,19 @@ bool three_phase::PhaseApp::Initialize(const std::string &config_file, const std
 }
 
 std::complex<double> three_phase::PhaseApp::ComputeVoltageCurrent(double time_step, int target_bus_id,
-                                                                  const std::complex<double> &Sa)
+                                                                  const std::complex<double> &Sa,
+                                                                  common::utils::LocalLogHelper &log)
 {
     const std::complex<double> result =
-        m_state->ComputeVoltageCurrent(time_step, target_bus_id, Sa, m_phase_name, m_local_file) * m_r;
-    const std::complex<double> published = result * m_ln_magnitude;
+        m_state->ComputeVoltageCurrent(time_step, target_bus_id, Sa, m_phase_name, m_rotation_degrees, log);
+    const std::complex<double> rotated = result * ToComplexRadian(m_rotation_degrees);
 
-    std::ofstream output(m_local_file, std::ios::app);
-    output << "Rotated V  : " << result.real() << "," << result.imag() << "\n";
-    output << "Published V: " << published.real() << "," << published.imag() << "\n";
-    output << "###################\n";
+    log << "rotated: " << rotated << "\n";
+
     return result;
 }
 
-std::complex<double> three_phase::PhaseApp::GetRotationAngle() const { return m_r; }
+double three_phase::PhaseApp::GetRotationAngle() const { return m_rotation_degrees; }
 
 // ###################################
 // ThreePhaseApp Implementation
@@ -369,27 +372,24 @@ bool three_phase::ThreePhaseApp::Initialize(const three_phase::PhaseInput &phase
         {
             log << bus_id << " ";
         }
-        log << "\nr120: " << three_phase::RotationToRadians(1.0, phase.rotation_degrees) << "\n";
+        log << "\rotation (degrees): " << phase.rotation_degrees << "\n";
     };
 
     bool success_a, success_b, success_c = false;
 
-    success_a = m_phase_a.Initialize(phase_a.xml_file, bus_ids, "A",
-                                     three_phase::RotationToRadians(1.0, phase_a.rotation_degrees), log, ln_magnitude);
+    success_a = m_phase_a.Initialize(phase_a.xml_file, bus_ids, "A", phase_a.rotation_degrees, log, ln_magnitude);
     if (!success_a)
     {
         logger_lambda(phase_a, bus_ids, log);
     }
 
-    success_b = m_phase_b.Initialize(phase_b.xml_file, bus_ids, "B",
-                                     three_phase::RotationToRadians(1.0, phase_b.rotation_degrees), log, ln_magnitude);
+    success_b = m_phase_b.Initialize(phase_b.xml_file, bus_ids, "B", phase_b.rotation_degrees, log, ln_magnitude);
     if (!success_b)
     {
         logger_lambda(phase_b, bus_ids, log);
     }
 
-    success_c = m_phase_c.Initialize(phase_c.xml_file, bus_ids, "C",
-                                     three_phase::RotationToRadians(1.0, phase_c.rotation_degrees), log, ln_magnitude);
+    success_c = m_phase_c.Initialize(phase_c.xml_file, bus_ids, "C", phase_c.rotation_degrees, log, ln_magnitude);
     if (!success_c)
     {
         logger_lambda(phase_c, bus_ids, log);
@@ -404,44 +404,27 @@ three_phase::ThreePhaseApp::ComputeVoltage(double time_step, const common::helic
 {
     common::helics::ThreePhaseValues phased_voltage;
 
-    std::stringstream out;
-    out << "####################################\n";
-    out << "Bus Id: " << bus_id << "\n";
-    out << "Power A: " << power_s.a << "\n";
-    out << "Power B: " << power_s.b << "\n";
-    out << "Power C: " << power_s.c << "\n";
+    log << "####################################\n";
+    log << "Bus Id: " << bus_id << "\n";
 
-    common::utils::Stopwatch watch;
-    watch.Start();
-    phased_voltage.a = m_phase_a.ComputeVoltageCurrent(time_step, bus_id, power_s.a);
-    long long time_a = watch.ElapsedMilliseconds();
-    out << "Time A: " << time_a << " ms\n";
+    log << "\nPhase A\n";
+    phased_voltage.a = m_phase_a.ComputeVoltageCurrent(time_step, bus_id, power_s.a, log);
 
-    watch.Start();
-    phased_voltage.b = m_phase_b.ComputeVoltageCurrent(time_step, bus_id, power_s.b);
-    long long time_b = watch.ElapsedMilliseconds();
-    out << "Time B: " << time_b << " ms\n";
+    log << "\nPhase B\n";
+    phased_voltage.b = m_phase_b.ComputeVoltageCurrent(time_step, bus_id, power_s.b, log);
 
-    watch.Start();
-    phased_voltage.c = m_phase_c.ComputeVoltageCurrent(time_step, bus_id, power_s.c);
-    long long time_c = watch.ElapsedMilliseconds();
-    out << "Time C: " << time_c << " ms\n";
+    log << "\nPhase C\n";
+    phased_voltage.c = m_phase_c.ComputeVoltageCurrent(time_step, bus_id, power_s.c, log);
 
-    out << "Computed A: " << phased_voltage.a << "\n";
-    out << "Computed B: " << phased_voltage.b << "\n";
-    out << "Computed C: " << phased_voltage.c << "\n";
-
-    out << "####################################\n\n";
-
-    log << out.str();
+    log << "####################################\n\n";
 
     return phased_voltage;
 }
 
 common::helics::ThreePhaseValues three_phase::ThreePhaseApp::GetInitialPhasedVoltages() const
 {
-    const static common::helics::ThreePhaseValues initial_phased = { m_phase_a.GetRotationAngle(),
-                                                                     m_phase_b.GetRotationAngle(),
-                                                                     m_phase_c.GetRotationAngle() };
+    const common::helics::ThreePhaseValues initial_phased = { ToComplexRadian(m_phase_a.GetRotationAngle()),
+                                                              ToComplexRadian(m_phase_b.GetRotationAngle()),
+                                                              ToComplexRadian(m_phase_c.GetRotationAngle()) };
     return initial_phased;
 }

@@ -62,19 +62,19 @@ void ieee_118::FederateState::Initialize(const ieee_118::IEEE118Input &input,
     m_fed = fed;
 
     log << "Registering published connections..." << std::endl;
-    m_pub = common::helics::VoltagePublisher(m_fed, input.ln_magnitude);
+    m_pub = common::helics::VoltagePublisher(m_fed);
 
     log << "Registering subscribed connections..." << std::endl;
     m_subs = GetSubscriptions(input, m_fed);
-
-    log << "Initializing values..." << std::endl;
-    m_last_known_values = GetInitialPhaseValues(input);
 
     log << "Getting Bus Ids..." << std::endl;
     m_bus_ids = GetBusIds(input);
 
     log << "Getting the period..." << std::endl;
     m_period = m_fed->getTimeProperty(HELICS_PROPERTY_TIME_PERIOD);
+
+    log << "Getting Magnitude..." << std::endl;
+    m_ln_magnitude = input.ln_magnitude;
 
     log << "Initializing the executor..." << std::endl;
     if (!m_executor.Initialize("118.xml", m_bus_ids, std::complex<double>(-0.5, -0.866025)))
@@ -95,7 +95,9 @@ double ieee_118::FederateState::RunSimulation(const ieee_118::IEEE118Input &inpu
 
     // Initial voltage publish
     log << "Publish initial voltage." << std::endl;
-    m_pub.Publish({ { 1.0, 0.0 }, { -0.5, -0.866025 }, { -0.5, 0.866025 } });
+    common::helics::ThreePhaseValues initial_values = { { 1.0, 0.0 }, { -0.5, -0.866025 }, { -0.5, 0.866025 } };
+    initial_values = initial_values.Multiply(m_ln_magnitude);
+    m_pub.Publish(initial_values);
     log << "Published." << std::endl;
 
     // Perform Simulation
@@ -141,21 +143,8 @@ double ieee_118::FederateState::SimulateStep(const std::vector<ieee_118::Gridlab
         for (const std::string &gridlabd_name : gridlabd_info.names)
         {
             log << "\"" << gridlabd_name << "\" ";
-            common::helics::ThreePhaseSubscriptions &current_subs = m_subs.at(gridlabd_name);
-            if (current_subs.a.isUpdated() || current_subs.a.isValid())
-            {
-                m_last_known_values.at(gridlabd_name).a = current_subs.a.getValue<std::complex<double>>();
-            }
-            if (current_subs.b.isUpdated() || current_subs.b.isValid())
-            {
-                m_last_known_values.at(gridlabd_name).b = current_subs.b.getValue<std::complex<double>>();
-            }
-            if (current_subs.c.isUpdated() || current_subs.c.isValid())
-            {
-                m_last_known_values.at(gridlabd_name).c = current_subs.c.getValue<std::complex<double>>();
-            }
-
-            common::helics::ThreePhaseValues limited_power = common::helics::LimitPower(m_subs.at(gridlabd_name), 1.0);
+            common::helics::ThreePhaseValues limited_power =
+                common::helics::LimitPower(m_subs.at(gridlabd_name).GetValues(), 1.0);
             s_total.a += limited_power.a;
             s_total.b += limited_power.b;
             s_total.c += limited_power.c;
@@ -164,10 +153,11 @@ double ieee_118::FederateState::SimulateStep(const std::vector<ieee_118::Gridlab
         log << "\nTotal S received from Gridlab-D: [" << s_total.a << ", " << s_total.b << ", " << s_total.c << "]\n";
 
         common::helics::ThreePhaseValues v = m_executor.ComputeVoltage(s_total, gridlabd_info.bus_id);
+        common::helics::ThreePhaseValues scaled = v.Multiply(m_ln_magnitude);
 
-        log << "Updated V by GridPACK: [" << v.a << ", " << v.b << ", " << v.c << "]\n";
+        log << "Updated V by GridPACK: [" << scaled.a << ", " << scaled.b << ", " << scaled.c << "]\n";
 
-        m_pub.Publish(v);
+        m_pub.Publish(scaled);
     }
 
     return granted_time;
