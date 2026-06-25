@@ -25,12 +25,11 @@ class PhaseApp
     double GetRotationAngle() const;
 
   private:
-    class State; // forward declare, implement in source file
-    std::unique_ptr<State> m_state;
     std::vector<int> m_bus_ids;
     double m_rotation_degrees;
     std::string m_phase_name;
     double m_ln_magnitude;
+    std::string m_config_file;
 };
 
 class ThreePhaseApp

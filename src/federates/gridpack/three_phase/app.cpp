@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <cmath>
+#include <stdexcept>
 
 #include "common/utils/stopwatch.hpp"
 
@@ -27,13 +28,11 @@ double ToRadian(double degrees) { return degrees * (M_PI / 180.0); }
 
 std::complex<double> ToComplexRadian(double degrees) { return std::polar(1.0, ToRadian(degrees)); }
 
-} // namespace
-
 // ###################################
-// ThreePhaseApp::State Implementation
+// PhaseAppState Implementation
 // ###################################
 
-class three_phase::PhaseApp::State
+class PhaseAppState
 {
   private:
     std::unordered_map<int, int> m_bus_indeces;
@@ -51,7 +50,7 @@ class three_phase::PhaseApp::State
     boost::shared_ptr<gridpack::math::Matrix> J;
     std::unique_ptr<gridpack::math::LinearSolver> solver;
 
-    State() {}
+    PhaseAppState() {}
 
     bool InitializeConfig(const std::string &config_file)
     {
@@ -289,16 +288,17 @@ class three_phase::PhaseApp::State
     }
 };
 
+} // namespace
+
 // ###################################
 // PhaseApp Implementation
 // ###################################
 
 three_phase::PhaseApp::PhaseApp()
-    : m_state(std::make_unique<three_phase::PhaseApp::State>()), m_bus_ids(), m_rotation_degrees(0.0), m_phase_name("")
+    : m_bus_ids(), m_rotation_degrees(0.0), m_phase_name(""), m_ln_magnitude(0.0), m_config_file("")
 {
 }
 
-// At this point the inner State class has been defined, so we can default delete.
 three_phase::PhaseApp::~PhaseApp() = default;
 
 bool three_phase::PhaseApp::Initialize(const std::string &config_file, const std::vector<int> &bus_ids,
@@ -309,45 +309,45 @@ bool three_phase::PhaseApp::Initialize(const std::string &config_file, const std
     m_rotation_degrees = rotation_degrees;
     m_phase_name = phase_name;
     m_ln_magnitude = ln_magnitude;
+    m_config_file = config_file;
 
-    bool success = m_state->InitializeConfig(config_file);
-    if (!success)
-    {
-        log << "Phase " << m_phase_name << ": Could not initialize pf state with config file: " << config_file
-            << std::endl;
-        return success;
-    }
-
-    success = m_state->InitializeBusIndeces(m_bus_ids);
-    if (!success)
-    {
-        std::stringstream out;
-        out << "Phase " << m_phase_name << ": Could not initialize bus indeces with the following ids:\n";
-        for (int bus_ids : m_bus_ids)
-        {
-            out << bus_ids << " ";
-        }
-        out << "/n";
-        log << out.str();
-        return success;
-    }
-
-    m_state->InitializeFactoryAndFields();
-
-    return success;
+    return true;
 }
 
 std::complex<double> three_phase::PhaseApp::ComputeVoltageCurrent(double time_step, int target_bus_id,
                                                                   const std::complex<double> &Sa,
                                                                   common::utils::LocalLogHelper &log)
+
 {
+    PhaseAppState state;
+    if (!state.InitializeConfig(m_config_file))
+    {
+        log << "Phase " << m_phase_name << ": Could not initialize pf state with config file: " << m_config_file
+            << std::endl;
+        throw std::runtime_error("Could not initialize gridpack state!");
+    }
+
+    if (!state.InitializeBusIndeces(m_bus_ids))
+    {
+        std::stringstream out;
+        log << "Phase " << m_phase_name << ": Could not initialize bus indeces with the following ids:\n";
+        for (int bus_ids : m_bus_ids)
+        {
+            log << bus_ids << " ";
+        }
+        log << "/n";
+        throw std::runtime_error("Could not initialize gridpack bus indeces!");
+    }
+
+    state.InitializeFactoryAndFields();
+
     const std::complex<double> result =
-        m_state->ComputeVoltageCurrent(time_step, target_bus_id, Sa, m_phase_name, m_rotation_degrees, log);
+        state.ComputeVoltageCurrent(time_step, target_bus_id, Sa, m_phase_name, m_rotation_degrees, log);
     const std::complex<double> rotated = result * ToComplexRadian(m_rotation_degrees);
 
     log << "rotated: " << rotated << "\n";
 
-    return result;
+    return rotated;
 }
 
 double three_phase::PhaseApp::GetRotationAngle() const { return m_rotation_degrees; }
