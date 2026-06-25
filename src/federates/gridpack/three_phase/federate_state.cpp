@@ -71,7 +71,7 @@ void three_phase::FederateState::Initialize(const three_phase::ThreePhaseInput &
     m_fed = fed;
 
     log << "Registering published connections..." << std::endl;
-    m_pub = common::helics::VoltagePublisher(m_fed);
+    m_pub = common::helics::ThreePhaseVoltagePublisher(m_fed);
 
     log << "Registering subscribed connections..." << std::endl;
     m_subs = GetSubscriptions(input, m_fed);

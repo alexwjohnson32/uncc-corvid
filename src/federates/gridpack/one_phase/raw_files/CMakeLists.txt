@@ -1,0 +1,12 @@
+install(
+    FILES
+        118.raw
+        IEEE3_phase_A.raw
+        IEEE3_phase_B.raw
+        IEEE3_phase_C.raw
+        IEEE13_phase_A.raw
+        IEEE13_phase_B.raw
+        IEEE13_phase_C.raw
+    DESTINATION
+        ${CORVID_INSTALL_DIR}
+)

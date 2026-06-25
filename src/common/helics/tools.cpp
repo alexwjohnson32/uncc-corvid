@@ -11,23 +11,23 @@ common::helics::ThreePhaseValues common::helics::ThreePhaseSubscriptions::GetVal
              c.getValue<std::complex<double>>() };
 }
 
-common::helics::VoltagePublisher::VoltagePublisher() : m_a{}, m_b{}, m_c{} {}
+common::helics::ThreePhaseVoltagePublisher::ThreePhaseVoltagePublisher() : m_a{}, m_b{}, m_c{} {}
 
-common::helics::VoltagePublisher::VoltagePublisher(::helics::ValueFederate &fed)
+common::helics::ThreePhaseVoltagePublisher::ThreePhaseVoltagePublisher(::helics::ValueFederate &fed)
 {
     m_a = fed.registerPublication("Va", "complex", "V");
     m_b = fed.registerPublication("Vb", "complex", "V");
     m_c = fed.registerPublication("Vc", "complex", "V");
 }
 
-common::helics::VoltagePublisher::VoltagePublisher(const std::shared_ptr<::helics::ValueFederate> fed)
+common::helics::ThreePhaseVoltagePublisher::ThreePhaseVoltagePublisher(const std::shared_ptr<::helics::ValueFederate> fed)
 {
     m_a = fed->registerPublication("Va", "complex", "V");
     m_b = fed->registerPublication("Vb", "complex", "V");
     m_c = fed->registerPublication("Vc", "complex", "V");
 }
 
-void common::helics::VoltagePublisher::Publish(const common::helics::ThreePhaseValues &v)
+void common::helics::ThreePhaseVoltagePublisher::Publish(const common::helics::ThreePhaseValues &v)
 {
     m_a.publish(v.a);
     m_b.publish(v.b);

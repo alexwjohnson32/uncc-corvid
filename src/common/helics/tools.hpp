@@ -30,7 +30,7 @@ struct ThreePhaseSubscriptions
     ThreePhaseValues GetValues();
 };
 
-class VoltagePublisher
+class ThreePhaseVoltagePublisher
 {
   private:
     ::helics::Publication m_a;
@@ -38,9 +38,9 @@ class VoltagePublisher
     ::helics::Publication m_c;
 
   public:
-    VoltagePublisher();
-    VoltagePublisher(::helics::ValueFederate &fed);
-    VoltagePublisher(const std::shared_ptr<::helics::ValueFederate> fed);
+    ThreePhaseVoltagePublisher();
+    ThreePhaseVoltagePublisher(::helics::ValueFederate &fed);
+    ThreePhaseVoltagePublisher(const std::shared_ptr<::helics::ValueFederate> fed);
 
     void Publish(const ThreePhaseValues &v);
 };

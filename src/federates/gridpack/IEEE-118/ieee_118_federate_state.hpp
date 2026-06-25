@@ -20,7 +20,7 @@ class FederateState
 {
   public:
     std::shared_ptr<helics::ValueFederate> m_fed;
-    common::helics::VoltagePublisher m_pub;
+    common::helics::ThreePhaseVoltagePublisher m_pub;
     std::unordered_map<std::string, common::helics::ThreePhaseSubscriptions> m_subs;
     ieee_118::IEEE118App m_executor;
     std::vector<int> m_bus_ids;

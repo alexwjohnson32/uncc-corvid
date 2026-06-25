@@ -13,32 +13,34 @@
 #include <vector>
 #include <memory>
 
-namespace three_phase
+#include "inputs.hpp"
+
+namespace one_phase
 {
 class FederateState
 {
   public:
-    static std::unique_ptr<FederateState> Create(const three_phase::ThreePhaseInput &input,
+    static std::unique_ptr<FederateState> Create(const one_phase::PhaseInput &input,
                                                  const std::shared_ptr<helics::ValueFederate> &fed,
                                                  common::utils::LocalLogHelper &log);
 
     std::shared_ptr<helics::ValueFederate> m_fed;
-    common::helics::ThreePhaseVoltagePublisher m_pub;
-    std::unordered_map<std::string, common::helics::ThreePhaseSubscriptions> m_subs;
-    three_phase::ThreePhaseApp m_executor;
+    ::helics::Publication m_pub;
+    std::unordered_map<std::string, ::helics::Input> m_subs;
+    one_phase::PhaseApp m_app;
     std::vector<int> m_bus_ids;
     double m_period;
     double m_ln_magnitude;
 
     ~FederateState() {}
 
-    double RunSimulation(const three_phase::ThreePhaseInput &input, common::utils::LocalLogHelper &log);
+    double RunSimulation(const one_phase::PhaseInput &input, common::utils::LocalLogHelper &log);
 
   private:
     FederateState();
-    void Initialize(const three_phase::ThreePhaseInput &input, const std::shared_ptr<helics::ValueFederate> &fed,
+    void Initialize(const one_phase::PhaseInput &input, const std::shared_ptr<helics::ValueFederate> &fed,
                     common::utils::LocalLogHelper &log);
-    double SimulateStep(const std::vector<three_phase::GridlabDInputs> &gridlabd_infos, const double current_time,
+    double SimulateStep(const std::vector<one_phase::GridlabDInputs> &gridlabd_infos, const double current_time,
                         common::utils::LocalLogHelper &log);
 };
-} // namespace three_phase
+} // namespace one_phase

@@ -62,7 +62,7 @@ void ieee_118::FederateState::Initialize(const ieee_118::IEEE118Input &input,
     m_fed = fed;
 
     log << "Registering published connections..." << std::endl;
-    m_pub = common::helics::VoltagePublisher(m_fed);
+    m_pub = common::helics::ThreePhaseVoltagePublisher(m_fed);
 
     log << "Registering subscribed connections..." << std::endl;
     m_subs = GetSubscriptions(input, m_fed);

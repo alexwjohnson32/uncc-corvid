@@ -76,5 +76,5 @@ TEST_F(HelicsToolsTest, VoltagePublisherRegistration)
     if (!fed) return;
 
     // Ensure registrations happen without throwing
-    ASSERT_NO_THROW({ common::helics::VoltagePublisher publisher(*fed); });
+    ASSERT_NO_THROW({ common::helics::ThreePhaseVoltagePublisher publisher(*fed); });
 }
