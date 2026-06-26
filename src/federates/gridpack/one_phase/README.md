@@ -1,8 +1,8 @@
-# IEEE-118 Node GridPACK Model
+# One Phase Node GridPACK Model
 
-This represents a IEEE-118 Node model implemented in gridpack as a executable built from C++ 17.
+This represents a single phase of a transmission model implemented in gridpack as a executable built from C++ 17.
 
-The executable is named `ieee-118-gridpack-federate`, and it accepts a json file as input.
+The executable is named `one-phase-gridpack-federate`, and it accepts a json file as input.
 
 ## JSON File Inputs
 
@@ -13,17 +13,20 @@ There are a number of inputs that must be set per cosim and model prior to the l
 * `total_time`: A double precision value that represents (in seconds) the total simulated time of the cosim.
 * `local_log_file`: A path to a local log file to write outputs to, in order to keep a record of the model execution. More useful for debugging purposes than data analysis.
 * `ln_magnitude`: A double precision measurement of the line's voltag(? needs more explanation and to confirm this is true).
+* `phase_name`: The name of the phase being modeled.
+* `publication_field`: The name of the publication that this model will publish. The project will prepend the field with `federate_name/`.
+* `subscription_field`: The name of the subscription that this model will listen for. The project will prepend the field with each name found within `gridlabd_infos`, so multiple subscriptions can occur. The fields will be prepended with `gridlabd_name/`.
 * `gridlabd_infos`: This is a list of objects that represent the Distribution systems attached to this model. It is a list of maps, where a `bus_id` is mapped to a series of distribution system `names`.
 
 ## Running
 
 Call this command to launch the model as a HELICS federate. Change filepaths as necessary.
 
-`./ieee-118-gridpack-federate helics_setup.json`
+`./one-phase-gridpack-federate helics_setup.json`
 
 As a side note, if launching as part of a helics runner file, you will probably need to use an exec string like this:
 
-`"/bin/sh -c './ieee-118-gridpack-federate helics_setup.json'"`
+`"/bin/sh -c './one-phase-gridpack-federate helics_setup.json'"`
 
 ## IPC Core Compliance
 
