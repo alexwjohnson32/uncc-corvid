@@ -75,65 +75,6 @@ TEST_F(HelicsToolsTest, VoltagePublisherRegistration)
 {
     if (!fed) return;
 
-    double magnitude = 240.0;
     // Ensure registrations happen without throwing
-    ASSERT_NO_THROW({ common::helics::VoltagePublisher publisher(*fed, magnitude); });
-}
-
-TEST_F(HelicsToolsTest, LimitPowerWithSubscriptions)
-{
-    if (!fed) return;
-
-    common::helics::ThreePhaseSubscriptions subs;
-    // Using local names (not global) for safer unit testing
-    subs.a = fed->registerInput<std::complex<double>>("test_a", "V");
-    subs.b = fed->registerInput<std::complex<double>>("test_b", "V");
-    subs.c = fed->registerInput<std::complex<double>>("test_c", "V");
-
-    auto pub_a = fed->registerPublication<std::complex<double>>("test_a", "V");
-    auto pub_b = fed->registerPublication<std::complex<double>>("test_b", "V");
-    auto pub_c = fed->registerPublication<std::complex<double>>("test_c", "V");
-
-    fed->enterExecutingMode();
-
-    // Value in implementation is divided by 1e8.
-    // We want a result of (3,4) -> publish (3e8, 4e8)
-    std::complex<double> val(3e8, 4e8);
-    pub_a.publish(val);
-    pub_b.publish(val);
-    pub_c.publish(val);
-
-    fed->requestNextStep();
-
-    double limit = 10.0;
-    common::helics::ThreePhaseValues results = common::helics::LimitPower(subs, limit);
-
-    EXPECT_DOUBLE_EQ(results.a.real(), 3.0);
-    EXPECT_DOUBLE_EQ(results.a.imag(), 4.0);
-}
-
-TEST_F(HelicsToolsTest, LimitPowerWithSubscriptionsAboveLimit)
-{
-    if (!fed) return;
-
-    common::helics::ThreePhaseSubscriptions subs;
-    subs.a = fed->registerInput<std::complex<double>>("scale_a", "V");
-    subs.b = fed->registerInput<std::complex<double>>("scale_b", "V");
-    subs.c = fed->registerInput<std::complex<double>>("scale_c", "V");
-
-    auto pub_a = fed->registerPublication<std::complex<double>>("scale_a", "V");
-
-    fed->enterExecutingMode();
-
-    // 12e8 + 16e8j -> 20e8. Divided by 1e8 = 20. Limit 10 -> Scale 0.5.
-    pub_a.publish(std::complex<double>(12e8, 16e8));
-
-    fed->requestNextStep();
-
-    double limit = 10.0;
-    common::helics::ThreePhaseValues results = common::helics::LimitPower(subs, limit);
-
-    EXPECT_DOUBLE_EQ(results.a.real(), 6.0);
-    EXPECT_DOUBLE_EQ(results.a.imag(), 8.0);
-    EXPECT_DOUBLE_EQ(std::abs(results.a), 10.0);
+    ASSERT_NO_THROW({ common::helics::ThreePhaseVoltagePublisher publisher(*fed); });
 }

@@ -1,0 +1,197 @@
+clock {
+//	timestamp '2014-01-01 0:00:00';
+	timezone EST+5EDT;
+        starttime '2000-09-01 00:00:00';
+        stoptime '2000-09-02 00:00:00';
+}
+
+#set profiler=1
+#set iteration_limit=100000;
+#set relax_naming_rules=1;
+#set minimum_timestep=15;
+
+module powerflow {
+    solver_method NR;
+};
+
+module tape;
+module connection;
+
+object helics_msg {
+    name gld_hlc_conn;
+    configure gld_3bus.json;
+}
+
+// Define transmission line parameters
+object overhead_line {
+    name line_1_2;
+//    from Node1;
+    from Meter1;
+    to Node2;
+    phases ABC;
+    length 5280;
+    configuration "line_config";
+};
+
+object overhead_line {
+    name line_2_3;
+    from Node2;
+    to Node3;
+    phases ABC;
+    length 5280;
+    configuration line_config;
+};
+
+object overhead_line {
+    name line_2_l1;
+    from Node2;
+    to Load1;
+    phases ABC;
+    length 500;
+    configuration line_config;
+};
+
+object overhead_line {
+    name line_3_l2;
+    from Node3;
+    to Load2;
+    phases ABC;
+    length 500;
+    configuration line_config;
+};
+
+// Define the line configuration with the given impedance
+object line_configuration {
+    name line_config;
+    z11 0.25+1.0j;  // Impedance in Ohms per mile
+    z12 0.0;
+    z13 0.0;
+    z21 0.0;
+    z22 0.25+1.0j;
+    z23 0.0;
+    z31 0.0;
+    z32 0.0;
+    z33 0.25+1.0j;
+};
+
+// Create node objects
+//object node {
+//      name Node1;
+//      phases "ABCN";
+//          bustype SWING;
+//      voltage_A 2401.7771;
+//      voltage_B -1200.8886-2080.000j;
+//      voltage_C -1200.8886+2080.000j;
+//      nominal_voltage 2401.7771;
+//}
+
+object meter {
+      name Meter1;
+      phases "ABCN";
+          bustype SWING;
+      voltage_A 2401.7771;
+      voltage_B -1200.8886-2080.000j;
+      voltage_C -1200.8886+2080.000j;
+      nominal_voltage 2401.7771;
+      object recorder {
+        name slack_recorder;
+        property measured_voltage_A,measured_power_A,measured_voltage_B,measured_power_B,measured_voltage_C,measured_power_C;
+        interval 1;
+        limit 59;
+        file "slack_meter_cosim.csv";
+    };
+}
+
+object node {
+     name Node2;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     nominal_voltage 2401.7771;
+}
+
+object node {
+     name Node3;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     nominal_voltage 2401.7771;
+}
+
+// Create load objects 
+
+object load {
+     name Load1;
+//     parent Node2;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     constant_power_A 160000+110000j;
+     constant_power_B 120000-90000j;
+     constant_power_C 100000+80000j;
+     nominal_voltage 2401.7771;
+}
+ 
+object load {
+     name Load2;
+//     parent Node3;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     constant_power_A 170000+125000j;
+     constant_power_B 120000+105000j;
+     constant_power_C 150000-95000j;
+     nominal_voltage 2401.7771;
+}
+ 
+object voltdump {
+     filename Volt_Dump_NR_glm.csv;
+//     mode RECT;
+//     interval 900; 
+}
+object currdump {
+     filename Current_Dump_NR_glm.csv;
+//     mode RECT;
+//     interval 900; 
+}
+
+module tape;
+
+object recorder {
+    parent Meter1;
+    property voltage_A.real,voltage_A.imag,voltage_B.real,voltage_B.imag,voltage_C.real,voltage_C.imag;
+    file Meter1_voltage_cosim.csv;
+    interval 900;
+}
+
+object recorder {
+    parent Node2;
+    property voltage_A.real,voltage_A.imag,voltage_B.real,voltage_B.imag,voltage_C.real,voltage_C.imag;
+    file Node2_voltage_cosim.csv;
+    interval 900;
+}
+
+object recorder {
+    parent Node3;
+    property voltage_A.real,voltage_A.imag,voltage_B.real,voltage_B.imag,voltage_C.real,voltage_C.imag;
+    file Node3_voltage_cosim.csv;
+    interval 900;
+}
+
+object recorder {
+    parent Load1;
+    property voltage_A.real,voltage_A.imag,voltage_B.real,voltage_B.imag,voltage_C.real,voltage_C.imag;
+    file Load1_voltage_cosim.csv;
+    interval 900;
+}
+
+object recorder {
+    parent Load2;
+    property voltage_A.real,voltage_A.imag,voltage_B.real,voltage_B.imag,voltage_C.real,voltage_C.imag;
+    file Load2_voltage_cosim.csv;
+    interval 900;
+}

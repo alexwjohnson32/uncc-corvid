@@ -1,20 +1,15 @@
-#include "ieee_118_federate.hpp"
+#include "federate.hpp"
 #include "common/utils/json_templates.hpp"
 
-#include <string>
 #include <stdexcept>
 #include <sstream>
 #include <iostream>
 
-#include <helics/application_api/ValueFederate.hpp>
-#include <helics/application_api/Publications.hpp>
-#include <helics/application_api/Inputs.hpp>
+one_phase::PhaseFederate::PhaseFederate() {}
+one_phase::PhaseFederate::~PhaseFederate() {}
 
-ieee_118::IEEE118Federate::IEEE118Federate() {}
-ieee_118::IEEE118Federate::~IEEE118Federate() {}
-
-void ieee_118::IEEE118Federate::Initialize(const ieee_118::IEEE118Input &input,
-                                           const std::shared_ptr<helics::ValueFederate> &fed)
+void one_phase::PhaseFederate::Initialize(const one_phase::PhaseInput &input,
+                                          const std::shared_ptr<helics::ValueFederate> &fed)
 {
     m_fed_input = input;
 
@@ -34,16 +29,16 @@ void ieee_118::IEEE118Federate::Initialize(const ieee_118::IEEE118Input &input,
     m_log << "Json Input:\n" << common::utils::ToJsonString(input, true) << std::endl;
 
     // Setup Federate State
-    m_state.Initialize(m_fed_input, fed, m_log);
+    m_state = one_phase::FederateState::Create(m_fed_input, fed, m_log);
 }
 
-void ieee_118::IEEE118Federate::Run()
+void one_phase::PhaseFederate::Run()
 {
     double granted_time = -1;
 
     try
     {
-        granted_time = m_state.RunSimulation(m_fed_input, m_log);
+        granted_time = m_state->RunSimulation(m_fed_input, m_log);
     }
     catch (const std::exception &e)
     {

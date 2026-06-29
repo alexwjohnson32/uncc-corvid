@@ -1,0 +1,28 @@
+{
+  "name": "gld_3bus_fed",
+  "coreType": "tcp",
+  "coreInitString": "--broker=127.0.0.1:23500 --localport=23600 --ipv4",
+  "period": 900.0,
+  "offset": 0.0,
+  "uninterruptible": false,
+  "logfile": "gld_13bus.log",
+  "log_level": "debug",
+
+  "publications": [
+    { "global": true, "key": "gld_hlc_conn/Sa", "type": "complex", "unit": "VA",
+      "info": { "object": "Meter1", "property": "measured_power_A" } },
+    { "global": true, "key": "gld_hlc_conn/Sb", "type": "complex", "unit": "VA",
+      "info": { "object": "Meter1", "property": "measured_power_B" } },
+    { "global": true, "key": "gld_hlc_conn/Sc", "type": "complex", "unit": "VA",
+      "info": { "object": "Meter1", "property": "measured_power_C" } }
+  ],
+
+  "subscriptions": [
+    { "required": true, "key": "gridpack/Va", "type": "complex", "unit": "V",
+      "info": { "object": "Meter1", "property": "voltage_A" } },
+    { "required": true, "key": "gridpack/Vb", "type": "complex", "unit": "V",
+      "info": { "object": "Meter1", "property": "voltage_B" } },
+    { "required": true, "key": "gridpack/Vc", "type": "complex", "unit": "V",
+      "info": { "object": "Meter1", "property": "voltage_C" } }
+  ]
+}
