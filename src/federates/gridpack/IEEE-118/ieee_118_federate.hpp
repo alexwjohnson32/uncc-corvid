@@ -1,32 +1,25 @@
 #pragma once
 
 #include "ieee_118_inputs.hpp"
+#include "ieee_118_federate_state.hpp"
 #include "common/utils/local_log_helper.hpp"
 
-#include <memory>
+#include <helics/application_api/ValueFederate.hpp>
 
 namespace ieee_118
 {
-struct GridpackEnvConfig
-{
-    int argc;
-    char **argv;
-};
-
 class IEEE118Federate
 {
   public:
     IEEE118Federate();
     ~IEEE118Federate();
 
-    void Initialize(const ieee_118::IEEE118Input &input, ieee_118::GridpackEnvConfig config);
+    void Initialize(const ieee_118::IEEE118Input &input, const std::shared_ptr<helics::ValueFederate> &fed);
     void Run();
-    void Close();
 
   private:
     ieee_118::IEEE118Input m_fed_input;
     common::utils::LocalLogHelper m_log;
-    class FederateState; // Forward declaration, implemented in source
-    std::unique_ptr<FederateState> m_state;
+    ieee_118::FederateState m_state;
 };
 } // namespace ieee_118

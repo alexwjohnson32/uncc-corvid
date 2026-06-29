@@ -1,0 +1,455 @@
+clock {
+//	timestamp '2014-01-01 0:00:00';
+	timezone EST+5EDT;
+        starttime '2000-09-01 12:00:00';
+        stoptime '2000-09-02 12:00:00';
+}
+
+#set profiler=1
+#set iteration_limit=100000;
+#set relax_naming_rules=1;
+#set minimum_timestep=15;
+
+module powerflow {
+    solver_method NR;
+};
+
+module tape;
+module connection;
+
+object helics_msg {
+    name gld_hlc_conn;
+    configure gld_13bus.json;
+}
+
+// Define transmission line parameters
+object overhead_line {
+    name line_1_2;
+//    from Node1;
+    from Meter1;
+    to Node2;
+    phases ABC;
+    length 5280;
+    configuration "line_config";
+};
+
+object overhead_line {
+    name line_2_3;
+    from Node2;
+    to Node3;
+    phases ABC;
+    length 5280;
+    configuration line_config;
+};
+
+//object overhead_line {
+//    name line_2_l1;
+//    from Node2;
+//    to Load1;
+//    phases ABC;
+//    length 500;
+//    configuration line_config;
+//};
+
+object overhead_line {
+    name line_3_4;
+    from Node3;
+    to Node4;
+    phases ABC;
+    length 5280;
+    configuration line_config;
+};
+
+object overhead_line {
+    name line_4_6;
+    from Node4;
+    to Node6;
+    phases ABC;
+    length 5280;
+    configuration line_config;
+};
+
+object overhead_line {
+    name line_4_7;
+    from Node4;
+    to Node7;
+    phases ABC;
+    length 5280;
+    configuration line_config;
+};
+
+object overhead_line {
+    name line_7_8;
+    from Node7;
+    to Node8;
+    phases ABC;
+    length 5280;
+    configuration line_config;
+};
+
+object overhead_line {
+    name line_7_9;
+    from Node7;
+    to Node9;
+    phases ABC;
+    length 5280;
+    configuration line_config;
+};
+
+object overhead_line {
+    name line_3_5;
+    from Node3;
+    to Node5;
+    phases ABC;
+    length 5280;
+    configuration line_config;
+};
+
+object overhead_line {
+    name line_5_10;
+    from Node5;
+    to Node10;
+    phases ABC;
+    length 5280;
+    configuration line_config;
+};
+
+object overhead_line {
+    name line_5_11;
+    from Node5;
+    to Node11;
+    phases ABC;
+    length 5280;
+    configuration line_config;
+};
+
+object overhead_line {
+    name line_11_12;
+    from Node11;
+    to Node12;
+    phases ABC;
+    length 5280;
+    configuration line_config;
+};
+
+object overhead_line {
+    name line_11_13;
+    from Node11;
+    to Node13;
+    phases ABC;
+    length 5280;
+    configuration line_config;
+};
+
+//object overhead_line {
+//    name line_3_l2;
+//    from Node3;
+//    to Load2;
+//    phases ABC;
+//    length 500;
+//    configuration line_config;
+//};
+
+// Define the line configuration with the given impedance
+object line_configuration {
+    name line_config;
+    z11 0.25+1.0j;  // Impedance in Ohms per mile
+    z12 0.0;
+    z13 0.0;
+    z21 0.0;
+    z22 0.25+1.0j;
+    z23 0.0;
+    z31 0.0;
+    z32 0.0;
+    z33 0.25+1.0j;
+};
+
+// Create node objects
+//object node {
+//      name Node1;
+//      phases "ABCN";
+//          bustype SWING;
+//      voltage_A 2401.7771;
+//      voltage_B -1200.8886-2080.000j;
+//      voltage_C -1200.8886+2080.000j;
+//      nominal_voltage 2401.7771;
+//}
+
+object meter {
+      name Meter1;
+      phases "ABCN";
+          bustype SWING;
+      voltage_A 2401.7771;
+      voltage_B -1200.8886-2080.000j;
+      voltage_C -1200.8886+2080.000j;
+      nominal_voltage 2401.7771;
+      object recorder {
+        name slack_recorder;
+        property measured_voltage_A,measured_power_A,measured_voltage_B,measured_power_B,measured_voltage_C,measured_power_C;
+        interval 900;
+        limit 59;
+        file "slack_meter.csv";
+    };
+}
+
+object node {
+     name Node2;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     nominal_voltage 2401.7771;
+}
+
+object node {
+     name Node3;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     nominal_voltage 2401.7771;
+}
+
+object node {
+     name Node4;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     nominal_voltage 2401.7771;
+}
+
+object node {
+     name Node5;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     nominal_voltage 2401.7771;
+}
+
+object node {
+     name Node6;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     nominal_voltage 2401.7771;
+}
+
+object node {
+     name Node7;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     nominal_voltage 2401.7771;
+}
+
+object node {
+     name Node8;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     nominal_voltage 2401.7771;
+}
+
+object node {
+     name Node9;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     nominal_voltage 2401.7771;
+}
+
+object node {
+     name Node10;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     nominal_voltage 2401.7771;
+}
+
+object node {
+     name Node11;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     nominal_voltage 2401.7771;
+}
+
+object node {
+     name Node12;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     nominal_voltage 2401.7771;
+}
+
+object node {
+     name Node13;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     nominal_voltage 2401.7771;
+}
+
+// Create load objects 
+
+object load {
+     name Load1;
+     parent Node3;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     constant_power_A 16000+11000j;
+     constant_power_B 12000-9000j;
+     constant_power_C 10000+8000j;
+     nominal_voltage 2401.7771;
+}
+ 
+object load {
+     name Load2;
+     parent Node4;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     constant_power_A 17000+12500j;
+     constant_power_B 12000+10500j;
+     constant_power_C 15000-9500j;
+     nominal_voltage 2401.7771;
+}
+
+object load {
+     name Load3;
+     parent Node5;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     constant_power_A 1500+1050j;
+     constant_power_B 1000+950j;
+     constant_power_C 1300-8500j;
+     nominal_voltage 2401.7771;
+}
+
+object load {
+     name Load4;
+     parent Node6;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     constant_power_A 1000+950j;
+     constant_power_B 800+750j;
+     nominal_voltage 2401.7771;
+}
+
+object load {
+     name Load5;
+     parent Node7;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     constant_power_A 1550+1520j;
+     constant_power_C 1400-850j;
+     nominal_voltage 2401.7771;
+}
+
+object load {
+     name Load6;
+     parent Node8;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     constant_power_B 8000+7500j;
+     constant_power_C 9500-680j;
+     nominal_voltage 2401.7771;
+}
+
+object load {
+     name Load7;
+     parent Node9;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     constant_power_A 6000+1500j;
+     nominal_voltage 2401.7771;
+}
+
+object load {
+     name Load8;
+     parent Node10;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     constant_power_B 6000+5500j;
+     nominal_voltage 2401.7771;
+}
+
+object load {
+     name Load9;
+     parent Node13;
+     phases "ABCN";
+     voltage_A 2401.7771;
+     voltage_B -1200.8886-2080.000j;
+     voltage_C -1200.8886+2080.000j;
+     constant_power_C 6700-5800j;
+     nominal_voltage 2401.7771;
+}
+ 
+object voltdump {
+     filename Volt_Dump_NR_cosim.csv;
+}
+object currdump {
+     filename Current_Dump_NR_cosim.csv;
+}
+
+module tape;
+
+object recorder {
+    parent Meter1;
+    property voltage_A.real,voltage_A.imag,voltage_B.real,voltage_B.imag,voltage_C.real,voltage_C.imag;
+    file Meter1_voltage_glm.csv;
+    interval 900;
+}
+
+object recorder {
+    parent Node2;
+    property voltage_A.real,voltage_A.imag,voltage_B.real,voltage_B.imag,voltage_C.real,voltage_C.imag;
+    file Node2_voltage_glm.csv;
+    interval 900;
+}
+
+object recorder {
+    parent Node3;
+    property voltage_A.real,voltage_A.imag,voltage_B.real,voltage_B.imag,voltage_C.real,voltage_C.imag;
+    file Node3_voltage_glm.csv;
+    interval 900;
+}
+
+object recorder {
+    parent Load1;
+    property voltage_A.real,voltage_A.imag,voltage_B.real,voltage_B.imag,voltage_C.real,voltage_C.imag;
+    file Load1_voltage_glm.csv;
+    interval 900;
+}
+
+//object recorder {
+//    parent Load2;
+//    property voltage_A.real,voltage_A.imag,voltage_B.real,voltage_B.imag,voltage_C.real,voltage_C.imag;
+//    file Load2_voltage_glm.csv;
+//    interval 900;
+//}
