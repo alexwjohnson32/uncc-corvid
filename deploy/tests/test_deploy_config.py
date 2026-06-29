@@ -15,7 +15,7 @@ def _expected_federates() -> list[dict[str, str]]:
     return [
         {
             "directory": ".",
-            "exec": "helics-broker --federates=3 --port 23500",
+            "exec": "helics_broker --federates=3 --port 23500",
             "host": "localhost",
             "name": "main_broker"
         },

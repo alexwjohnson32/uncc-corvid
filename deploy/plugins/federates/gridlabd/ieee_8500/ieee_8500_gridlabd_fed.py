@@ -118,7 +118,7 @@ class IEEE8500FederatePlugin(interface.IDeployable):
 
 object helics_msg {{
     name {name};
-    configure {name}.json;
+    configure IEEE_8500node.json;
 }}
 
 clock {{
@@ -189,7 +189,7 @@ clock {{
         json_definition = dict()
         if absolute_working_directory.exists():
             json_definition["directory"] = str(relative_working_directory)
-            json_definition["exec"] = f"gridlabd.sh {model_name}.glm"
+            json_definition["exec"] = "gridlabd.sh IEEE_8500node.glm"
             json_definition["host"] = "localhost"
             json_definition["name"] = model_name
 

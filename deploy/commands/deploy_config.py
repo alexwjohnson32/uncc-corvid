@@ -126,7 +126,7 @@ def _get_model_execs(manager: plugins.manager.PluginManager, deploy_root: pathli
     federate_count = len(federates)
     broker_federate = {
         "directory": ".",
-        "exec": f"helics-broker --federates={federate_count} --port 23500",
+        "exec": f"helics_broker --federates={federate_count} --port 23500",
         "host": "localhost",
         "name": "main_broker"
     }
