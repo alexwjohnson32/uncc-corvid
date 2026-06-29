@@ -1,8 +1,12 @@
-#include "ieee_118_app.hpp"
+#include "app.hpp"
 
+#include <complex>
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <cmath>
+#include <stdexcept>
+#include <memory>
 
 #include "common/utils/stopwatch.hpp"
 
@@ -19,15 +23,15 @@ enum class Parser
     PTI33
 };
 
-constexpr double PI = 3.14159265358979323846;
+double ToRadian(double degrees) { return degrees * (M_PI / 180.0); }
 
-} // namespace
+std::complex<double> ToComplexRadian(double degrees) { return std::polar(1.0, ToRadian(degrees)); }
 
 // ###################################
-// IEEE118App::State Implementation
+// PhaseAppState Implementation
 // ###################################
 
-class ieee_118::IEEE118App::State
+class PhaseAppState
 {
   private:
     std::unordered_map<int, int> m_bus_indeces;
@@ -37,8 +41,6 @@ class ieee_118::IEEE118App::State
     boost::shared_ptr<gridpack::powerflow::PFNetwork> network;
     gridpack::utility::Configuration::CursorPtr cursor;
 
-    double base_MVA = 100.0;
-
     std::unique_ptr<gridpack::powerflow::PFFactoryModule> pf_factory;
     std::unique_ptr<gridpack::mapper::BusVectorMap<gridpack::powerflow::PFNetwork>> v_map;
     std::unique_ptr<gridpack::mapper::FullMatrixMap<gridpack::powerflow::PFNetwork>> j_map;
@@ -47,7 +49,7 @@ class ieee_118::IEEE118App::State
     boost::shared_ptr<gridpack::math::Matrix> J;
     std::unique_ptr<gridpack::math::LinearSolver> solver;
 
-    State() {}
+    PhaseAppState() {}
 
     bool InitializeConfig(const std::string &config_file)
     {
@@ -57,14 +59,10 @@ class ieee_118::IEEE118App::State
         gridpack::utility::Configuration *config = gridpack::utility::Configuration::configuration();
         config->enableLogging(&std::cout);
 
-        bool opened;
+        bool opened = false;
         if (!config_file.empty())
         {
             opened = config->open(config_file, m_world);
-        }
-        else
-        {
-            opened = config->open("118.xml", m_world);
         }
 
         if (!opened)
@@ -73,7 +71,6 @@ class ieee_118::IEEE118App::State
         }
 
         cursor = config->getCursor("Configuration.Powerflow");
-        base_MVA = cursor->get("baseMVA", 100.0);
 
         std::string filename = "";
         Parser file_type = Parser::PTI23;
@@ -189,6 +186,7 @@ class ieee_118::IEEE118App::State
         solver = std::make_unique<gridpack::math::LinearSolver>(*J);
         solver->configure(cursor);
     }
+
     int GetBusIndex(int bus_id) const
     {
         int bus_index = -1;
@@ -200,22 +198,26 @@ class ieee_118::IEEE118App::State
 
         return bus_index;
     }
+
     int GetWorldRank() const { return m_world.rank(); }
 
-    std::complex<double> ComputeVoltageCurrent(const std::string &config_file, int target_bus_id,
-                                               const std::string &phase_name, const std::complex<double> &Sa)
+    std::complex<double> ComputeVoltage(int target_bus_id, const std::complex<double> &S, const std::string &phase_name,
+                                        double rotation_degrees, common::utils::LocalLogHelper &log)
     {
         // Apply S (pu in MW/Mvar) and solve
-        const double P_MW = Sa.real() * this->base_MVA;
-        const double Q_Mvar = Sa.imag() * this->base_MVA;
+        const double tolerance = this->cursor->get("tolerance", 1.0e-6);
+        const int max_iteration = this->cursor->get("maxIteration", 50);
 
         const int bus_index = this->GetBusIndex(target_bus_id);
 
-        this->network->getBusData(bus_index)->setValue(LOAD_PL, P_MW, 0);
-        this->network->getBusData(bus_index)->setValue(LOAD_QL, Q_Mvar, 0);
+        log << "Target Bus: " << target_bus_id << "\n";
+        log << "bus_index: " << bus_index << "\n";
+        log << "Tolerance: " << tolerance << "\n";
+        log << "Max Iterations: " << max_iteration << "\n";
+        log << "S: " << S << "\n";
 
-        const double tolerance = this->cursor->get("tolerance", 1.0e-6);
-        const int max_iteration = this->cursor->get("maxIteration", 50);
+        this->network->getBusData(bus_index)->setValue(LOAD_PL, S.real(), 0);
+        this->network->getBusData(bus_index)->setValue(LOAD_QL, S.imag(), 0);
 
         this->pf_factory->setMode(gridpack::powerflow::RHS);
         this->v_map->mapToVector(*this->PQ);
@@ -246,15 +248,12 @@ class ieee_118::IEEE118App::State
 
         // Push solution and return bus id voltage
         this->pf_factory->setMode(gridpack::powerflow::RHS);
-        this->v_map->mapToBus(*this->X);
+        this->v_map->mapToBus(this->X);
         this->network->updateBuses();
-
-        const double v_mag = this->network->getBus(bus_index)->getVoltage();
-        const double v_ang_deg = this->network->getBus(bus_index)->getPhase(); // deg
 
         if (this->GetWorldRank() == 0)
         {
-            const std::string filename_out = "bus_voltages_phase" + phase_name + ".csv";
+            const std::string filename_out = "bus_voltages_phase_" + phase_name + ".csv";
             std::ofstream out_file(filename_out);
 
             out_file << "Original Bus Number,Voltage Magnitude (pu),Voltage Angle (deg)\n";
@@ -268,87 +267,79 @@ class ieee_118::IEEE118App::State
             std::cout << "Bus voltages written to " << filename_out << "\n";
         }
 
-        return std::polar(v_mag, v_ang_deg * PI / 180.0);
+        const double v_mag = this->network->getBus(bus_index)->getVoltage();
+        const double v_ang = this->network->getBus(bus_index)->getPhase();
+        log << "v_mag: " << v_mag << "\n";
+        log << "v_ang: " << v_ang << "\n";
+        const std::complex<double> solver = std::polar(v_mag, v_ang);
+        log << "v_solver: " << solver << "\n";
+        const double rotation_radians = ToRadian(rotation_degrees);
+        log << "rotation_radians: " << rotation_radians << "\n";
+        const std::complex<double> result = solver * std::polar(1.0, rotation_radians);
+        log << "boundary result: " << result << "\n";
+
+        return result;
     }
 };
 
+} // namespace
+
 // ###################################
-// IEEE118App Implementation
+// PhaseApp Implementation
 // ###################################
 
-ieee_118::IEEE118App::IEEE118App()
-    : m_state(std::make_unique<ieee_118::IEEE118App::State>()), m_config_file(""), m_bus_ids(), m_r(0.0, 0.0),
-      m_log("three_phase_timing.log")
+one_phase::PhaseApp::PhaseApp() : m_bus_ids(), m_rotation_degrees(0.0), m_phase_name(""), m_config_file("") {}
+
+one_phase::PhaseApp::~PhaseApp() = default;
+
+void one_phase::PhaseApp::Initialize(const std::string &config_file, const std::vector<int> &bus_ids,
+                                     const std::string &phase_name, double rotation_degrees)
 {
+    m_bus_ids = bus_ids;
+    m_rotation_degrees = rotation_degrees;
+    m_phase_name = phase_name;
+    m_config_file = config_file;
 }
 
-// At this point the inner State class has been defined, so we can default delete.
-ieee_118::IEEE118App::~IEEE118App() = default;
+std::complex<double> one_phase::PhaseApp::ComputeVoltage(int target_bus_id, const std::complex<double> &S,
+                                                         common::utils::LocalLogHelper &log)
 
-bool ieee_118::IEEE118App::Initialize(const std::string &config_file, const std::vector<int> &bus_ids,
-                                      const std::complex<double> &r)
 {
-    m_config_file = config_file;
-    m_bus_ids = bus_ids;
-    m_r = r;
+    log << "####################################\n";
+    log << "Bus Id: " << target_bus_id << "\n";
 
-    bool success = m_state->InitializeConfig(m_config_file);
-    if (!success)
+    PhaseAppState state;
+    if (!state.InitializeConfig(m_config_file))
     {
-        m_log << "Could not initialize pf state with config file: " << m_config_file << std::endl;
-        return success;
+        log << "Phase " << m_phase_name << ": Could not initialize pf state with config file: " << m_config_file
+            << std::endl;
+        throw std::runtime_error("Could not initialize gridpack state!");
     }
 
-    success = m_state->InitializeBusIndeces(m_bus_ids);
-    if (!success)
+    if (!state.InitializeBusIndeces(m_bus_ids))
     {
         std::stringstream out;
-        out << "Could not initialize bus indeces with the following ids:\n";
+        log << "Phase " << m_phase_name << ": Could not initialize bus indeces with the following ids:\n";
         for (int bus_ids : m_bus_ids)
         {
-            out << bus_ids << " ";
+            log << bus_ids << " ";
         }
-        out << "/n";
-        m_log << out.str();
-        return success;
+        log << "/n";
+        throw std::runtime_error("Could not initialize gridpack bus indeces!");
     }
 
-    m_state->InitializeFactoryAndFields();
+    state.InitializeFactoryAndFields();
 
-    return success;
+    const std::complex<double> result = state.ComputeVoltage(target_bus_id, S, m_phase_name, m_rotation_degrees, log);
+    const std::complex<double> rotated = result * ToComplexRadian(m_rotation_degrees);
+
+    log << "rotated: " << rotated << "\n";
+    log << "####################################\n\n";
+
+    return rotated;
 }
 
-common::helics::ThreePhaseValues ieee_118::IEEE118App::ComputeVoltage(const common::helics::ThreePhaseValues &power_s,
-                                                                      int bus_id)
+std::complex<double> one_phase::PhaseApp::GetInitialPhasedVoltages() const
 {
-    common::helics::ThreePhaseValues phased_voltage;
-
-    std::stringstream out;
-    out << "####################################\n";
-    out << "Bus Id: " << bus_id << "\n";
-    out << "Power A: " << power_s.a << "\n";
-    out << "Power B: " << power_s.b << "\n";
-    out << "Power C: " << power_s.c << "\n";
-
-    common::utils::Stopwatch watch;
-    watch.Start();
-    phased_voltage.a = m_state->ComputeVoltageCurrent(m_config_file, bus_id, "A", power_s.a);
-    long long time_a = watch.ElapsedMilliseconds();
-    out << "Time A: " << time_a << " ms\n";
-
-    watch.Start();
-    phased_voltage.b = m_state->ComputeVoltageCurrent(m_config_file, bus_id, "B", power_s.b) * m_r;
-    long long time_b = watch.ElapsedMilliseconds();
-    out << "Time B: " << time_b << " ms\n";
-
-    watch.Start();
-    phased_voltage.c = m_state->ComputeVoltageCurrent(m_config_file, bus_id, "C", power_s.c) * m_r * m_r;
-    long long time_c = watch.ElapsedMilliseconds();
-    out << "Time C: " << time_c << " ms\n";
-
-    out << "####################################\n\n";
-
-    m_log << out.str();
-
-    return phased_voltage;
+    return ToComplexRadian(m_rotation_degrees);
 }
