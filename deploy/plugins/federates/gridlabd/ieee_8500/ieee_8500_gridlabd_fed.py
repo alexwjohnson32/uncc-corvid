@@ -27,7 +27,11 @@ class InputData:
         self.local_log_file: str = ""
         self.core_type: str = ""
         self.core_init: str = ""
-        self.three_part_subscription_name: str = ""
+        self.broker: str = ""
+        self.broker_port: int = 0
+        self.period: float = 1.0
+        self.subscription_name: str = ""
+        self.is_three_part: bool = True
 
         errs = list[str]()
 
@@ -35,9 +39,16 @@ class InputData:
         self.local_log_file = self._validate_config(json_dict, "local_log_file", str, errs)
         self.core_type = self._validate_config(json_dict, "core_type", str, errs)
         self.core_init = self._validate_config(json_dict, "core_init", str, errs)
-        self.three_part_subscription_name = self._validate_config(
-            json_dict, "three_part_subscription_name", str, errs
-        )
+        self.broker = self._validate_config(json_dict, "broker", str, errs)
+        self.broker_port = self._validate_config(json_dict, "broker_port", int, errs)
+        self.subscription_name = self._validate_config(json_dict, "subscription_name", str, errs)
+
+        # This is an optional keyword, do not throw if it does not exist
+        if "is_three_part" in json_dict and isinstance(json_dict["is_three_part"], bool):
+            self.is_three_part = json_dict["is_three_part"]
+
+        if "period" in json_dict and isinstance(json_dict["period"], float):
+            self.period = json_dict["period"]
 
         if errs:
             err_msgs = str.join("\n", errs)
@@ -90,6 +101,9 @@ class IEEE8500FederatePlugin(interface.IDeployable):
         json_data["coreInit"] = input_data.core_init
         json_data["coreType"] = input_data.core_type
         json_data["name"] = input_data.name
+        json_data["broker"] = input_data.broker
+        json_data["broker_port"] = input_data.broker_port
+        json_data["period"] = input_data.period
         json_data["logfile"] = input_data.local_log_file
 
         # update three-part publication
@@ -100,9 +114,14 @@ class IEEE8500FederatePlugin(interface.IDeployable):
 
         # update three-part subscription
         subscriptions = json_data["subscriptions"]
-        subscriptions[0]["key"] = f"{input_data.three_part_subscription_name}/Va"
-        subscriptions[1]["key"] = f"{input_data.three_part_subscription_name}/Vb"
-        subscriptions[2]["key"] = f"{input_data.three_part_subscription_name}/Vc"
+        if input_data.is_three_part:
+            subscriptions[0]["key"] = f"{input_data.subscription_name}_a/Va"
+            subscriptions[1]["key"] = f"{input_data.subscription_name}_b/Vb"
+            subscriptions[2]["key"] = f"{input_data.subscription_name}_c/Vc"
+        else:
+            subscriptions[0]["key"] = f"{input_data.subscription_name}/Va"
+            subscriptions[1]["key"] = f"{input_data.subscription_name}/Vb"
+            subscriptions[2]["key"] = f"{input_data.subscription_name}/Vc"
 
         return json_data
 

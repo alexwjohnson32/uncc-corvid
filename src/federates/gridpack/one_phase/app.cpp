@@ -256,7 +256,7 @@ class PhaseAppState
             const std::string filename_out = "bus_voltages_phase_" + phase_name + ".csv";
             std::ofstream out_file(filename_out);
 
-            out_file << "Original Bus Number,Voltage Magnitude (pu),Voltage Angle (deg)\n";
+            out_file << "Original Bus Number,Voltage Magnitude (pu),Voltage Angle (rad)\n";
             for (int i = 0; i < this->network->numBuses(); i++)
             {
                 out_file << this->network->getOriginalBusIndex(i) << "," << this->network->getBus(i)->getVoltage()

@@ -55,7 +55,7 @@ class InputData:
 
         return gridlabd_infos
 
-    def __init__(self, json_dict: dict) -> None:
+    def __init__(self, json_dict: dict, total_time: float) -> None:
         self.name: str = ""
         self.local_log_file: str = ""
         self.core_type: str = ""
@@ -63,6 +63,7 @@ class InputData:
         self.log_level: str = ""
         self.ln_magnitude: float = 0.0
         self.gridlabd_infos: list = []
+        self.total_time = total_time
 
         errs = list[str]()
 
@@ -127,6 +128,7 @@ class IEEE118FederatePlugin(interface.IDeployable):
         config["gridpack_name"] = input_data.name
         config["local_log_file"] = input_data.local_log_file
         config["ln_magnitude"] = input_data.ln_magnitude
+        config["total_time"] = input_data.total_time
 
         gridlabd_infos = list()
         for gridlabd_info in input_data.gridlabd_infos:
@@ -139,7 +141,7 @@ class IEEE118FederatePlugin(interface.IDeployable):
         return config
 
     def deploy(self, json_config: dict, total_time_seconds: float, deploy_root: str, install_root: str) -> None:
-        input_data = InputData(json_config)
+        input_data = InputData(json_config, total_time_seconds)
 
         # Raise a ValueError if the path does not exist.
         install_path = self._get_install_path(install_root)
