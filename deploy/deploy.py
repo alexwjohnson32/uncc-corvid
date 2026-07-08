@@ -6,6 +6,7 @@ import commands.list_source_files
 import commands.list_model_files
 import commands.list_model_names
 import commands.deploy_config
+import commands.quick_config
 import pathlib
 import plugins.manager as manager
 
@@ -19,6 +20,7 @@ def main():
     _setup_list_model_files_parser(subparsers)
     _setup_list_model_names_parser(subparsers)
     _setup_deploy_parser(subparsers)
+    _setup_quick_config(subparsers)
 
     args = top_parser.parse_args()
 
@@ -39,6 +41,8 @@ def main():
             _print_list_model_names(plugin_manager, args.deploy_dir.resolve(), args.plugin_name)
         elif args.command == "deploy":
             _print_deploy_parser(plugin_manager, args.install_dir.resolve(), args.deploy_dir.resolve(), args.config.resolve())
+        elif args.command == "quick-config":
+            _print_quick_config(args.json_config, args.cosim_name, args.output_dir, args.create_output_dir)
         else:
             print(f"Unrecognized Command '{args.command}', terminating.")
 
@@ -107,6 +111,17 @@ def _setup_deploy_parser(subparser: argparse._SubParsersAction) -> None:
 def _print_deploy_parser(plugin_manager: manager.PluginManager, install_dir: pathlib.Path, deploy_dir: pathlib.Path, json_file: pathlib.Path) -> None:
     print(f"Deploy Configuration to '{str(deploy_dir)}'")
     print(commands.deploy_config.deploy(plugin_manager, install_dir, deploy_dir, json_file))
+
+def _setup_quick_config(subparser: argparse._SubParsersAction) -> None:
+    quick_config_parser = subparser.add_parser("quick-config", help="Attempts to generate a cosim definition based on the given input")
+    quick_config_parser.add_argument("--json-config", required=True, help="The path to the json config file to read from", type=pathlib.Path)
+    quick_config_parser.add_argument("--cosim-name", required=True, help="The cosim name to use.", type=str)
+    quick_config_parser.add_argument("--output-dir", required=True, help="The path to the output directory to write to", type=pathlib.Path)
+    quick_config_parser.add_argument("--create-output-dir", required=False, help="(Optional) Create ouput directory, defaults to true", type=bool, default=True)
+
+def _print_quick_config(json_config: pathlib.Path, cosim_name: str, output_dir: pathlib.Path, create_output_dir: bool) -> None:
+    print(f"Writing cosim configuration to {output_dir}")
+    print(commands.quick_config.quick_deploy(json_config, cosim_name, output_dir, create_output_dir))
 
 if __name__ == '__main__':
     main()

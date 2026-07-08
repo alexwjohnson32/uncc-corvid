@@ -314,5 +314,3 @@ class IEEE3FederatePlugin(interface.IDeployable):
                     model_names.append(model_dir.name)
 
         return model_names
-
-

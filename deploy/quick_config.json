@@ -1,0 +1,18 @@
+{
+    "total_time_seconds": 86400.0,
+    "bus_ids": [
+        2, 3
+    ],
+    "core_type": "zmq",
+    "broker_address": "127.0.0.1",
+    "broker_port": 23500,
+    "period": 1.0,
+    "ln_magnitude": 2401.7771,
+    "gridpack_type": "gridpack/IEEE-3",
+    "gridlabd_infos": [
+        {
+            "gridlabd_type": "gridlabd/3-bus",
+            "number_instances": 4
+        }
+    ]
+}
