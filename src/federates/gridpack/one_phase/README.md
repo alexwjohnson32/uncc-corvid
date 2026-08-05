@@ -12,10 +12,10 @@ There are a number of inputs that must be set per cosim and model prior to the l
 * `fed_info_json`: A separate json object that is the actual HELICS json structure, this will be passed to the federate directly. The HELICS json file itself has many options that can be set, but do NOT define the publications and subscriptions here, that is handled later in the config. You must also configure it to run with an `ipc` core to be compliant on the HPC.
 * `total_time`: A double precision value that represents (in seconds) the total simulated time of the cosim.
 * `local_log_file`: A path to a local log file to write outputs to, in order to keep a record of the model execution. More useful for debugging purposes than data analysis.
-* `ln_magnitude`: A double precision measurement of the line's voltag(? needs more explanation and to confirm this is true).
+* `ln_magnitude`: A double precision measurement of the line's voltage.
 * `phase_name`: The name of the phase being modeled.
-* `publication_field`: The name of the publication that this model will publish. The project will prepend the field with `federate_name/`.
-* `subscription_field`: The name of the subscription that this model will listen for. The project will prepend the field with each name found within `gridlabd_infos`, so multiple subscriptions can occur. The fields will be prepended with `gridlabd_name/`.
+* `publication_field`: The name of the publication that this model will publish. The project will prepend the field with `<federate_name>/`.
+* `subscription_field`: The name of the subscription that this model will listen for. The project will prepend the field with each name found within `gridlabd_infos`, so multiple subscriptions can occur. The fields will be prepended with `<gridlabd_name>/`.
 * `gridlabd_infos`: This is a list of objects that represent the Distribution systems attached to this model. It is a list of maps, where a `bus_id` is mapped to a series of distribution system `names`.
 
 ## Running
@@ -37,3 +37,13 @@ In order to run on an IPC core, you need to set two fields specifically in the H
     * The `--shared_file` is the exact path that you set in the broker's init string `--shared_file` flag.
 
 For a basic example of the json file, refer to the `helics_setup.json` file.
+
+## Validity Considerations
+
+The approach to supporting multiple bus-ids per federate is largely untested as to its validity. The approach was derived from discussions between Corvid and UNCC. Essentially, we compute the voltage per bus id and sum them together and publish that summed value as the output. The truth models provided were only for single bus ids and did not display any approach to approve or counter this design choice, so please be aware of this implementation detail when using the models.
+
+## Supporting Files
+
+There are multiple subdirectories: `json_files`, `raw_files` and `xml_files`. The `json_files` directory shows three json inputs that define separate federates that would work in tandem to be a single model. The `raw_files` and `xml_files` contains the definitions of 3 bus and 13 bus implementations, as well as the 118 raw and xml files. In order to properly use the 118 model though, I believe changes would need to be made to the raw and xml files for each phase to be properly represented within the 118 model definition.
+
+These files are "truth" data files, and changing them can and likely will affect the `deploy` tool plugins.

@@ -2,7 +2,7 @@
 
 The `CMakePresets.json` file holds the default CMake Variables for this project. Look at the `cmake_deps` directory for more dependencies for the project, but those should not be necessary to modify from the build process.
 
-Everything is being built statically currently. If we move to build shared, I think some changes will need to be made to the install process to properly install the shared libs.
+Everything is being built statically currently. If building shared is desired, I think some changes will need to be made to the install process to properly install the shared libs.
 
 Currently, we are not exporting any headers or libs to link to. The current concept of this project is to present a series of executables that all launch HELICS federates. Each federate will have a configurable set of inputs that can be handed to it via a json config file.
 
@@ -14,7 +14,7 @@ Besides those keywords, you can add any CMake build flag to the build process by
 
 If you want to pass specific flags to the `gtest` test runner, first type `--` as a separator, even if you have not specified any other CMake flags. Every flag after the standalone `--` will be interpreted as a gtest runner flag.
 
-If you want to get a fully clean build, the best thing to do is manually `rm -rf` the build and install directories manually. From this directory `src`, the easiest way to do that is to simply run `rm -rf build/* install/*` to get a clean slate as long as you have not specified another install directory location.
+If you want to get a fully clean build, the best thing to do is manually `rm -rf` the build and install directories manually. From the `src` directory, the easiest way to do that is to simply run `rm -rf build/* install/*` to get a clean slate as long as you have not specified another install directory location.
 
 ## The `install` Directory
 
@@ -26,7 +26,7 @@ Once built, you will have the following directories:
 
 ### `debug_tools`
 
-This contains any tools that may be useful for troubleshooting a helics cosim execution, but is not meant for delivery or truly external use. It contains a dummy server and client for testing the passing of information from an executing helics federate, although with the new knowledge about how locked down the HPC's are, we may need a new approach.
+This contains any tools that may be useful for troubleshooting a helics cosim execution, but is not meant for delivery or truly external use. It contains a dummy server and client for testing the passing of information from an executing helics federate. Currently, the websocket tool is not in use in any federate, but is left within the directory in the event someone may find it useful in the future.
 
 There is also a `dummy_federates` directory which contains a very basic helics federate that does not rely on any external libraries. It exists to simply execute a helics cosim to test that the pieces can connect. You could probably do the same with the queryable federate we will mention later, but this is a dedicated federate for dummy tests that should not change over time.
 
@@ -46,11 +46,11 @@ This directory contains the built federates for the UNCC-COSIM environment. In g
 
 The `federate model` itself is a directory that contains all of the files local to it that is necessary for the model to run. They may be c++ executables, gridlabd shell scripts, possibly even python scripts, or any other arbitrary executable type that can be coerced to run as a HELICS federate.
 
-For specific model information and details, one should refer to the `README.md` file within the `federate model` directory. If that `README.md` does not exist or is not sufficiently informative, good luck and have fun.
+For specific model information and details, one should refer to the `README.md` file within the `federate model` directory.
 
 ## Instantiating the HELICS Broker with IPC
 
-In order for a cosim to run, you need to have at least one broker. Currently with the IPC connection, I know how to stand-up a single broker cosim. I believe with our constraints that will be enough since we will have federates launching on multiple nodes, but they all can connect to the broker via the socketfile. If we need to setup a broker hiearchy, some more work will need to be put into this section. I believe it should be possible, in theory we just setup the broker hierarchies, and each "node" broker will have a socketfile connected to it, which is how it will communicate to all of its federates. It will then need to send all of it's data to a separate socketfile (which this may be where a mutli-broker approach could fall apart if this is not supported out-of-the-box).
+In order for a cosim to run, you need to have at least one broker. Currently with the IPC connection, I know how to stand-up a single broker cosim. I believe with our constraints that will be enough since we will have federates launching on multiple nodes, but they all can connect to the broker via the socketfile. If we need to setup a broker hiearchy, some more work will need to be put into this section. I believe it should be possible; in theory we just setup the broker hierarchies, and each "node" broker will have a socketfile connected to it, which is how it will communicate to all of its federates. It will then need to send all of it's data to a separate socketfile (which this may be where a mutli-broker approach could fall apart if this is not supported out-of-the-box).
 
 ### HELICS Broker exec string
 
