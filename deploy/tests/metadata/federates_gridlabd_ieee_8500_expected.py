@@ -3,6 +3,8 @@ import pathlib
 
 def get_ieee_8500_model_config(input_data: dict) -> dict:
     return {
+        "broker": "main_broker",
+        "broker_port": 23500,
         "coreInit": input_data["core_init"],
         "coreType": input_data["core_type"],
         "name": input_data["name"],
@@ -46,7 +48,7 @@ def get_ieee_8500_model_config(input_data: dict) -> dict:
         "subscriptions": [
             {
                 "required": True,
-                "key": f"{input_data['three_part_subscription_name']}/Va",
+                "key": f"{input_data['subscription_name']}_a/Va",
                 "type": "complex",
                 "unit": "V",
                 "info": {
@@ -56,7 +58,7 @@ def get_ieee_8500_model_config(input_data: dict) -> dict:
             },
             {
                 "required": True,
-                "key": f"{input_data['three_part_subscription_name']}/Vb",
+                "key": f"{input_data['subscription_name']}_b/Vb",
                 "type": "complex",
                 "unit": "V",
                 "info": {
@@ -66,7 +68,7 @@ def get_ieee_8500_model_config(input_data: dict) -> dict:
             },
             {
                 "required": True,
-                "key": f"{input_data['three_part_subscription_name']}/Vc",
+                "key": f"{input_data['subscription_name']}_c/Vc",
                 "type": "complex",
                 "unit": "V",
                 "info": {

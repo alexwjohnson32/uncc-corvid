@@ -11,7 +11,11 @@ def _get_basic_json_input() -> dict:
         "local_log_file": "local.log",
         "core_type": "core1",
         "core_init": "init1",
-        "three_part_subscription_name": "sub_name"
+        "broker": "main_broker",
+        "broker_port": 23500,
+        "is_three_part": True,
+        "subscription_name": "sub_name",
+        "period": 1.0
     }
 
 class TestIEEE8500FederatePlugin(base_test.BasePluginTestCase):
@@ -48,7 +52,7 @@ class TestIEEE8500FederatePlugin(base_test.BasePluginTestCase):
         self.assertEqual(expected_data["local_log_file"], actual_data.local_log_file)
         self.assertEqual(expected_data["core_type"], actual_data.core_type)
         self.assertEqual(expected_data["core_init"], actual_data.core_init)
-        self.assertEqual(expected_data["three_part_subscription_name"], actual_data.three_part_subscription_name)
+        self.assertEqual(expected_data["subscription_name"], actual_data.subscription_name)
 
     def test_InputData_failed_key(self):
         input_dict = _get_basic_json_input()
@@ -158,7 +162,7 @@ class TestIEEE8500FederatePlugin(base_test.BasePluginTestCase):
 
         expected = {
             "directory": str(self.__get_specific_path() / self.get_safe_model_name()),
-            "exec": f"gridlabd.sh {self.get_safe_model_name()}.glm",
+            "exec": f"gridlabd.sh IEEE_8500node.glm",
             "host": "localhost",
             "name": self.get_safe_model_name()
         }
