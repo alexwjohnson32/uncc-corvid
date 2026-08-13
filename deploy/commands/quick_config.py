@@ -51,7 +51,7 @@ def quick_deploy(json_file: pathlib.Path, cosim_name: str, output_dir: pathlib.P
 
     if not create_output_dir:
         if not output_dir.exists():
-            return f"Given output directory {output_dir} does not exist and create_outut_dir is set to false!"
+            return f"Given output directory {output_dir} does not exist and create_output_dir is set to false!"
 
         if not output_dir.is_dir():
             return f"Given output directory {output_dir} is not a directory!"

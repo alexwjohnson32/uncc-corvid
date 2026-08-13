@@ -2,7 +2,7 @@
 
 This directory directly contains the `IDeployable` interface class and the `PluginManager` class. Subdirectories will contain the actual plugin implementations.
 
-The subdirectories created within this have arbitrary names, and if you want to add your own plugin in a new directory, ensure that the directories all contain an `__init__.py` file within each directory within the path to find your plugin. This is a python limitation and further understanding on the why of it all can be learned elsewhere.
+The subdirectories created within this have arbitrary names, and if you want to add your own plugin in a new directory, ensure that the directories all contain an `__init__.py` file within each directory within the path to find your plugin. This is a python limitation and further understanding of the why of it all can be learned elsewhere.
 
 ## `interface.py`
 
@@ -12,14 +12,14 @@ The `IDeployable` interface allows for the `deploy` tool to interact with an arb
 
 ### `deploy`
 
-This is the major call and the most intricate function of the interface because this call takes the baseline inputs, transforms them with a json configuration, and writes the modified data to a ready to be used output directory. This function should NOT modify the actual baseline files in anyway. Instead, it should read them and/or copy them and modify the copied files or modify the read data in memory before writing back out to a new location. This should throw standard exceptions if the deployment cannot be completed.
+This is the major call and the most intricate function of the interface because this call takes the baseline inputs, transforms them with a Json configuration, and writes the modified data to a ready to be used output directory. This function should NOT modify the actual baseline files in any way. Instead, it should read them and/or copy them and modify the copied files or modify the read data in memory before writing back out to a new location. This should throw standard exceptions if the deployment cannot be completed.
 
-* `json_config`: A dictionary that is derived from a json config file, containing the specific information for this plugin.
-* `total_time_seconds`: The total time, in seconds, that is to be simulated. A floating point value.
+* `json_config`: A dictionary that is derived from a Json config file, containing the specific information for this plugin.
+* `total_time_seconds`: The total time, in seconds, that is to be simulated. A floating-point value.
 * `deploy_root`: The root path to the directory that is to be written to.
 * `install_root`: The root path to the directory that contains the installed information about the plugin (generated from the installed `src` code).
 
-This functions does not return anything. A deploy is considered successful on no exception throws.
+This function does not return anything. A deploy is considered successful on no exception throws.
 
 ### `get_baseline_files`
 
@@ -31,12 +31,12 @@ If the `install_root` does not exist, throw a `ValueError` describing the issue.
 
 ### `get_model_files`
 
-Returns a `list` of all the files that have been generated to create the specific model request by name. You may make changes to these files at your own risk to breaking the speciic cosim. This function should not throw any exceptions.
+Returns a `list` of all the files that have been generated to create the specific model request by name. You may make changes to these files at your own risk of breaking the specific cosim. This function should not throw any exceptions.
 
 * `model_name`: The specific model name to search for within the deployment directory.
 * `deploy_root`: The deploy directory to search within for the model.
 
-If the model name cannot be found or the directory does not exist, return an empty `list`. Otherwise, return all the found generated file paths within the directory.
+If the model name cannot be found or the directory does not exist, return an empty `list`. Otherwise, return all the generated file paths found within the directory.
 
 ### `get_exec_json`
 
@@ -45,7 +45,7 @@ Returns a dictionary object that represents a HELICS federate object that can be
 * `model_name`: The specific model name to search for within the deployment directory.
 * `deploy_root`: The deploy directory to search within for the model.
 
-If the model name cannot be found or the directory does not exist, return an empty `dict`. Otherwise, the dict returned must follow this definition:
+If the model name cannot be found or the directory does not exist, return an empty `dict`. Otherwise, the `dict` returned must follow this definition:
 ```json
 {
     "directory": "<relative_working_directory derived from deploy_root and model_name>",
@@ -74,7 +74,7 @@ If the deploy root does not exist or no names can be found, return an empty `lis
 
 ### `PluginManager`
 
-The `PluginManager` is a helper class that accepts the path to the root of the plugins directory and recursively searches through it to find all classes that inherit the `IDeployable` interface, importing them and saving an instance of each within it's internal `dict`. The instances are exposed through a `get` function that safely checks for name existence for you, leaving you to only have to check that the returned value is not `None`.
+The `PluginManager` is a helper class that accepts the path to the root of the plugins directory and recursively searches through it to find all classes that inherit the `IDeployable` interface, importing them and saving an instance of each within its internal `dict`. The instances are exposed through a `get` function that safely checks for name existence for you, leaving you to only have to check that the returned value is not `None`.
 
 ### `get`
 

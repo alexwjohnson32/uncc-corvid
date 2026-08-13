@@ -103,7 +103,7 @@ def _print_list_model_names(plugin_manager: manager.PluginManager, deploy_dir: p
     print(commands.list_model_names.get_model_names(plugin_manager, deploy_dir, plugin_name))
 
 def _setup_deploy_parser(subparser: argparse._SubParsersAction) -> None:
-    deploy_parser = subparser.add_parser("deploy", help="Attempts to deploy a given configuration to a given directory.")
+    deploy_parser = subparser.add_parser("deploy", help="Attempts to deploy a given configuration to a given directory")
     deploy_parser.add_argument("--install-dir", required=True, help="The path to the install directory to read from", type=pathlib.Path)
     deploy_parser.add_argument("--deploy-dir", required=True, help="The path to the deploy directory to read from", type=pathlib.Path)
     deploy_parser.add_argument("--config", required=True, help="The path to the input Json configuration", type=pathlib.Path)
