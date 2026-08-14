@@ -1,10 +1,3 @@
-clock {
-//	timestamp '2014-01-01 0:00:00';
-	timezone EST+5EDT;
-        starttime '2000-09-01 00:00:00';
-        stoptime '2000-09-02 00:00:00';
-}
-
 #set profiler=1
 #set iteration_limit=100000;
 #set relax_naming_rules=1;
@@ -16,11 +9,6 @@ module powerflow {
 
 module tape;
 module connection;
-
-object helics_msg {
-    name gld_hlc_conn;
-    configure gld_3bus.json;
-}
 
 // Define transmission line parameters
 object overhead_line {
@@ -120,7 +108,7 @@ object node {
      nominal_voltage 2401.7771;
 }
 
-// Create load objects 
+// Create load objects
 
 object load {
      name Load1;
@@ -134,7 +122,7 @@ object load {
      constant_power_C 100000+80000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object load {
      name Load2;
 //     parent Node3;
@@ -147,16 +135,16 @@ object load {
      constant_power_C 150000-95000j;
      nominal_voltage 2401.7771;
 }
- 
+
 object voltdump {
      filename Volt_Dump_NR_glm.csv;
 //     mode RECT;
-//     interval 900; 
+//     interval 900;
 }
 object currdump {
      filename Current_Dump_NR_glm.csv;
 //     mode RECT;
-//     interval 900; 
+//     interval 900;
 }
 
 module tape;

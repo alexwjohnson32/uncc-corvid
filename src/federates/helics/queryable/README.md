@@ -9,7 +9,7 @@ The executable is named `queryable-federate`, and it accepts a json file as inpu
 There are a number of inputs that must be set prior to the launch in order for the federate to be considered usable.
 
 * `federate_name`: The name of the federate. This must be consistent across the entirety of the cosim.
-* `fed_info_json`: A separate json object that is the actual HELICS json structure, this will be passed to the federate directly. The HELICS json file itself has many options that can be set, but do NOT define the publications and subscriptions here, that is handled later in the config. You must also configure it to run with an `ipc` core to be compliant on the HPC.
+* `fed_info_json`: A separate json object that is the actual HELICS json structure, this will be passed to the federate directly. The HELICS json file itself has many options that can be set, but do NOT define the publications and subscriptions here, that is handled later in the config.
 * `total_time`: A double precision value that represents (in seconds) the total simulated time of the cosim.
 * `local_log_file`: A path to a local log file to write outputs to, in order to keep a record of the model execution. More useful for debugging purposes than data analysis.
 * `client_details`: An object that is the location of the listening websocket server that the Query Federate sends messages to. The object consists of a `host`, `port`, and `target`.
